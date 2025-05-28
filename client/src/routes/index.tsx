@@ -15,6 +15,7 @@ import LoginLayout from './Layouts/Login';
 import dashboardRoutes from './Dashboard';
 import ShareRoute from './ShareRoute';
 import ChatRoute from './ChatRoute';
+import AgentSelectRoute from './AgentSelectRoute';
 import Search from './Search';
 import Root from './Root';
 
@@ -80,11 +81,15 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to="/c/new" replace={true} />,
+            element: <Navigate to="/agents" replace={true} />,
           },
           {
             path: 'c/:conversationId?',
             element: <ChatRoute />,
+          },
+          {
+            path: 'agents',
+            element: <AgentSelectRoute />,
           },
           {
             path: 'search',
