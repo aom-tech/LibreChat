@@ -2,7 +2,8 @@ name: Build and Push to GHCR
 
 on:
   workflow_dispatch:
-
+  push: 
+    branches: ['aicourse']
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
