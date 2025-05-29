@@ -15,28 +15,34 @@ export default function AgentSelectRoute(): JSX.Element | null {
   // Static list of predefined agents
   const availableAgents = [
     {
-      id: 'agent_bNZpHfG2lSdsrDinene0M',
-      name: 'Маркетолог',
-      description: 'Специалист по маркетингу, рекламе и продвижению продуктов',
-      icon: '📊',
+      id: 'agent_0etaLy7vjo0_TbNSuz5m-',
+      name: 'Анализ аудитории',
+      description: 'Исследование и анализ целевой аудитории, создание портретов пользователей',
+      icon: '👥',
     },
     {
-      id: 'slide-designer',
-      name: 'СлайдДизайнер',
-      description: 'Создание презентаций и дизайн слайдТов',
-      icon: '🎨',
+      id: 'agent_5JKQPhWMw3MRi7YEJtJpx',
+      name: 'Структура курса',
+      description: 'Разработка структуры и плана обучающих курсов',
+      icon: '📚',
     },
     {
-      id: 'copywriter',
-      name: 'Текстовик',
-      description: 'Копирайтер и редактор текстового контента',
-      icon: '✍️',
-    },
-    {
-      id: 'producer',
-      name: 'Продюсер',
-      description: 'Управление проектами и координация команды',
+      id: 'agent_OOz5189g7WffRmclq0E2q',
+      name: 'Сценарий видео',
+      description: 'Создание сценариев для видеоуроков и обучающего контента',
       icon: '🎬',
+    },
+    {
+      id: 'agent_76sQfuZcgnTskLMTQ5fdb',
+      name: 'Текст урока',
+      description: 'Написание текстовых материалов для уроков и курсов',
+      icon: '📝',
+    },
+    {
+      id: 'agent_mK4EZMGt07OXfCtRBEUfH',
+      name: 'Тесты/Квизы',
+      description: 'Создание тестов, квизов и заданий для проверки знаний',
+      icon: '❓',
     },
   ];
 
@@ -76,18 +82,18 @@ export default function AgentSelectRoute(): JSX.Element | null {
           </p>
         </div>
 
-        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-3">
           {availableAgents.map((agent) => (
             <button
               key={agent.id}
               onClick={() => handleAgentSelect(agent.id)}
-              className="hover:border-border-strong group relative flex flex-col items-center rounded-2xl border border-border-medium bg-surface-primary p-8 transition-all duration-300 hover:scale-105 hover:bg-surface-secondary hover:shadow-lg"
+              className="hover:border-border-strong group relative flex flex-col items-center rounded-xl border border-border-medium bg-surface-primary p-4 transition-all duration-300 hover:scale-105 hover:bg-surface-secondary hover:shadow-lg"
             >
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface-tertiary transition-transform duration-300 group-hover:scale-110">
-                <span className="text-3xl">{agent.icon}</span>
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface-tertiary transition-transform duration-300 group-hover:scale-110">
+                <span className="text-2xl">{agent.icon}</span>
               </div>
-              <h3 className="mb-3 text-xl font-semibold text-text-primary">{agent.name}</h3>
-              <p className="text-center text-sm leading-relaxed text-text-secondary">
+              <h3 className="mb-2 text-lg font-semibold text-text-primary">{agent.name}</h3>
+              <p className="text-center text-xs leading-relaxed text-text-secondary">
                 {agent.description}
               </p>
             </button>
@@ -101,7 +107,7 @@ export default function AgentSelectRoute(): JSX.Element | null {
             size="lg"
             className="px-8 py-3 text-base"
           >
-            {localize('com_ui_continue')}
+            {localize('com_ui_continue_yourself')}
           </Button>
         </div>
       </div>
