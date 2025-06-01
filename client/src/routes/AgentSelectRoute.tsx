@@ -72,27 +72,29 @@ export default function AgentSelectRoute(): JSX.Element | null {
 
   return (
     <div className="flex h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-4xl p-8">
-        <div className="mb-8 text-center">
-          <h1 className="mb-4 text-3xl font-bold text-text-primary">
+      <div className="w-full max-w-4xl p-4 md:p-8">
+        <div className="mb-4 text-center md:mb-8">
+          <h1 className="mb-2 text-xl font-bold text-text-primary md:mb-4 md:text-3xl">
             {localize('com_ui_choose_agent')}
           </h1>
-          <p className="text-lg text-text-secondary">
+          <p className="text-sm text-text-secondary md:text-lg">
             {localize('com_ui_agent_selector_description')}
           </p>
         </div>
 
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-3">
+        <div className="mb-4 grid grid-cols-2 gap-2 md:mb-8 md:grid-cols-3 md:gap-4">
           {availableAgents.map((agent) => (
             <button
               key={agent.id}
               onClick={() => handleAgentSelect(agent.id)}
-              className="hover:border-border-strong group relative flex flex-col items-center rounded-xl border border-border-medium bg-surface-primary p-4 transition-all duration-300 hover:scale-105 hover:bg-surface-secondary hover:shadow-lg"
+              className="hover:border-border-strong group relative flex flex-col items-center rounded-lg border border-border-medium bg-surface-primary p-2 transition-all duration-300 hover:scale-105 hover:bg-surface-secondary hover:shadow-lg md:rounded-xl md:p-4"
             >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface-tertiary transition-transform duration-300 group-hover:scale-110">
-                <span className="text-2xl">{agent.icon}</span>
+              <div className="mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-surface-tertiary transition-transform duration-300 group-hover:scale-110 md:mb-3 md:h-12 md:w-12">
+                <span className="text-lg md:text-2xl">{agent.icon}</span>
               </div>
-              <h3 className="mb-2 text-lg font-semibold text-text-primary">{agent.name}</h3>
+              <h3 className="mb-1 text-center text-sm font-semibold text-text-primary md:mb-2 md:text-lg">
+                {agent.name}
+              </h3>
               <p className="text-center text-xs leading-relaxed text-text-secondary">
                 {agent.description}
               </p>
