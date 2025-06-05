@@ -12,6 +12,7 @@ import { LiveAnnouncer } from '~/a11y';
 import { router } from './routes';
 import YandexMetrica from '~/components/YandexMetrica';
 import HelpButton from '~/components/HelpButton';
+import Amplitude from '~/components/Amplitude';
 
 const App = () => {
   const { setError } = useApiErrorBoundary();
@@ -41,6 +42,10 @@ const App = () => {
                   {/* Add Yandex Metrica */}
                   {process.env.REACT_APP_YANDEX_METRICA_ID && (
                     <YandexMetrica counterId={process.env.REACT_APP_YANDEX_METRICA_ID} />
+                  )}
+                  {/* Add Amplitude */}
+                  {process.env.REACT_APP_AMPLITUDE_API_KEY && (
+                    <Amplitude apiKey={process.env.REACT_APP_AMPLITUDE_API_KEY} />
                   )}
                   <HelpButton />
                 </DndProvider>
