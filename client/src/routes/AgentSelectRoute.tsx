@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EModelEndpoint } from 'librechat-data-provider';
 import { useNewConvo, useLocalize } from '~/hooks';
+import { useYandexMetrica } from '~/hooks/useYandexMetrica';
 import { Button } from '~/components/ui';
 import useAuthRedirect from './useAuthRedirect';
 import { Spinner } from '~/components/svg';
@@ -11,6 +12,7 @@ export default function AgentSelectRoute(): JSX.Element | null {
   const localize = useLocalize();
   const { newConversation } = useNewConvo();
   const { isAuthenticated } = useAuthRedirect();
+  const { reachGoal } = useYandexMetrica();
 
   // Static list of predefined agents
   const availableAgents = [
@@ -47,6 +49,9 @@ export default function AgentSelectRoute(): JSX.Element | null {
   ];
 
   const handleAgentSelect = (agentId: string): void => {
+    // Track predefined agent selection
+    reachGoal('predefined-agent-choice');
+
     // Create new conversation with the selected agent
     newConversation({
       template: {

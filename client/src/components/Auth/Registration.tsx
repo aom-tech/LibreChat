@@ -8,6 +8,7 @@ import type { TLoginLayoutContext } from '~/common';
 import { ErrorMessage } from './ErrorMessage';
 import { Spinner } from '~/components/svg';
 import { useLocalize, TranslationKeys, ThemeContext } from '~/hooks';
+import { useYandexMetrica } from '~/hooks/useYandexMetrica';
 
 const Registration: React.FC = () => {
   const navigate = useNavigate();
@@ -35,6 +36,8 @@ const Registration: React.FC = () => {
 
   // only require captcha if we have a siteKey
   const requireCaptcha = Boolean(startupConfig?.turnstile?.siteKey);
+
+  const { reachGoal } = useYandexMetrica();
 
   const registerUser = useRegisterUserMutation({
     onMutate: () => {
@@ -95,6 +98,17 @@ const Registration: React.FC = () => {
     </div>
   );
 
+  const onSubmit = async (data: TRegisterUser) => {
+    try {
+      registerUser.mutate({ ...data, token: token ?? undefined });
+      reachGoal('register');
+    } catch (error) {
+      if ((error as TError).response?.data?.message) {
+        setErrorMessage((error as TError).response?.data?.message ?? '');
+      }
+    }
+  };
+
   return (
     <>
       {errorMessage && (
@@ -122,9 +136,7 @@ const Registration: React.FC = () => {
             className="mt-6"
             aria-label="Registration form"
             method="POST"
-            onSubmit={handleSubmit((data: TRegisterUser) =>
-              registerUser.mutate({ ...data, token: token ?? undefined }),
-            )}
+            onSubmit={handleSubmit(onSubmit)}
           >
             {renderInput('name', 'com_auth_full_name', 'text', {
               required: localize('com_auth_name_required'),

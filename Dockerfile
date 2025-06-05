@@ -37,6 +37,14 @@ RUN \
 
 RUN mkdir -p /app/client/public/images /app/api/logs
 
+# Add build arguments
+ARG REACT_APP_YANDEX_METRICA_ID
+ARG NODE_ENV=production
+
+# Set environment variables from build args
+ENV REACT_APP_YANDEX_METRICA_ID=$REACT_APP_YANDEX_METRICA_ID
+ENV NODE_ENV=$NODE_ENV
+
 # Node API setup
 EXPOSE 3080
 ENV HOST=0.0.0.0

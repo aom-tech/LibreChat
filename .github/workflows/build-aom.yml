@@ -44,3 +44,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            REACT_APP_YANDEX_METRICA_ID=${{ vars.REACT_APP_YANDEX_METRICA_ID }}
+            NODE_ENV=production

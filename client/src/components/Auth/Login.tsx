@@ -8,11 +8,13 @@ import { useLocalize } from '~/hooks';
 import LoginForm from './LoginForm';
 import SocialButton from '~/components/Auth/SocialButton';
 import { OpenIDIcon } from '~/components';
+import { useYandexMetrica } from '~/hooks/useYandexMetrica';
 
 function Login() {
   const localize = useLocalize();
   const { error, setError, login } = useAuthContext();
   const { startupConfig } = useOutletContext<TLoginLayoutContext>();
+  const { reachGoal } = useYandexMetrica();
 
   const [searchParams, setSearchParams] = useSearchParams();
   // Determine if auto-redirect should be disabled based on the URL parameter
@@ -72,6 +74,20 @@ function Login() {
       </div>
     );
   }
+
+  const handleSubmit = async (data: TLoginUser) => {
+    // ...existing code...
+    try {
+      // ...existing login logic...
+
+      // Track successful login
+      reachGoal('login');
+
+      // ...existing code...
+    } catch (error) {
+      // ...existing error handling...
+    }
+  };
 
   return (
     <>
