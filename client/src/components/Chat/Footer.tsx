@@ -37,9 +37,9 @@ export default function Footer({ className }: { className?: string }) {
   const mainContentParts = (
     typeof config?.customFooter === 'string'
       ? config.customFooter
-      : '[LibreChat ' +
+      : '[CourseGPT ' +
         Constants.VERSION +
-        '](https://librechat.ai) - ' +
+        '](https://ai-courses.aom-tech.ru) - ' +
         localize('com_ui_latest_footer')
   ).split('|');
 
@@ -78,9 +78,9 @@ export default function Footer({ className }: { className?: string }) {
     </React.Fragment>
   ));
 
-  const footerElements = [...mainContentRender, privacyPolicyRender, termsOfServiceRender].filter(
-    Boolean,
-  );
+  const footerElements = [
+    ...mainContentRender /* privacyPolicyRender, termsOfServiceRender */, // TODO: раскоментить и поставить свои ссылки
+  ].filter(Boolean);
 
   return (
     <div className="relative w-full">
