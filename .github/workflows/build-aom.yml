@@ -45,6 +45,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            REACT_APP_YANDEX_METRICA_ID=${{ vars.REACT_APP_YANDEX_METRICA_ID }}
-            REACT_APP_AMPLITUDE_API_KEY=${{ vars.REACT_APP_AMPLITUDE_API_KEY }}
+            SCRIPT_YANDEX_METRICA_ID=${{ vars.SCRIPT_YANDEX_METRICA_ID }}
+            SCRIPT_AMPLITUDE_API_KEY=${{ vars.SCRIPT_AMPLITUDE_API_KEY }}
             NODE_ENV=production

@@ -7,7 +7,7 @@ declare global {
 }
 
 export const useYandexMetrica = () => {
-  const counterId = process.env.REACT_APP_YANDEX_METRICA_ID || '102444444';
+  const counterId = import.meta.env.SCRIPT_YANDEX_METRICA_ID || '102444444';
 
   const reachGoal = useCallback(
     (goal: string) => {

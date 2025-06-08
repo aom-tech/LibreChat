@@ -10,9 +10,7 @@ import { ToastProvider } from './Providers';
 import Toast from './components/ui/Toast';
 import { LiveAnnouncer } from '~/a11y';
 import { router } from './routes';
-import YandexMetrica from '~/components/YandexMetrica';
-import HelpButton from '~/components/HelpButton';
-import Amplitude from '~/components/Amplitude';
+import Scripts from './components/CourseGPT/Scripts/Scripts';
 
 const App = () => {
   const { setError } = useApiErrorBoundary();
@@ -31,6 +29,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <RecoilRoot>
         <LiveAnnouncer>
+          <Scripts />
           <ThemeProvider>
             <RadixToast.Provider>
               <ToastProvider>
@@ -39,15 +38,6 @@ const App = () => {
                   <ReactQueryDevtools initialIsOpen={false} position="top-right" />
                   <Toast />
                   <RadixToast.Viewport className="pointer-events-none fixed inset-0 z-[1000] mx-auto my-2 flex max-w-[560px] flex-col items-stretch justify-start md:pb-5" />
-                  {/* Add Yandex Metrica */}
-                  {process.env.REACT_APP_YANDEX_METRICA_ID && (
-                    <YandexMetrica counterId={process.env.REACT_APP_YANDEX_METRICA_ID} />
-                  )}
-                  {/* Add Amplitude */}
-                  {process.env.REACT_APP_AMPLITUDE_API_KEY && (
-                    <Amplitude apiKey={process.env.REACT_APP_AMPLITUDE_API_KEY} />
-                  )}
-                  <HelpButton />
                 </DndProvider>
               </ToastProvider>
             </RadixToast.Provider>

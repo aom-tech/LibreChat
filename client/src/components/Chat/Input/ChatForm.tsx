@@ -34,6 +34,8 @@ import BadgeRow from './BadgeRow';
 import Mention from './Mention';
 import store from '~/store';
 
+const isAllowCodeInterpreterBadge = import.meta.env.ALLOW_CODE_INTERPETER_BADGE === 'true';
+
 const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const submitButtonRef = useRef<HTMLButtonElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -304,7 +306,11 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                 <AttachFileChat disableInputs={disableInputs} />
               </div>
               <BadgeRow
-                showEphemeralBadges={!isAgentsEndpoint(endpoint) && !isAssistantsEndpoint(endpoint)}
+                showEphemeralBadges={
+                  !isAgentsEndpoint(endpoint) &&
+                  !isAssistantsEndpoint(endpoint) &&
+                  isAllowCodeInterpreterBadge
+                }
                 conversationId={conversationId}
                 onChange={setBadges}
                 isInChat={
