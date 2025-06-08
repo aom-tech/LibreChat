@@ -10,6 +10,12 @@ RUN apk add --no-cache python3 py3-pip uv
 # Set environment variable to use jemalloc
 ENV LD_PRELOAD=/usr/lib/libjemalloc.so.2
 
+ARG SCRIPT_YANDEX_METRICA_ID
+ARG SCRIPT_AMPLITUDE_API_KEY
+
+ENV SCRIPT_YANDEX_METRICA_ID=$SCRIPT_YANDEX_METRICA_ID
+ENV SCRIPT_AMPLITUDE_API_KEY=$SCRIPT_AMPLITUDE_API_KEY
+
 # Add `uv` for extended MCP support
 COPY --from=ghcr.io/astral-sh/uv:0.6.13 /uv /uvx /bin/
 RUN uv --version
@@ -38,13 +44,9 @@ RUN \
 RUN mkdir -p /app/client/public/images /app/api/logs
 
 # Add build arguments
-ARG SCRIPT_YANDEX_METRICA_ID
-ARG SCRIPT_AMPLITUDE_API_KEY
 ARG NODE_ENV=production
 
 # Set environment variables from build args
-ENV SCRIPT_YANDEX_METRICA_ID=$SCRIPT_YANDEX_METRICA_ID
-ENV SCRIPT_AMPLITUDE_API_KEY=$SCRIPT_AMPLITUDE_API_KEY
 ENV NODE_ENV=$NODE_ENV
 
 # Node API setup
