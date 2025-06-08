@@ -46,6 +46,12 @@ export default function AgentSelectRoute(): JSX.Element | null {
       description: 'Создание тестов, квизов и заданий для проверки знаний',
       icon: '❓',
     },
+    {
+      id: 'agent_srl6222FWjmA0XxeEGgGQ',
+      name: 'Изображения для курса',
+      description: 'Создание иллюстраций, схем и визуалов для обучающих материалов',
+      icon: '🖼️',
+    },
   ];
 
   const handleAgentSelect = (agentId: string): void => {
