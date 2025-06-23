@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { EModelEndpoint } from 'librechat-data-provider';
 import { useNewConvo, useLocalize } from '~/hooks';
 import { useYandexMetrica } from '~/hooks/useYandexMetrica';
+import { useListAgentsQuery, useGetStartupConfig } from '~/data-provider';
+import { processAgentOption } from '~/utils';
 import { Button } from '~/components/ui';
 import useAuthRedirect from './useAuthRedirect';
 import { Spinner } from '~/components/svg';
@@ -14,45 +16,21 @@ export default function AgentSelectRoute(): JSX.Element | null {
   const { isAuthenticated } = useAuthRedirect();
   const { reachGoal } = useYandexMetrica();
 
-  // Static list of predefined agents
-  const availableAgents = [
-    {
-      id: 'agent_0etaLy7vjo0_TbNSuz5m-',
-      name: 'Анализ аудитории',
-      description: 'Исследование и анализ целевой аудитории, создание портретов пользователей',
-      icon: '👥',
-    },
-    {
-      id: 'agent_5JKQPhWMw3MRi7YEJtJpx',
-      name: 'Структура курса',
-      description: 'Разработка структуры и плана обучающих курсов',
-      icon: '📚',
-    },
-    {
-      id: 'agent_OOz5189g7WffRmclq0E2q',
-      name: 'Сценарий видео',
-      description: 'Создание сценариев для видеоуроков и обучающего контента',
-      icon: '🎬',
-    },
-    {
-      id: 'agent_76sQfuZcgnTskLMTQ5fdb',
-      name: 'Текст урока',
-      description: 'Написание текстовых материалов для уроков и курсов',
-      icon: '📝',
-    },
-    {
-      id: 'agent_mK4EZMGt07OXfCtRBEUfH',
-      name: 'Тесты/Квизы',
-      description: 'Создание тестов, квизов и заданий для проверки знаний',
-      icon: '❓',
-    },
-    {
-      id: 'agent_srl6222FWjmA0XxeEGgGQ',
-      name: 'Изображения для курса',
-      description: 'Создание иллюстраций, схем и визуалов для обучающих материалов',
-      icon: '🖼️',
-    },
-  ];
+  const { data: startupConfig } = useGetStartupConfig();
+  const { data: agents = [], isLoading } = useListAgentsQuery(undefined, {
+    select: (res) =>
+      res.data
+        .map((agent) =>
+          processAgentOption({
+            agent: {
+              ...agent,
+              name: agent.name || agent.id,
+            },
+            instanceProjectId: startupConfig?.instanceProjectId,
+          }),
+        )
+        .filter((agent) => agent.isGlobal || agent.icon),
+  });
 
   const handleAgentSelect = (agentId: string): void => {
     // Track predefined agent selection
@@ -73,7 +51,7 @@ export default function AgentSelectRoute(): JSX.Element | null {
     navigate('/c/new');
   };
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || isLoading) {
     return (
       <div className="flex h-screen items-center justify-center" aria-live="polite" role="status">
         <Spinner className="text-text-primary" />
@@ -94,23 +72,37 @@ export default function AgentSelectRoute(): JSX.Element | null {
         </div>
 
         <div className="mb-4 grid grid-cols-2 gap-2 md:mb-8 md:grid-cols-3 md:gap-4">
-          {availableAgents.map((agent) => (
-            <button
-              key={agent.id}
-              onClick={() => handleAgentSelect(agent.id)}
-              className="hover:border-border-strong group relative flex flex-col items-center rounded-lg border border-border-medium bg-surface-primary p-2 transition-all duration-300 hover:scale-105 hover:bg-surface-secondary hover:shadow-lg md:rounded-xl md:p-4"
-            >
-              <div className="mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-surface-tertiary transition-transform duration-300 group-hover:scale-110 md:mb-3 md:h-12 md:w-12">
-                <span className="text-lg md:text-2xl">{agent.icon}</span>
-              </div>
-              <h3 className="mb-1 text-center text-sm font-semibold text-text-primary md:mb-2 md:text-lg">
-                {agent.name}
-              </h3>
-              <p className="text-center text-xs leading-relaxed text-text-secondary">
-                {agent.description}
-              </p>
-            </button>
-          ))}
+          {agents.length > 0 ? (
+            agents.map((agent) => (
+              <button
+                key={agent.id}
+                onClick={() => handleAgentSelect(agent.id)}
+                className="hover:border-border-strong group relative flex flex-col items-center rounded-lg border border-border-medium bg-surface-primary p-2 transition-all duration-300 hover:scale-105 hover:bg-surface-secondary hover:shadow-lg md:rounded-xl md:p-4"
+              >
+                <div className="mb-1 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-surface-tertiary transition-transform duration-300 group-hover:scale-110 md:mb-3 md:h-12 md:w-12">
+                  {agent.avatar?.filepath ? (
+                    <img
+                      src={agent.avatar.filepath}
+                      alt={agent.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg md:text-2xl">🤖</span>
+                  )}
+                </div>
+                <h3 className="mb-1 text-center text-sm font-semibold text-text-primary md:mb-2 md:text-lg">
+                  {agent.name}
+                </h3>
+                <p className="text-center text-xs leading-relaxed text-text-secondary">
+                  {agent.description || 'AI Assistant'}
+                </p>
+              </button>
+            ))
+          ) : (
+            <div className="col-span-full flex items-center justify-center py-8">
+              <p className="text-text-secondary">{localize('com_ui_no_public_agents_available')}</p>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-center">
