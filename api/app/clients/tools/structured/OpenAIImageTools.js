@@ -428,7 +428,12 @@ Error Message: ${error.message}`);
             ...axiosConfig.params,
           };
         }
+
+        console.log(11111)
+
         const response = await axios.post('/images/edits', formData, axiosConfig);
+
+        console.log('Image edit response:', JSON.stringify(response.data, null, 2));
 
         if (!response.data || !response.data.data || !response.data.data.length) {
           return returnValue(
