@@ -7,10 +7,34 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { QueryClient, QueryClientProvider, QueryCache } from '@tanstack/react-query';
 import { ScreenshotProvider, ThemeProvider, useApiErrorBoundary } from './hooks';
 import { ToastProvider } from './Providers';
+// import { TourProvider } from './components/Tour';
+import { TourProvider } from '@reactour/tour';
 import Toast from './components/ui/Toast';
 import { LiveAnnouncer } from '~/a11y';
 import { router } from './routes';
 import Scripts from './components/CourseGPT/Scripts/Scripts';
+
+const steps = [
+  {
+    selector: '[data-tour="sidebar-toggle"]',
+    content:
+      'Click here to toggle the sidebar and access your chat history, settings, and other features.',
+  },
+  {
+    selector: '[data-tour="model-selector"]',
+    content:
+      'Select different AI models or agents for your conversations. Each has unique capabilities.',
+  },
+  {
+    selector: '[data-tour="chat-input"]',
+    content:
+      'Type your messages here. You can ask questions, request help with tasks, or have conversations.',
+  },
+  {
+    selector: '[data-tour="send-button"]',
+    content: 'Click here or press Enter to send your message to the AI.',
+  },
+];
 
 const App = () => {
   const { setError } = useApiErrorBoundary();
@@ -31,16 +55,18 @@ const App = () => {
         <LiveAnnouncer>
           <Scripts />
           <ThemeProvider>
-            <RadixToast.Provider>
-              <ToastProvider>
-                <DndProvider backend={HTML5Backend}>
-                  <RouterProvider router={router} />
-                  <ReactQueryDevtools initialIsOpen={false} position="top-right" />
-                  <Toast />
-                  <RadixToast.Viewport className="pointer-events-none fixed inset-0 z-[1000] mx-auto my-2 flex max-w-[560px] flex-col items-stretch justify-start md:pb-5" />
-                </DndProvider>
-              </ToastProvider>
-            </RadixToast.Provider>
+            <TourProvider steps={steps}>
+              <RadixToast.Provider>
+                <ToastProvider>
+                  <DndProvider backend={HTML5Backend}>
+                    <RouterProvider router={router} />
+                    <ReactQueryDevtools initialIsOpen={false} position="top-right" />
+                    <Toast />
+                    <RadixToast.Viewport className="pointer-events-none fixed inset-0 z-[1000] mx-auto my-2 flex max-w-[560px] flex-col items-stretch justify-start md:pb-5" />
+                  </DndProvider>
+                </ToastProvider>
+              </RadixToast.Provider>
+            </TourProvider>
           </ThemeProvider>
         </LiveAnnouncer>
       </RecoilRoot>

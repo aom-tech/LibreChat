@@ -27,6 +27,7 @@ const SubmitButton = React.memo(
               'rounded-full bg-text-primary p-1.5 text-text-primary outline-offset-4 transition-all duration-200 disabled:cursor-not-allowed disabled:text-text-secondary disabled:opacity-10',
             )}
             data-testid="send-button"
+            data-tour="send-button"
             type="submit"
           >
             <span className="" data-state="closed">
