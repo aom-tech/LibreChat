@@ -14,7 +14,7 @@ export default defineConfig(({ command }) => ({
     strictPort: false,
     proxy: {
       '/api': {
-        target: 'http://localhost:3080',
+        target: 'https://ai-courses.aom-tech.ru', //'http://localhost:3080',
         changeOrigin: true,
       },
       '/oauth': {

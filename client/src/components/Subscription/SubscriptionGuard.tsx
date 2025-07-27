@@ -15,7 +15,7 @@ const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }) => {
 
   // Skip subscription check for certain paths
   const skipPaths = ['/login', '/register', '/logout', '/subscription', '/checkout'];
-  const shouldSkip = skipPaths.some(path => location.pathname.startsWith(path));
+  const shouldSkip = skipPaths.some((path) => location.pathname.startsWith(path));
 
   useEffect(() => {
     // Check if subscription check is enabled in config
@@ -23,7 +23,7 @@ const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }) => {
       try {
         const response = await fetch('/api/config');
         const config = await response.json();
-        
+
         if (!config?.subscription?.enabled) {
           // Subscription system not enabled
           return;
@@ -61,8 +61,8 @@ const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }) => {
   }
 
   // Check if user has active subscription
-  const subscription = subscriptionData?.subscription;
-  
+  const subscription = false; //subscriptionData?.subscription;
+
   // If subscription data exists and user doesn't have active subscription, show paywall
   if (subscription && !subscription.isActive) {
     return <Paywall />;

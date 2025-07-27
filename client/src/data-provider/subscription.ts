@@ -1,43 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { dataService } from './data-service';
-import { QueryKeys } from 'librechat-data-provider';
-
-export interface SubscriptionPlan {
-  name: string;
-  price: number;
-  tokenCredits: number;
-  features: {
-    presentations: boolean;
-    videos: boolean;
-  };
-  description: string;
-}
-
-export interface SubscriptionStatus {
-  isActive: boolean;
-  tier?: string;
-  expiresAt?: string;
-  features?: {
-    presentations: boolean;
-    videos: boolean;
-  };
-}
-
-export interface CheckoutSession {
-  id: string;
-  tier: string;
-  userId: string;
-  amount: number;
-  currency: string;
-  status: string;
-  checkoutUrl: string;
-}
+import { QueryKeys, dataService } from 'librechat-data-provider';
+import type { SubscriptionPlan, SubscriptionStatus, CheckoutSession } from 'librechat-data-provider';
 
 // Get subscription plans
 export const useGetSubscriptionPlans = () => {
   return useQuery<{ plans: Record<string, SubscriptionPlan> }>({
     queryKey: ['subscriptionPlans'],
-    queryFn: () => dataService.get('/api/subscription/plans'),
+    queryFn: () => dataService.getSubscriptionPlans(),
   });
 };
 
@@ -45,7 +14,7 @@ export const useGetSubscriptionPlans = () => {
 export const useGetSubscriptionStatus = () => {
   return useQuery<{ subscription: SubscriptionStatus }>({
     queryKey: [QueryKeys.user, 'subscription'],
-    queryFn: () => dataService.get('/api/subscription/status'),
+    queryFn: () => dataService.getSubscriptionStatus(),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
@@ -55,7 +24,7 @@ export const useCreateCheckoutSession = () => {
   const queryClient = useQueryClient();
 
   return useMutation<{ session: CheckoutSession }, Error, { tier: string }>({
-    mutationFn: (data) => dataService.post('/api/subscription/checkout', data),
+    mutationFn: (data) => dataService.createCheckoutSession(data),
     onSuccess: () => {
       // Invalidate subscription status after checkout
       queryClient.invalidateQueries({ queryKey: [QueryKeys.user, 'subscription'] });
@@ -68,7 +37,7 @@ export const useCancelSubscription = () => {
   const queryClient = useQueryClient();
 
   return useMutation<{ message: string; subscription: SubscriptionStatus }, Error>({
-    mutationFn: () => dataService.post('/api/subscription/cancel'),
+    mutationFn: () => dataService.cancelSubscription(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.user, 'subscription'] });
     },
@@ -80,7 +49,7 @@ export const useActivateSubscription = () => {
   const queryClient = useQueryClient();
 
   return useMutation<{ message: string; subscription: SubscriptionStatus }, Error, { tier: string }>({
-    mutationFn: (data) => dataService.post('/api/subscription/activate', data),
+    mutationFn: (data) => dataService.activateSubscription(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.user, 'subscription'] });
       queryClient.invalidateQueries({ queryKey: [QueryKeys.user] });
