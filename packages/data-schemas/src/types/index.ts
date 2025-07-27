@@ -17,3 +17,4 @@ export * from './share';
 export * from './pluginAuth';
 /* Memories */
 export * from './memory';
+export * from './subscription';

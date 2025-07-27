@@ -91,6 +91,10 @@ const startServer = async () => {
     await configureSocialLogins(app);
   }
 
+  // Subscription middleware
+  const { checkSubscription } = require('~/server/middleware/checkSubscription');
+  app.use(checkSubscription);
+
   app.use('/oauth', routes.oauth);
   /* API Endpoints */
   app.use('/api/auth', routes.auth);
@@ -122,6 +126,7 @@ const startServer = async () => {
   app.use('/api/memories', routes.memories);
   app.use('/api/tags', routes.tags);
   app.use('/api/mcp', routes.mcp);
+  app.use('/api/subscription', routes.subscription);
 
   app.use((req, res) => {
     res.set({

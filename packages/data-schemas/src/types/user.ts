@@ -33,6 +33,14 @@ export interface IUser extends Document {
   personalization?: {
     memories?: boolean;
   };
+  // Subscription fields
+  isSubscriptionActive?: boolean;
+  subscriptionTier?: 'basic' | 'pro' | 'enterprise' | null;
+  subscriptionExpiresAt?: Date | null;
+  subscriptionFeatures?: {
+    presentations?: boolean;
+    videos?: boolean;
+  };
   createdAt?: Date;
   updatedAt?: Date;
 }
