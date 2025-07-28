@@ -1,28 +1,43 @@
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import type { Plugin } from 'vite';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { compression } from 'vite-plugin-compression2';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command }) => ({
-  server: {
-    host: 'localhost',
-    port: 3090,
-    strictPort: false,
-    proxy: {
-      '/api': {
-        target: 'https://ai-courses.aom-tech.ru', //'http://localhost:3080',
-        changeOrigin: true,
-      },
-      '/oauth': {
-        target: 'http://localhost:3080',
-        changeOrigin: true,
+export default defineConfig(({ command, mode }) => {
+  // Load env file based on `mode` in the current working directory.
+  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
+  const env = loadEnv(mode, process.cwd() + '/..', '');
+  
+  console.log('Vite Config - VITE_API_TARGET:', env.VITE_API_TARGET);
+  console.log('Vite Config - Using target:', env.VITE_API_TARGET || 'http://localhost:3080');
+  console.log('Vite Config - VITE_SUBSCRIPTION_API_URL:', env.VITE_SUBSCRIPTION_API_URL);
+  console.log('Vite Config - Using subscription target:', env.VITE_SUBSCRIPTION_API_URL || 'http://localhost:3081');
+  
+  return {
+    server: {
+      host: 'localhost',
+      port: 3090,
+      strictPort: false,
+      proxy: {
+        '/api': {
+          target: env.VITE_API_TARGET || 'http://localhost:3080',
+          changeOrigin: true,
+        },
+        '/oauth': {
+          target: env.VITE_API_TARGET || 'http://localhost:3080',
+          changeOrigin: true,
+        },
+        '/subscription-api': {
+          target: env.VITE_SUBSCRIPTION_API_URL || 'http://localhost:3081',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/subscription-api/, ''),
+        },
       },
     },
-  },
   // Set the directory where environment variables are loaded from and restrict prefixes
   envDir: '../',
   envPrefix: ['VITE_', 'SCRIPT_', 'DOMAIN_', 'ALLOW_'],
@@ -235,7 +250,8 @@ export default defineConfig(({ command }) => ({
       'micromark-extension-math': 'micromark-extension-llm-math',
     },
   },
-}));
+  };
+});
 
 interface SourcemapExclude {
   excludeNodeModules?: boolean;

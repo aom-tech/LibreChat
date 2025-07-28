@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { useGetSubscriptionStatus } from '~/data-provider';
 import Paywall from './Paywall';
@@ -11,32 +11,24 @@ interface SubscriptionGuardProps {
 const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }) => {
   const { user, isAuthenticated } = useAuthContext();
   const location = useLocation();
-  const { data: subscriptionData, isLoading } = useGetSubscriptionStatus();
+  const { data: subscriptionData, isLoading, error } = useGetSubscriptionStatus();
 
   // Skip subscription check for certain paths
   const skipPaths = ['/login', '/register', '/logout', '/subscription', '/checkout'];
   const shouldSkip = skipPaths.some((path) => location.pathname.startsWith(path));
 
-  useEffect(() => {
-    // Check if subscription check is enabled in config
-    const checkSubscriptionConfig = async () => {
-      try {
-        const response = await fetch('/api/config');
-        const config = await response.json();
+  console.log('[SubscriptionGuard] Debug:', {
+    isAuthenticated,
+    shouldSkip,
+    pathname: location.pathname,
+    isLoading,
+    subscriptionData,
+    error,
+    user: user?.email,
+  });
 
-        if (!config?.subscription?.enabled) {
-          // Subscription system not enabled
-          return;
-        }
-      } catch (error) {
-        console.error('Failed to fetch config:', error);
-      }
-    };
-
-    if (isAuthenticated && !shouldSkip) {
-      checkSubscriptionConfig();
-    }
-  }, [isAuthenticated, shouldSkip]);
+  // No need to check main API config anymore since subscription is a separate service
+  // The subscription service will handle its own availability
 
   // If not authenticated, let auth guard handle it
   if (!isAuthenticated) {
@@ -60,15 +52,29 @@ const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }) => {
     );
   }
 
+  // Error state - if subscription service is down, allow access
+  if (error) {
+    console.error('[SubscriptionGuard] Error checking subscription:', error);
+    console.log('[SubscriptionGuard] Allowing access due to service error');
+    return <>{children}</>;
+  }
+
   // Check if user has active subscription
-  const subscription = false; //subscriptionData?.subscription;
+  const subscription = subscriptionData?.subscription;
+  console.log('[SubscriptionGuard] Subscription check:', {
+    subscription,
+    isActive: subscription?.isActive,
+    showPaywall: subscription && !subscription.isActive,
+  });
 
   // If subscription data exists and user doesn't have active subscription, show paywall
   if (subscription && !subscription.isActive) {
+    console.log('[SubscriptionGuard] Showing paywall - no active subscription');
     return <Paywall />;
   }
 
   // User has active subscription or subscription system is disabled
+  console.log('[SubscriptionGuard] Allowing access - subscription active or system disabled');
   return <>{children}</>;
 };
 

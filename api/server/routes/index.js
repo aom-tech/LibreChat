@@ -28,7 +28,6 @@ const keys = require('./keys');
 const user = require('./user');
 const ask = require('./ask');
 const mcp = require('./mcp');
-const subscription = require('./subscription');
 
 module.exports = {
   ask,
@@ -61,5 +60,4 @@ module.exports = {
   categories,
   staticRoute,
   mcp,
-  subscription,
 };

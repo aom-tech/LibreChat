@@ -138,33 +138,6 @@ const userSchema = new Schema<IUser>(
       },
       default: {},
     },
-    // Subscription fields
-    isSubscriptionActive: {
-      type: Boolean,
-      default: false,
-    },
-    subscriptionTier: {
-      type: String,
-      enum: ['basic', 'pro', 'enterprise'],
-      default: null,
-    },
-    subscriptionExpiresAt: {
-      type: Date,
-      default: null,
-    },
-    subscriptionFeatures: {
-      type: {
-        presentations: {
-          type: Boolean,
-          default: false,
-        },
-        videos: {
-          type: Boolean,
-          default: false,
-        },
-      },
-      default: {},
-    },
   },
   { timestamps: true },
 );
