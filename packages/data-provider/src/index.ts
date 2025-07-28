@@ -44,3 +44,5 @@ export { default as createPayload } from './createPayload';
 /* feedback */
 export * from './feedback';
 export * from './parameterSettings';
+/* billing types */
+export type { BillingPlan, BillingSubscription } from './types/billing';

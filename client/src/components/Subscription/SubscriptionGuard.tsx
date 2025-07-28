@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuthContext } from '~/hooks/AuthContext';
-import { useGetSubscriptionStatus } from '~/data-provider';
+import { useGetSubscriptionStatus } from '~/data-provider/subscription';
 import Paywall from './Paywall';
 
 interface SubscriptionGuardProps {

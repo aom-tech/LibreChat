@@ -31,10 +31,10 @@ export default defineConfig(({ command, mode }) => {
           target: env.VITE_API_TARGET || 'http://localhost:3080',
           changeOrigin: true,
         },
-        '/subscription-api': {
-          target: env.VITE_SUBSCRIPTION_API_URL || 'http://localhost:3081',
+        '/billing-api': {
+          target: env.VITE_BILLING_API_URL || 'http://188.225.87.39:8088',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/subscription-api/, ''),
+          rewrite: (path) => path.replace(/^\/billing-api/, ''),
         },
       },
     },
