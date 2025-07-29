@@ -2,12 +2,13 @@ import React from 'react';
 import { CreditCard, AlertCircle, Calendar, Package } from 'lucide-react';
 import { useGetSubscriptionStatus, useCancelSubscription } from '~/data-provider/subscription';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '~/components/ui';
-import { useToast } from '~/hooks';
+import { useToast, useLocalize } from '~/hooks';
 
 const SubscriptionManagement: React.FC = () => {
   const { data: subscriptionData, isLoading } = useGetSubscriptionStatus();
   const cancelMutation = useCancelSubscription();
   const { showToast } = useToast();
+  const localize = useLocalize();
 
   const handleCancelSubscription = async () => {
     try {
@@ -42,7 +43,7 @@ const SubscriptionManagement: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CreditCard className="h-5 w-5" />
-          Subscription
+          {localize('com_ui_subscription')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -51,21 +52,21 @@ const SubscriptionManagement: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Package className="h-4 w-4 text-gray-500" />
-                <span className="font-medium">Plan</span>
+                <span className="font-medium">{localize('com_ui_subscription_plan')}</span>
               </div>
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {subscription.tier || 'Active'}
+                {subscription?.tier || localize('com_ui_subscription_active')}
               </span>
             </div>
 
-            {subscription.expiresAt && (
+            {subscription?.expiresAt && (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-gray-500" />
-                  <span className="font-medium">Renews on</span>
+                  <span className="font-medium">{localize('com_ui_subscription_renews_on')}</span>
                 </div>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {new Date(subscription.expiresAt).toLocaleDateString()}
+                  {subscription.expiresAt && new Date(subscription.expiresAt).toLocaleDateString()}
                 </span>
               </div>
             )}
@@ -74,9 +75,9 @@ const SubscriptionManagement: React.FC = () => {
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500 mt-0.5" />
                 <div className="text-sm text-amber-700 dark:text-amber-400">
-                  <p className="font-medium">Need to cancel your subscription?</p>
+                  <p className="font-medium">{localize('com_ui_subscription_need_cancel')}</p>
                   <p className="mt-1">
-                    Please contact our support team at{' '}
+                    {localize('com_ui_subscription_contact_support')}{' '}
                     <a 
                       href="mailto:support@example.com" 
                       className="underline hover:no-underline"
@@ -94,19 +95,22 @@ const SubscriptionManagement: React.FC = () => {
               className="w-full"
               disabled={cancelMutation.isLoading}
             >
-              {cancelMutation.isLoading ? 'Processing...' : 'Contact Support to Cancel'}
+              {cancelMutation.isLoading 
+                ? localize('com_ui_paywall_processing') 
+                : localize('com_ui_subscription_contact_support_cancel')
+              }
             </Button>
           </div>
         ) : (
           <div className="text-center py-4">
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              No active subscription
+              {localize('com_ui_subscription_no_active')}
             </p>
             <Button
               onClick={() => window.location.href = '/'}
               className="w-full"
             >
-              View Plans
+              {localize('com_ui_subscription_view_plans')}
             </Button>
           </div>
         )}

@@ -1,12 +1,12 @@
 import React from 'react';
 import { Check, X } from 'lucide-react';
-import { 
-  useGetSubscriptionPlans, 
+import {
+  useGetSubscriptionPlans,
   useCreateCheckoutSession,
-  type BillingPlan 
+  type BillingPlan,
 } from '~/data-provider/subscription';
 import { Button } from '~/components/ui';
-import { useToast } from '~/hooks';
+import { useToast, useLocalize } from '~/hooks';
 
 interface PlanFeature {
   text: string;
@@ -15,6 +15,7 @@ interface PlanFeature {
 
 const Paywall: React.FC = () => {
   const { showToast } = useToast();
+  const localize = useLocalize();
   const { data: plans, isLoading: plansLoading } = useGetSubscriptionPlans();
   const checkoutMutation = useCreateCheckoutSession();
 
@@ -26,11 +27,14 @@ const Paywall: React.FC = () => {
     const support = plan.metadata?.features?.support || 'Basic';
 
     return [
-      { text: `${tokens.toLocaleString()} tokens per month`, included: true },
-      { text: 'Access to all AI models', included: true },
-      { text: `${support} support`, included: true },
-      { text: 'Presentation generation', included: hasPresentation },
-      { text: 'Video generation', included: hasVideo },
+      {
+        text: localize('com_ui_paywall_tokens_per_month', { tokens: tokens.toLocaleString() }),
+        included: true,
+      },
+      { text: localize('com_ui_paywall_access_all_models'), included: true },
+      { text: localize('com_ui_paywall_support', { level: support }), included: true },
+      { text: localize('com_ui_paywall_presentation_generation'), included: hasPresentation },
+      { text: localize('com_ui_paywall_video_generation'), included: hasVideo },
     ];
   };
 
@@ -38,9 +42,9 @@ const Paywall: React.FC = () => {
     try {
       // The mutation will handle the redirect
       await checkoutMutation.mutateAsync({ planId });
-    } catch (error) {
+    } catch (_error) {
       showToast({
-        message: 'Failed to create checkout session. Please try again.',
+        message: localize('com_ui_paywall_error_checkout'),
         status: 'error',
       });
     }
@@ -51,7 +55,7 @@ const Paywall: React.FC = () => {
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
           <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
-          <p className="text-gray-600 dark:text-gray-400">Loading plans...</p>
+          <p className="text-gray-600 dark:text-gray-400">{localize('com_ui_paywall_loading')}</p>
         </div>
       </div>
     );
@@ -65,10 +69,10 @@ const Paywall: React.FC = () => {
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-            Choose Your Plan
+            {localize('com_ui_paywall_title')}
           </h2>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-            Select the plan that best fits your needs
+            {localize('com_ui_paywall_subtitle')}
           </p>
         </div>
 
@@ -81,29 +85,29 @@ const Paywall: React.FC = () => {
               <div
                 key={plan._id}
                 className={`relative rounded-2xl border ${
-                  isPopular
-                    ? 'border-blue-500 shadow-xl'
-                    : 'border-gray-200 dark:border-gray-700'
-                } bg-white dark:bg-gray-800 p-8`}
+                  isPopular ? 'border-blue-500 shadow-xl' : 'border-gray-200 dark:border-gray-700'
+                } bg-white p-8 dark:bg-gray-800`}
               >
                 {isPopular && (
                   <div className="absolute -top-4 left-0 right-0 mx-auto w-32 rounded-full bg-blue-500 px-3 py-1 text-center text-sm font-medium text-white">
-                    Most Popular
+                    {localize('com_ui_paywall_most_popular')}
                   </div>
                 )}
 
                 <div className="mb-8">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {plan.name}
-                  </h3>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{plan.name}</h3>
                   <p className="mt-2 text-gray-600 dark:text-gray-400">
                     {plan.metadata?.description || plan.name}
                   </p>
                   <p className="mt-4">
                     <span className="text-4xl font-bold text-gray-900 dark:text-white">
-                      ₽{(plan.price / 100).toFixed(0)}
+                      {/* Currency symbol is not translatable */}
+                      {'₽'}
+                      {(plan.price / 100).toFixed(0)}
                     </span>
-                    <span className="text-gray-600 dark:text-gray-400">/{plan.interval}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      /{localize(`com_ui_paywall_per_${plan.interval}`)}
+                    </span>
                   </p>
                 </div>
 
@@ -137,7 +141,9 @@ const Paywall: React.FC = () => {
                       : 'bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100'
                   }`}
                 >
-                  {checkoutMutation.isLoading ? 'Processing...' : 'Get Started'}
+                  {checkoutMutation.isLoading
+                    ? localize('com_ui_paywall_processing')
+                    : localize('com_ui_paywall_get_started')}
                 </Button>
               </div>
             );
@@ -146,7 +152,7 @@ const Paywall: React.FC = () => {
 
         <div className="mt-12 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            All plans include a 7-day free trial. Cancel anytime.
+            {localize('com_ui_paywall_trial_info')}
           </p>
         </div>
       </div>
