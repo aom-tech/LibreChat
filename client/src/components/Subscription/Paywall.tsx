@@ -106,7 +106,14 @@ const Paywall: React.FC = () => {
                       {(plan.price / 100).toFixed(0)}
                     </span>
                     <span className="text-gray-600 dark:text-gray-400">
-                      /{localize(`com_ui_paywall_per_${plan.interval}`)}
+                      /
+                      {plan.interval === 'monthly'
+                        ? localize('com_ui_paywall_per_month')
+                        : plan.interval === 'yearly'
+                          ? localize('com_ui_paywall_per_year')
+                          : plan.interval === 'weekly'
+                            ? localize('com_ui_paywall_per_week')
+                            : localize('com_ui_paywall_per_day')}
                     </span>
                   </p>
                 </div>

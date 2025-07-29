@@ -10,7 +10,7 @@ export interface BillingPlan {
   _id: string;
   name: string;
   price: number; // in kopecks
-  interval: 'day' | 'week' | 'month' | 'year';
+  interval: 'monthly' | 'yearly' | 'weekly' | 'daily';
   active: boolean;
   metadata: {
     tokens?: number;
@@ -21,13 +21,26 @@ export interface BillingPlan {
     };
     description?: string;
   };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface BillingSubscription {
-  status: 'active' | 'trialing' | 'canceled' | 'expired';
-  expiresAt?: string;
-  planId?: string;
+  _id: string;
+  userId: string;
+  planId: string;
   plan?: BillingPlan;
+  status: 'active' | 'trialing' | 'canceled' | 'expired';
+  startedAt: string;
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BillingSubscriptionResponse {
+  subscription: BillingSubscription;
+  success: boolean;
+  isSubscriptionActive: boolean;
 }
 
 // Legacy types for compatibility
@@ -112,7 +125,8 @@ export const useGetSubscriptionPlans = () => {
     queryFn: async () => {
       const response = await billingFetch('/plans');
       console.log('[Billing API] Plans response:', response);
-      return response.activePlans;
+      // API returns array of plans directly or in activePlans property
+      return response.activePlans || response;
     },
   });
 };
@@ -123,7 +137,8 @@ export const useGetSubscriptionStatus = () => {
     queryKey: [QueryKeys.user, 'subscription'],
     queryFn: async () => {
       try {
-        const billingSubscription: BillingSubscription = await billingFetch('/subscription');
+        const response: BillingSubscriptionResponse = await billingFetch('/subscription');
+        const billingSubscription = response.subscription;
         console.log('[Billing API] Subscription response:', billingSubscription);
 
         // Convert billing subscription to legacy format
