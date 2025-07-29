@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 // Use local QueryKeys since we're having build issues
 const QueryKeys = {
   user: 'user',
@@ -71,32 +72,37 @@ const getBillingApiUrl = () => {
   return import.meta.env.VITE_BILLING_API_URL;
 };
 
-// Helper to make requests to billing service
-const billingFetch = async (path: string, options?: RequestInit) => {
+// Helper to make requests to billing service using axios
+const billingFetch = async (
+  path: string,
+  options?: {
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    data?: any;
+  },
+) => {
   const baseUrl = getBillingApiUrl();
   const url = `${baseUrl}/api/v1/billing${path}`;
 
   console.log('[Billing API] Request:', url);
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      // Include auth token if available
-      ...(localStorage.getItem('token') && {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      }),
-      ...options?.headers,
-    },
-  });
+  try {
+    const response = await axios({
+      url,
+      method: options?.method || 'GET',
+      data: options?.data,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    console.error('[Billing API] Error:', response.status, errorData);
-    throw new Error(errorData.message || `Billing API error: ${response.statusText}`);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('[Billing API] Error:', error.response?.status, error.response?.data);
+      throw new Error(error.response?.data?.message || `Billing API error: ${error.message}`);
+    }
+    throw error;
   }
-
-  return response.json();
 };
 
 // Get subscription plans
