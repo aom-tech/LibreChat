@@ -5,7 +5,7 @@ import { ThemeContext, Spinner, Button } from '@librechat/client';
 import { useNavigate, useOutletContext, useLocation } from 'react-router-dom';
 import { useRegisterUserMutation } from 'librechat-data-provider/react-query';
 import type { TRegisterUser, TError } from 'librechat-data-provider';
-import { useLocalize, TranslationKeys, ThemeContext } from '~/hooks';
+import { useLocalize, TranslationKeys } from '~/hooks';
 import { useYandexMetrica } from '~/hooks/useYandexMetrica';
 import type { TLoginLayoutContext } from '~/common';
 import { ErrorMessage } from './ErrorMessage';

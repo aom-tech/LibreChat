@@ -5,9 +5,8 @@ import { useNewConvo, useLocalize } from '~/hooks';
 import { useYandexMetrica } from '~/hooks/useYandexMetrica';
 import { useListAgentsQuery, useGetStartupConfig } from '~/data-provider';
 import { processAgentOption } from '~/utils';
-import { Button } from '~/components/ui';
+import { Button, Spinner } from '@librechat/client';
 import useAuthRedirect from './useAuthRedirect';
-import { Spinner } from '~/components/svg';
 
 export default function AgentSelectRoute(): JSX.Element | null {
   const navigate = useNavigate();
