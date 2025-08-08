@@ -11,14 +11,6 @@ import request from './request';
 import * as s from './schemas';
 import * as r from './roles';
 
-export function abortRequestWithMessage(
-  endpoint: string,
-  abortKey: string,
-  message: string,
-): Promise<void> {
-  return request.post(endpoints.abortRequest(endpoint), { arg: { abortKey, message } });
-}
-
 export function revokeUserKey(name: string): Promise<unknown> {
   return request.delete(endpoints.revokeUserKey(name));
 }
@@ -148,6 +140,28 @@ export const getAvailablePlugins = (): Promise<s.TPlugin[]> => {
 export const updateUserPlugins = (payload: t.TUpdateUserPlugins) => {
   return request.post(endpoints.userPlugins(), payload);
 };
+
+export const reinitializeMCPServer = (serverName: string) => {
+  return request.post(endpoints.mcpReinitialize(serverName));
+};
+
+export const getMCPConnectionStatus = (): Promise<q.MCPConnectionStatusResponse> => {
+  return request.get(endpoints.mcpConnectionStatus());
+};
+
+export const getMCPServerConnectionStatus = (
+  serverName: string,
+): Promise<q.MCPServerConnectionStatusResponse> => {
+  return request.get(endpoints.mcpServerConnectionStatus(serverName));
+};
+
+export const getMCPAuthValues = (serverName: string): Promise<q.MCPAuthValuesResponse> => {
+  return request.get(endpoints.mcpAuthValues(serverName));
+};
+
+export function cancelMCPOAuth(serverName: string): Promise<m.CancelMCPOAuthResponse> {
+  return request.post(endpoints.cancelMCPOAuth(serverName), {});
+}
 
 /* Config */
 
@@ -324,6 +338,10 @@ export const getToolCalls = (params: q.GetToolCallParams): Promise<q.ToolCallRes
 
 export const getFiles = (): Promise<f.TFile[]> => {
   return request.get(endpoints.files());
+};
+
+export const getAgentFiles = (agentId: string): Promise<f.TFile[]> => {
+  return request.get(endpoints.agentFiles(agentId));
 };
 
 export const getFileConfig = (): Promise<f.FileConfig> => {
