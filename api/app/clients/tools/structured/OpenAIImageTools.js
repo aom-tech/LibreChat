@@ -3,10 +3,10 @@ const axios = require('axios');
 const { v4 } = require('uuid');
 const OpenAI = require('openai');
 const FormData = require('form-data');
+const { ProxyAgent } = require('undici');
 const { tool } = require('@langchain/core/tools');
 const { logAxiosError } = require('@librechat/api');
 const { logger } = require('@librechat/data-schemas');
-const { HttpsProxyAgent } = require('https-proxy-agent');
 const { ContentTypes, EImageOutputType } = require('librechat-data-provider');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { extractBaseURL } = require('~/utils');
@@ -107,6 +107,12 @@ const getImageEditPromptDescription = () => {
   return process.env.IMAGE_EDIT_OAI_PROMPT_DESCRIPTION || DEFAULT_IMAGE_EDIT_PROMPT_DESCRIPTION;
 };
 
+function createAbortHandler() {
+  return function () {
+    logger.debug('[ImageGenOAI] Image generation aborted');
+  };
+}
+
 /**
  * Creates OpenAI Image tools (generation and editing)
  * @param {Object} fields - Configuration fields
@@ -183,7 +189,10 @@ function createOpenAIImageTools(fields = {}) {
       }
       const clientConfig = { ...closureConfig };
       if (process.env.PROXY) {
-        clientConfig.httpAgent = new HttpsProxyAgent(process.env.PROXY);
+        const proxyAgent = new ProxyAgent(process.env.PROXY);
+        clientConfig.fetchOptions = {
+          dispatcher: proxyAgent,
+        };
       }
 
       /** @type {OpenAI} */
@@ -201,10 +210,18 @@ function createOpenAIImageTools(fields = {}) {
       }
 
       let resp;
+      /** @type {AbortSignal} */
+      let derivedSignal = null;
+      /** @type {() => void} */
+      let abortHandler = null;
+
       try {
-        const derivedSignal = runnableConfig?.signal
-          ? AbortSignal.any([runnableConfig.signal])
-          : undefined;
+        if (runnableConfig?.signal) {
+          derivedSignal = AbortSignal.any([runnableConfig.signal]);
+          abortHandler = createAbortHandler();
+          derivedSignal.addEventListener('abort', abortHandler, { once: true });
+        }
+
         resp = await openai.images.generate(
           {
             model: 'gpt-image-1',
@@ -228,6 +245,10 @@ function createOpenAIImageTools(fields = {}) {
         logAxiosError({ error, message });
         return returnValue(`Something went wrong when trying to generate the image. The OpenAI API may be unavailable:
 Error Message: ${error.message}`);
+      } finally {
+        if (abortHandler && derivedSignal) {
+          derivedSignal.removeEventListener('abort', abortHandler);
+        }
       }
 
       if (!resp) {
@@ -317,7 +338,10 @@ Error Message: ${error.message}`);
 
       const clientConfig = { ...closureConfig };
       if (process.env.PROXY) {
-        clientConfig.httpAgent = new HttpsProxyAgent(process.env.PROXY);
+        const proxyAgent = new ProxyAgent(process.env.PROXY);
+        clientConfig.fetchOptions = {
+          dispatcher: proxyAgent,
+        };
       }
 
       const formData = new FormData();
@@ -409,10 +433,17 @@ Error Message: ${error.message}`);
         headers['Authorization'] = `Bearer ${apiKey}`;
       }
 
+      /** @type {AbortSignal} */
+      let derivedSignal = null;
+      /** @type {() => void} */
+      let abortHandler = null;
+
       try {
-        const derivedSignal = runnableConfig?.signal
-          ? AbortSignal.any([runnableConfig.signal])
-          : undefined;
+        if (runnableConfig?.signal) {
+          derivedSignal = AbortSignal.any([runnableConfig.signal]);
+          abortHandler = createAbortHandler();
+          derivedSignal.addEventListener('abort', abortHandler, { once: true });
+        }
 
         /** @type {import('axios').AxiosRequestConfig} */
         const axiosConfig = {
@@ -421,6 +452,19 @@ Error Message: ${error.message}`);
           signal: derivedSignal,
           baseURL,
         };
+
+        if (process.env.PROXY) {
+          try {
+            const url = new URL(process.env.PROXY);
+            axiosConfig.proxy = {
+              host: url.hostname.replace(/^\[|\]$/g, ''),
+              port: url.port ? parseInt(url.port, 10) : undefined,
+              protocol: url.protocol.replace(':', ''),
+            };
+          } catch (error) {
+            logger.error('Error parsing proxy URL:', error);
+          }
+        }
 
         if (process.env.IMAGE_GEN_OAI_AZURE_API_VERSION && process.env.IMAGE_GEN_OAI_BASEURL) {
           axiosConfig.params = {
@@ -468,6 +512,10 @@ Error Message: ${error.message}`);
         logAxiosError({ error, message });
         return returnValue(`Something went wrong when trying to edit the image. The OpenAI API may be unavailable:
 Error Message: ${error.message || 'Unknown error'}`);
+      } finally {
+        if (abortHandler && derivedSignal) {
+          derivedSignal.removeEventListener('abort', abortHandler);
+        }
       }
     },
     {
