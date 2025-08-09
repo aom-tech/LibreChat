@@ -10,30 +10,9 @@ import { ScreenshotProvider, useApiErrorBoundary } from './hooks';
 import { getThemeFromEnv } from './utils/getThemeFromEnv';
 import { LiveAnnouncer } from '~/a11y';
 import { TourProvider } from '@reactour/tour';
+import { coreSteps } from './components/Tour';
 import { router } from './routes';
 import Scripts from './components/CourseGPT/Scripts/Scripts';
-
-const steps = [
-  {
-    selector: '[data-tour="sidebar-toggle"]',
-    content:
-      'Click here to toggle the sidebar and access your chat history, settings, and other features.',
-  },
-  {
-    selector: '[data-tour="model-selector"]',
-    content:
-      'Select different AI models or agents for your conversations. Each has unique capabilities.',
-  },
-  {
-    selector: '[data-tour="chat-input"]',
-    content:
-      'Type your messages here. You can ask questions, request help with tasks, or have conversations.',
-  },
-  {
-    selector: '[data-tour="send-button"]',
-    content: 'Click here or press Enter to send your message to the AI.',
-  },
-];
 
 const App = () => {
   const { setError } = useApiErrorBoundary();
@@ -66,7 +45,7 @@ const App = () => {
                 2. Apply custom theme colors if envTheme is provided
                 3. Otherwise use stored theme preferences from localStorage
                 4. Fall back to default theme colors if nothing is stored */}
-            <TourProvider steps={steps}>
+            <TourProvider steps={coreSteps}>
               <RadixToast.Provider>
                 <ToastProvider>
                   <DndProvider backend={HTML5Backend}>

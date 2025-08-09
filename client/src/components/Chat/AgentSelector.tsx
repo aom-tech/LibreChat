@@ -65,7 +65,7 @@ export default function AgentSelector({ onAgentSelect }: AgentSelectorProps) {
   }
 
   return (
-    <div className="mb-8 w-full max-w-4xl">
+    <div className="mb-8 w-full max-w-4xl" data-tour="agent-selector">
       <div className="mb-6 grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-4">
         {agents.length > 0 ? (
           agents.map((agent) => (
