@@ -14,7 +14,7 @@ export default function HeaderNewChat() {
 
   const clickHandler: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     if (e.button === 0 && (e.ctrlKey || e.metaKey)) {
-      window.open('/agents', '_blank');
+      window.open('/c/new', '_blank');
       return;
     }
     queryClient.setQueryData<TMessage[]>(
@@ -22,7 +22,7 @@ export default function HeaderNewChat() {
       [],
     );
     queryClient.invalidateQueries([QueryKeys.messages]);
-    navigate('/agents');
+    navigate('/c/new');
   };
 
   return (

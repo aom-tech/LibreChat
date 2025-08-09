@@ -1,7 +1,7 @@
 import React from 'react';
 import { HelpCircle } from 'lucide-react';
 // import { useTourSteps } from './useTourSteps';
-import { Button } from '~/components/ui';
+import { Button } from '@librechat/client';
 import { useTour } from '@reactour/tour';
 
 const TOUR_BUTTON_TEXT = 'Start Tour';

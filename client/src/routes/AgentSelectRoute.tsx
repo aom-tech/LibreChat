@@ -6,6 +6,7 @@ import { useListAgentsQuery, useGetStartupConfig } from '~/data-provider';
 import { processAgentOption } from '~/utils';
 import { Button, Spinner } from '@librechat/client';
 import useAuthRedirect from './useAuthRedirect';
+import { TourButton } from '~/components/Tour';
 
 export default function AgentSelectRoute(): JSX.Element | null {
   const navigate = useNavigate();
