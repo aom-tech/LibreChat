@@ -662,6 +662,7 @@ class BaseClient {
           endpoint: this.options.endpoint,
           model: this.modelOptions?.model ?? this.model,
           endpointTokenConfig: this.options.endpointTokenConfig,
+          agentId: this.options.agent?.id,
         },
       });
     }

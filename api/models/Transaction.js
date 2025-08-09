@@ -1,6 +1,6 @@
 const { logger } = require('@librechat/data-schemas');
 const { getBalanceConfig } = require('~/server/services/Config');
-const { getMultiplier, getCacheMultiplier } = require('./tx');
+const { getMultiplier, getCacheMultiplier, getCreditTypeByAgentId } = require('./tx');
 const { Transaction, Balance } = require('~/db/models');
 
 const cancelRate = 1.15;
@@ -14,10 +14,11 @@ const cancelRate = 1.15;
  * @param {string|mongoose.Types.ObjectId} params.user - The user ID.
  * @param {number} params.incrementValue - The value to increment the balance by (can be negative).
  * @param {import('mongoose').UpdateQuery<import('@librechat/data-schemas').IBalance>['$set']} [params.setValues] - Optional additional fields to set.
+ * @param {'text' | 'image' | 'presentation' | 'video' | null} [params.creditType] - The credit type to update.
  * @returns {Promise<Object>} Returns the updated balance document (lean).
  * @throws {Error} Throws an error if the update fails after multiple retries.
  */
-const updateBalance = async ({ user, incrementValue, setValues }) => {
+const updateBalance = async ({ user, incrementValue, setValues, creditType = null }) => {
   let maxRetries = 10; // Number of times to retry on conflict
   let delay = 50; // Initial retry delay in ms
   let lastError = null;
@@ -27,30 +28,64 @@ const updateBalance = async ({ user, incrementValue, setValues }) => {
     try {
       // 1. Read the current document state
       currentBalanceDoc = await Balance.findOne({ user }).lean();
-      const currentCredits = currentBalanceDoc ? currentBalanceDoc.tokenCredits : 0;
+      
+      let currentCredits;
+      let newCredits;
+      let updatePayload;
 
-      // 2. Calculate the desired new state
-      const potentialNewCredits = currentCredits + incrementValue;
-      const newCredits = Math.max(0, potentialNewCredits); // Ensure balance doesn't go below zero
-
-      // 3. Prepare the update payload
-      const updatePayload = {
-        $set: {
-          tokenCredits: newCredits,
-          ...(setValues || {}), // Merge other values to set
-        },
-      };
+      if (creditType) {
+        // Handle specific credit type (including 'text')
+        const currentAvailableCredits = currentBalanceDoc?.availableCredits || {
+          text: 0,
+          image: 0,
+          presentation: 0,
+          video: 0,
+        };
+        currentCredits = currentAvailableCredits[creditType] || 0;
+        const potentialNewCredits = currentCredits + incrementValue;
+        newCredits = Math.max(0, potentialNewCredits);
+        
+        const updatedAvailableCredits = {
+          ...currentAvailableCredits,
+          [creditType]: newCredits,
+        };
+        
+        updatePayload = {
+          $set: {
+            availableCredits: updatedAvailableCredits,
+            ...(setValues || {}),
+          },
+        };
+      } else {
+        // Handle legacy tokenCredits (when no creditType is specified)
+        currentCredits = currentBalanceDoc ? currentBalanceDoc.tokenCredits : 0;
+        const potentialNewCredits = currentCredits + incrementValue;
+        newCredits = Math.max(0, potentialNewCredits);
+        
+        updatePayload = {
+          $set: {
+            tokenCredits: newCredits,
+            ...(setValues || {}),
+          },
+        };
+      }
 
       // 4. Attempt the conditional update or upsert
       let updatedBalance = null;
       if (currentBalanceDoc) {
         // --- Document Exists: Perform Conditional Update ---
-        // Try to update only if the tokenCredits match the value we read (currentCredits)
+        // Build the query based on credit type
+        let query = { user: user };
+        if (creditType) {
+          // For specific credit types (including 'text'), we need to check the nested field
+          query[`availableCredits.${creditType}`] = currentCredits;
+        } else {
+          // For legacy tokenCredits
+          query.tokenCredits = currentCredits;
+        }
+        
         updatedBalance = await Balance.findOneAndUpdate(
-          {
-            user: user,
-            tokenCredits: currentCredits, // Optimistic lock: condition based on the read value
-          },
+          query,
           updatePayload,
           {
             new: true, // Return the modified document
@@ -206,15 +241,23 @@ async function createTransaction(txData) {
   }
 
   let incrementValue = transaction.tokenValue;
+  const creditType = getCreditTypeByAgentId(txData.agentId);
+  
   const balanceResponse = await updateBalance({
     user: transaction.user,
     incrementValue,
+    creditType,
   });
+
+  const responseBalance = creditType 
+    ? balanceResponse.availableCredits?.[creditType] || 0
+    : balanceResponse.tokenCredits;
 
   return {
     rate: transaction.rate,
     user: transaction.user.toString(),
-    balance: balanceResponse.tokenCredits,
+    balance: responseBalance,
+    creditType,
     [transaction.tokenType]: incrementValue,
   };
 }
@@ -239,16 +282,23 @@ async function createStructuredTransaction(txData) {
   }
 
   let incrementValue = transaction.tokenValue;
+  const creditType = getCreditTypeByAgentId(txData.agentId);
 
   const balanceResponse = await updateBalance({
     user: transaction.user,
     incrementValue,
+    creditType,
   });
+
+  const responseBalance = creditType 
+    ? balanceResponse.availableCredits?.[creditType] || 0
+    : balanceResponse.tokenCredits;
 
   return {
     rate: transaction.rate,
     user: transaction.user.toString(),
-    balance: balanceResponse.tokenCredits,
+    balance: responseBalance,
+    creditType,
     [transaction.tokenType]: incrementValue,
   };
 }

@@ -13,6 +13,24 @@ const balanceSchema = new Schema<t.IBalance>({
     type: Number,
     default: 0,
   },
+  availableCredits: {
+    text: {
+      type: Number,
+      default: 0,
+    },
+    image: {
+      type: Number,
+      default: 0,
+    },
+    presentation: {
+      type: Number,
+      default: 0,
+    },
+    video: {
+      type: Number,
+      default: 0,
+    },
+  },
   // Automatic refill settings
   autoRefillEnabled: {
     type: Boolean,

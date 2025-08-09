@@ -3,6 +3,12 @@ import { Document, Types } from 'mongoose';
 export interface IBalance extends Document {
   user: Types.ObjectId;
   tokenCredits: number;
+  availableCredits: {
+    text: number;
+    image: number;
+    presentation: number;
+    video: number;
+  };
   // Automatic refill settings
   autoRefillEnabled: boolean;
   refillIntervalValue: number;

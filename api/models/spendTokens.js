@@ -12,6 +12,7 @@ const { createTransaction, createStructuredTransaction } = require('./Transactio
  * @param {String} txData.context - The context in which the transaction is made.
  * @param {EndpointTokenConfig} [txData.endpointTokenConfig] - The current endpoint token config.
  * @param {String} [txData.valueKey] - The value key (optional).
+ * @param {String} [txData.agentId] - The agent ID for determining credit type (optional).
  * @param {Object} tokenUsage - The number of tokens used.
  * @param {Number} tokenUsage.promptTokens - The number of prompt tokens used.
  * @param {Number} tokenUsage.completionTokens - The number of completion tokens used.
@@ -76,6 +77,7 @@ const spendTokens = async (txData, tokenUsage) => {
  * @param {String} txData.context - The context in which the transaction is made.
  * @param {EndpointTokenConfig} [txData.endpointTokenConfig] - The current endpoint token config.
  * @param {String} [txData.valueKey] - The value key (optional).
+ * @param {String} [txData.agentId] - The agent ID for determining credit type (optional).
  * @param {Object} tokenUsage - The number of tokens used.
  * @param {Object} tokenUsage.promptTokens - The number of prompt tokens used.
  * @param {Number} tokenUsage.promptTokens.input - The number of input tokens.

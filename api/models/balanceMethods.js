@@ -2,7 +2,7 @@ const { logger } = require('@librechat/data-schemas');
 const { ViolationTypes } = require('librechat-data-provider');
 const { createAutoRefillTransaction } = require('./Transaction');
 const { logViolation } = require('~/cache');
-const { getMultiplier } = require('./tx');
+const { getMultiplier, getCreditTypeByAgentId } = require('./tx');
 const { Balance } = require('~/db/models');
 
 function isInvalidDate(date) {
@@ -21,6 +21,7 @@ const checkBalanceRecord = async function ({
   tokenType,
   amount,
   endpointTokenConfig,
+  agentId,
 }) {
   const multiplier = getMultiplier({ valueKey, tokenType, model, endpoint, endpointTokenConfig });
   const tokenCost = amount * multiplier;
@@ -33,9 +34,21 @@ const checkBalanceRecord = async function ({
       canSpend: false,
       balance: 0,
       tokenCost,
+      creditType: 'text',
     };
   }
-  let balance = record.tokenCredits;
+  
+  // Determine which credit type to use
+  const creditType = getCreditTypeByAgentId(agentId);
+  let balance;
+  
+  if (agentId) {
+    // Use specific credit type for agents (including 'text')
+    balance = record.availableCredits?.[creditType] || 0;
+  } else {
+    // Use legacy tokenCredits for non-agent requests
+    balance = record.tokenCredits;
+  }
 
   logger.debug('[Balance.check] Initial state', {
     user,
@@ -46,6 +59,8 @@ const checkBalanceRecord = async function ({
     amount,
     balance,
     multiplier,
+    creditType,
+    agentId,
     endpointTokenConfig: !!endpointTokenConfig,
   });
 
@@ -73,8 +88,8 @@ const checkBalanceRecord = async function ({
     }
   }
 
-  logger.debug('[Balance.check] Token cost', { tokenCost });
-  return { canSpend: balance >= tokenCost, balance, tokenCost };
+  logger.debug('[Balance.check] Token cost', { tokenCost, creditType });
+  return { canSpend: balance >= tokenCost, balance, tokenCost, creditType };
 };
 
 /**
@@ -126,11 +141,12 @@ const addIntervalToDate = (date, value, unit) => {
  * @param {number} params.txData.amount - The amount of tokens.
  * @param {string} params.txData.model - The model name or identifier.
  * @param {string} [params.txData.endpointTokenConfig] - The token configuration for the endpoint.
+ * @param {string} [params.txData.agentId] - The agent ID for determining credit type.
  * @returns {Promise<boolean>} Throws error if the user cannot spend the amount.
  * @throws {Error} Throws an error if there's an issue with the balance check.
  */
 const checkBalance = async ({ req, res, txData }) => {
-  const { canSpend, balance, tokenCost } = await checkBalanceRecord(txData);
+  const { canSpend, balance, tokenCost, creditType } = await checkBalanceRecord(txData);
   if (canSpend) {
     return true;
   }

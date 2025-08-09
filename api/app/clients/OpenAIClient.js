@@ -1036,6 +1036,7 @@ ${convo}
         conversationId: this.conversationId,
         user: this.user ?? this.options.req.user?.id,
         endpointTokenConfig: this.options.endpointTokenConfig,
+        agentId: this.options.agent?.id,
       },
       { promptTokens, completionTokens },
     );
@@ -1053,6 +1054,7 @@ ${convo}
           conversationId: this.conversationId,
           user: this.user ?? this.options.req.user?.id,
           endpointTokenConfig: this.options.endpointTokenConfig,
+          agentId: this.options.agent?.id,
         },
         { completionTokens: usage.reasoning_tokens },
       );

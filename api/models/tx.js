@@ -1,6 +1,27 @@
 const { matchModelName } = require('../utils/tokens');
 const defaultRate = 6;
 
+// Agent IDs to credit type mapping
+const AGENT_CREDIT_TYPES = {
+  'agent_-2vJDJqv7zoHlNeu5VX6f': 'image',
+  'agent_srl6222FWjmA0XxeEGgGQ': 'image',
+  'agent_b1rpKFVSmmevC7A2hkfLz': 'presentation',
+  'agent_p_s8V9FmVfxgHGVIFjOne': 'video',
+};
+
+/**
+ * Determines the credit type based on the agent ID
+ * @param {string} agentId - The agent ID
+ * @returns {'text' | 'image' | 'presentation' | 'video'} The credit type
+ */
+const getCreditTypeByAgentId = (agentId) => {
+  if (!agentId) {
+    return 'text';
+  }
+  
+  return AGENT_CREDIT_TYPES[agentId] || 'text';
+};
+
 /**
  * AWS Bedrock pricing
  * source: https://aws.amazon.com/bedrock/pricing/
@@ -324,4 +345,6 @@ module.exports = {
   getCacheMultiplier,
   defaultRate,
   cacheTokenValues,
+  getCreditTypeByAgentId,
+  AGENT_CREDIT_TYPES,
 };
