@@ -5,7 +5,7 @@ import { getConfigDefaults, PermissionTypes, Permissions } from 'librechat-data-
 import type { ContextType } from '~/common';
 import ModelSelector from './Menus/Endpoints/ModelSelector';
 import { PresetsMenu, HeaderNewChat, OpenSidebar } from './Menus';
-import { TourButton } from '~/components/Tour';
+import { TourButton, useAutoTour } from '~/components/Tour';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
 import BookmarkMenu from './Menus/BookmarkMenu';
@@ -22,6 +22,8 @@ export default function Header() {
     () => startupConfig?.interface ?? defaultInterface,
     [startupConfig],
   );
+
+  useAutoTour();
 
   const hasAccessToBookmarks = useHasAccess({
     permissionType: PermissionTypes.BOOKMARKS,
