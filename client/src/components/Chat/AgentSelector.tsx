@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { EModelEndpoint } from 'librechat-data-provider';
 import { useNewConvo, useLocalize } from '~/hooks';
-import { Button } from '~/components/ui';
+import { Button } from '@librechat/client';
 
 interface AgentSelectorProps {
   onAgentSelect?: (agentId: string) => void;

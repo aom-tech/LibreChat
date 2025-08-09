@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useMediaQuery } from '@librechat/client';
 import { useOutletContext } from 'react-router-dom';
 import { getConfigDefaults, PermissionTypes, Permissions } from 'librechat-data-provider';
 import type { ContextType } from '~/common';
@@ -7,10 +8,10 @@ import { PresetsMenu, HeaderNewChat, OpenSidebar } from './Menus';
 import { TourButton } from '~/components/Tour';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
-import { useMediaQuery, useHasAccess } from '~/hooks';
 import BookmarkMenu from './Menus/BookmarkMenu';
 import { TemporaryChat } from './TemporaryChat';
 import AddMultiConvo from './AddMultiConvo';
+import { useHasAccess } from '~/hooks';
 
 const defaultInterface = getConfigDefaults().interface;
 
