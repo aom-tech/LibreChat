@@ -30,7 +30,7 @@ export default function NewChat({
   const clickHandler: React.MouseEventHandler<HTMLButtonElement> = useCallback(
     (e) => {
       if (e.button === 0 && (e.ctrlKey || e.metaKey)) {
-        window.open('/agents', '_blank');
+        window.open('/c/new', '_blank');
         return;
       }
       queryClient.setQueryData<TMessage[]>(
@@ -38,7 +38,7 @@ export default function NewChat({
         [],
       );
       queryClient.invalidateQueries([QueryKeys.messages]);
-      navigate('/agents', { state: { focusChat: true } });
+      navigate('/c/new', { state: { focusChat: true } });
       if (isSmallScreen) {
         toggleNav();
       }
@@ -56,6 +56,7 @@ export default function NewChat({
               size="icon"
               variant="outline"
               data-testid="close-sidebar-button"
+              data-tour="sidebar-toggle"
               aria-label={localize('com_nav_close_sidebar')}
               className="rounded-full border-none bg-transparent p-2 hover:bg-surface-hover md:rounded-xl"
               onClick={toggleNav}

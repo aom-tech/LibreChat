@@ -98,10 +98,15 @@ function ModelSelectorContent() {
   );
 }
 
-export default function ModelSelector({ startupConfig }: ModelSelectorProps) {
+export default function ModelSelector({
+  startupConfig,
+  'data-tour': dataTour,
+}: ModelSelectorProps & { 'data-tour'?: string }) {
   return (
     <ModelSelectorProvider startupConfig={startupConfig}>
-      <ModelSelectorContent />
+      <div data-tour={dataTour}>
+        <ModelSelectorContent />
+      </div>
     </ModelSelectorProvider>
   );
 }

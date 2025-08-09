@@ -273,6 +273,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                   id={mainTextareaId}
                   tabIndex={0}
                   data-testid="text-input"
+                  data-tour="chat-input"
                   rows={1}
                   onFocus={() => {
                     handleFocusOrClick();

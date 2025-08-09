@@ -1,7 +1,10 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { EModelEndpoint } from 'librechat-data-provider';
 import { useNewConvo, useLocalize } from '~/hooks';
-import { Button } from '@librechat/client';
+import { useListAgentsQuery, useGetStartupConfig } from '~/data-provider';
+import { processAgentOption } from '~/utils';
+import { Button, Spinner } from '@librechat/client';
+import { useChatContext } from '~/Providers';
 
 interface AgentSelectorProps {
   onAgentSelect?: (agentId: string) => void;
@@ -10,43 +13,26 @@ interface AgentSelectorProps {
 export default function AgentSelector({ onAgentSelect }: AgentSelectorProps) {
   const localize = useLocalize();
   const { newConversation } = useNewConvo();
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const { conversation } = useChatContext();
 
-  // Static list of predefined agents
-  const availableAgents = useMemo(
-    () => [
-      {
-        id: 'agent_bNZpHfG2lSdsrDinene0M',
-        name: 'Маркетолог',
-        description: 'Специалист по маркетингу, рекламе и продвижению продуктов',
-        icon: '📊',
-      },
-      {
-        id: 'slide-designer',
-        name: 'СлайдДизайнер',
-        description: 'Создание презентаций и дизайн слайдов',
-        icon: '🎨',
-      },
-      {
-        id: 'copywriter',
-        name: 'Текстовик',
-        description: 'Копирайтер и редактор текстового контента',
-        icon: '✍️',
-      },
-      {
-        id: 'producer',
-        name: 'Продюсер',
-        description: 'Управление проектами и координация команды',
-        icon: '🎬',
-      },
-    ],
-    [],
-  );
+  const { data: startupConfig } = useGetStartupConfig();
+  const { data: agents = [], isLoading } = useListAgentsQuery(undefined, {
+    select: (res) =>
+      res.data
+        .map((agent) =>
+          processAgentOption({
+            agent: {
+              ...agent,
+              name: agent.name || agent.id,
+            },
+            instanceProjectId: startupConfig?.instanceProjectId,
+          }),
+        )
+        .filter((agent) => agent.isGlobal || agent.icon),
+  });
 
   const handleAgentSelect = useCallback(
     (agentId: string) => {
-      setSelectedAgentId(agentId);
-
       // Create new conversation with the selected agent
       newConversation({
         template: {
@@ -70,53 +56,55 @@ export default function AgentSelector({ onAgentSelect }: AgentSelectorProps) {
     });
   }, [newConversation]);
 
-  // Always show static agents
-  if (!availableAgents.length) {
-    return null;
+  if (isLoading) {
+    return (
+      <div className="mt-8 flex w-full max-w-4xl items-center justify-center">
+        <Spinner className="text-text-primary" />
+      </div>
+    );
   }
 
   return (
-    <div className="mt-8 w-full max-w-4xl">
-      <div className="mb-6 text-center">
-        <h2 className="mb-2 text-lg font-semibold text-text-primary">
-          {localize('com_ui_choose_agent')}
-        </h2>
-        <p className="text-sm text-text-secondary">
-          {localize('com_ui_agent_selector_description')}
-        </p>
-      </div>
-      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3">
-        {availableAgents.map((agent) => {
-          return (
+    <div className="mb-8 w-full max-w-4xl" data-tour="agent-selector">
+      <div className="mb-6 grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-4">
+        {agents.length > 0 ? (
+          agents.map((agent) => (
             <button
               key={agent.id}
               onClick={() => handleAgentSelect(agent.id)}
-              className={`hover:border-border-strong relative flex flex-col items-center rounded-xl border p-4 transition-all duration-200 hover:bg-surface-secondary ${
-                selectedAgentId === agent.id
-                  ? 'border-border-strong bg-surface-secondary shadow-md'
-                  : 'border-border-medium bg-surface-primary'
-              } `}
+              className={`hover:border-border-strong group relative flex flex-col items-center rounded-lg border bg-surface-primary p-2 transition-all duration-300 hover:scale-105 hover:bg-surface-secondary hover:shadow-lg md:rounded-xl md:p-4 ${
+                conversation?.agent_id === agent.id
+                  ? 'border-2 border-blue-500'
+                  : 'border border-border-medium'
+              }`}
             >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface-tertiary">
-                <span className="text-2xl">{agent.icon}</span>
+              <div className="mb-1 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-surface-tertiary transition-transform duration-300 group-hover:scale-110 md:mb-3 md:h-12 md:w-12">
+                {agent.avatar?.filepath ? (
+                  <img
+                    src={agent.avatar.filepath}
+                    alt={agent.name || ''}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-lg md:text-2xl">🤖</span>
+                )}
               </div>
-              <h3 className="mb-1 line-clamp-2 text-center text-sm font-medium text-text-primary">
+              <h3 className="mb-1 text-center text-sm font-semibold text-text-primary md:mb-2 md:text-base">
                 {agent.name}
               </h3>
-              {agent.description && (
-                <p className="line-clamp-2 text-center text-xs text-text-secondary">
-                  {agent.description}
-                </p>
-              )}
+              <p className="text-center text-xs leading-relaxed text-text-secondary">
+                {agent.description || 'AI Assistant'}
+              </p>
             </button>
-          );
-        })}
+          ))
+        ) : (
+          <div className="col-span-full flex items-center justify-center py-8">
+            {/* eslint-disable-next-line i18next/no-literal-string */}
+            <p className="text-text-secondary">No agents available</p>
+          </div>
+        )}
       </div>
-      <div className="flex justify-center">
-        <Button onClick={handleNewChatWithoutAgent} variant="outline" className="px-6 py-2">
-          {localize('com_ui_start_new_chat')}
-        </Button>
-      </div>
+      {/* <div className="flex justify-center">или просто начните писать</div> */}
     </div>
   );
 }
