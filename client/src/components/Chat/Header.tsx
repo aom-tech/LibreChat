@@ -48,7 +48,7 @@ export default function Header() {
                 : 'pointer-events-none translate-x-[-100px] opacity-0'
             }`}
           >
-            <OpenSidebar setNavVisible={setNavVisible} data-tour="sidebar-toggle" />
+            <OpenSidebar setNavVisible={setNavVisible} />
             <HeaderNewChat />
           </div>
           <div

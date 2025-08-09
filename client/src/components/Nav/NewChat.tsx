@@ -56,6 +56,7 @@ export default function NewChat({
               size="icon"
               variant="outline"
               data-testid="close-sidebar-button"
+              data-tour="sidebar-toggle"
               aria-label={localize('com_nav_close_sidebar')}
               className="rounded-full border-none bg-transparent p-2 hover:bg-surface-hover md:rounded-xl"
               onClick={toggleNav}

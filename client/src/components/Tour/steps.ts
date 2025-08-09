@@ -1,17 +1,17 @@
 export const coreSteps = [
   {
-    target: 'body',
+    selector: '[data-tour="landing"]',
     placement: 'center',
-    disableBeacon: true,
     content: 'Привет! Это ваш ИИ‑ассистент. За 30 секунд — как быстро получать пользу.',
   },
   {
-    target: '[data-tour="sidebar"]',
+    selector: '[data-tour="sidebar"]',
     placement: 'right',
     content: 'Диалоги живут здесь. Создавайте новый, ищите, закрепляйте и очищайте историю.',
   },
   {
     selector: '[data-tour="sidebar-toggle"]',
+    placement: 'bottom',
     content:
       'Нажмите на кнопку, чтобы открыть/закрыть боковую панель и получить доступ к истории чатов, настройкам и другим функциям.',
   },
