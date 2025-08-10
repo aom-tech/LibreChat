@@ -49,28 +49,28 @@ jobs:
             SCRIPT_AMPLITUDE_API_KEY=${{ vars.SCRIPT_AMPLITUDE_API_KEY }}
             NODE_ENV=production
 
-      # - name: run docker compose
-      #   uses: appleboy/ssh-action@master
-      #   env:
-      #     TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     USERNAME: ${{ github.repository_owner }}
-      #   with:
-      #     host: ${{ secrets.DEPLOY_HOST }}
-      #     username: ${{ secrets.DEPLOY_USERNAME }}
-      #     key: ${{ secrets.DEPLOY_KEY }}
-      #     envs: TOKEN, USERNAME
-      #     script: |
-      #       cd ~/LibreChat
+      - name: run docker compose
+        uses: appleboy/ssh-action@master
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USERNAME: ${{ github.repository_owner }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          envs: TOKEN, USERNAME
+          script: |
+            cd ~/LibreChat
 
-      #       echo $TOKEN | docker login ghcr.io -u $USERNAME --password-stdin
+            echo $TOKEN | docker login ghcr.io -u $USERNAME --password-stdin
 
-      #       OLD_IMAGE=$(docker images -q g${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest 2>/dev/null || true)
+            OLD_IMAGE=$(docker images -q g${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest 2>/dev/null || true)
 
-      #       docker-compose pull api
-      #       docker-compose stop -t 1 api
-      #       docker-compose up -d api
+            docker-compose pull api
+            docker-compose stop -t 1 api
+            docker-compose up -d api
             
-      #       # Удалить только старый образ, если он существует
-      #       if [ ! -z "$OLD_IMAGE" ]; then
-      #         docker rmi $OLD_IMAGE 2>/dev/null || true
-      #       fi
+            # Удалить только старый образ, если он существует
+            if [ ! -z "$OLD_IMAGE" ]; then
+              docker rmi $OLD_IMAGE 2>/dev/null || true
+            fi

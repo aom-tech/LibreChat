@@ -54,8 +54,8 @@ jobs:
           USERNAME: ${{ github.repository_owner }}
         with:
           host: ${{ secrets.DEPLOY_HOST_STAGE }}
-          username: ${{ secrets.DEPLOY_USERNAME }}
-          key: ${{ secrets.DEPLOY_KEY }}
+          username: ${{ secrets.DEPLOY_USERNAME_STAGE }}
+          key: ${{ secrets.DEPLOY_KEY_STAGE }}
           envs: TOKEN, USERNAME
           script: |
             cd ~/LibreChat
@@ -64,6 +64,7 @@ jobs:
 
             OLD_IMAGE=$(docker images -q g${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:stage 2>/dev/null || true)
 
+            docker-compose build
             docker-compose pull api
             docker-compose stop -t 1 api
             docker-compose up -d api
