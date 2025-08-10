@@ -104,14 +104,15 @@ router.get('/video/*', async (req, res) => {
 
       // Set headers for partial content
       const filename = key.split('/').pop();
+      const contentType = getContentTypeByExtension(filename, 'video');
+
       res.status(206);
       res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
       res.setHeader('Accept-Ranges', 'bytes');
       res.setHeader('Content-Length', chunkSize);
-      res.setHeader(
-        'Content-Type',
-        data.ContentType || getContentTypeByExtension(filename, 'video'),
-      );
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+      res.setHeader('Cache-Control', 'no-cache');
 
       // Stream the video chunk
       data.Body.pipe(res);
@@ -121,12 +122,13 @@ router.get('/video/*', async (req, res) => {
       const data = await s3.send(command);
 
       const filename = key.split('/').pop();
-      res.setHeader(
-        'Content-Type',
-        data.ContentType || getContentTypeByExtension(filename, 'video'),
-      );
+      const contentType = getContentTypeByExtension(filename, 'video');
+
+      res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Length', data.ContentLength);
       res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+      res.setHeader('Cache-Control', 'no-cache');
 
       // Stream the entire video
       data.Body.pipe(res);
