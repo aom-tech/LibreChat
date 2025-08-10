@@ -3,7 +3,7 @@ name: Build and Push to GHCR
 on:
   workflow_dispatch:
   push: 
-    branches: ['aicourse']
+    branches: ['aicourse-dev']
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -35,7 +35,7 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=sha
-            type=raw,value=latest
+            type=raw,value=stage
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -45,8 +45,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            SCRIPT_YANDEX_METRICA_ID=${{ vars.SCRIPT_YANDEX_METRICA_ID }}
-            SCRIPT_AMPLITUDE_API_KEY=${{ vars.SCRIPT_AMPLITUDE_API_KEY }}
             NODE_ENV=production
 
       - name: run docker compose
@@ -55,7 +53,7 @@ jobs:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
           USERNAME: ${{ github.repository_owner }}
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
+          host: ${{ secrets.DEPLOY_HOST_STAGE }}
           username: ${{ secrets.DEPLOY_USERNAME }}
           key: ${{ secrets.DEPLOY_KEY }}
           envs: TOKEN, USERNAME
@@ -64,7 +62,7 @@ jobs:
 
             echo $TOKEN | docker login ghcr.io -u $USERNAME --password-stdin
 
-            OLD_IMAGE=$(docker images -q g${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest 2>/dev/null || true)
+            OLD_IMAGE=$(docker images -q g${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:stage 2>/dev/null || true)
 
             docker-compose pull api
             docker-compose stop -t 1 api
