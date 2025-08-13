@@ -309,11 +309,16 @@ const getMultiplier = ({ valueKey, tokenType, model, endpoint, endpointTokenConf
   }
 
   if (valueKey && tokenType) {
-    return tokenValues[valueKey][tokenType] ?? defaultRate;
+    // Check if tokenValues[valueKey] exists before accessing [tokenType]
+    const values = tokenValues[valueKey];
+    if (values && typeof values === 'object') {
+      return values[tokenType] ?? defaultRate;
+    }
+    return defaultRate;
   }
 
   if (!tokenType || !model) {
-    return 1;
+    return defaultRate;
   }
 
   valueKey = getValueKey(model, endpoint);
@@ -321,8 +326,14 @@ const getMultiplier = ({ valueKey, tokenType, model, endpoint, endpointTokenConf
     return defaultRate;
   }
 
-  // If we got this far, and values[tokenType] is undefined somehow, return a rough average of default multipliers
-  return tokenValues[valueKey]?.[tokenType] ?? defaultRate;
+  // Check if tokenValues[valueKey] exists before accessing [tokenType]
+  const values = tokenValues[valueKey];
+  if (values && typeof values === 'object') {
+    return values[tokenType] ?? defaultRate;
+  }
+  
+  // If we got this far, return defaultRate
+  return defaultRate;
 };
 
 /**
