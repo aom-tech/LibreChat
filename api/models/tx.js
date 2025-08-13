@@ -9,6 +9,14 @@ const AGENT_CREDIT_TYPES = {
   'agent_p_s8V9FmVfxgHGVIFjOne': 'video',
 };
 
+// Fixed token costs per request for specific agents
+const AGENT_FIXED_COSTS = {
+  'agent_-2vJDJqv7zoHlNeu5VX6f': 1000,  // 1000 image credits per request
+  'agent_srl6222FWjmA0XxeEGgGQ': 1000,  // 1000 image credits per request
+  'agent_b1rpKFVSmmevC7A2hkfLz': 5000,  // 5000 presentation credits per request
+  'agent_p_s8V9FmVfxgHGVIFjOne': 10000, // 10000 video credits per request
+};
+
 /**
  * Determines the credit type based on the agent ID
  * @param {string} agentId - The agent ID
@@ -20,6 +28,19 @@ const getCreditTypeByAgentId = (agentId) => {
   }
   
   return AGENT_CREDIT_TYPES[agentId] || 'text';
+};
+
+/**
+ * Gets the fixed token cost for an agent if defined
+ * @param {string} agentId - The agent ID
+ * @returns {number|null} The fixed cost or null if not defined
+ */
+const getAgentFixedCost = (agentId) => {
+  if (!agentId) {
+    return null;
+  }
+  
+  return AGENT_FIXED_COSTS[agentId] || null;
 };
 
 /**
@@ -346,5 +367,7 @@ module.exports = {
   defaultRate,
   cacheTokenValues,
   getCreditTypeByAgentId,
+  getAgentFixedCost,
   AGENT_CREDIT_TYPES,
+  AGENT_FIXED_COSTS,
 };

@@ -1,6 +1,6 @@
 const { logger } = require('@librechat/data-schemas');
 const { getBalanceConfig } = require('~/server/services/Config');
-const { getMultiplier, getCacheMultiplier, getCreditTypeByAgentId } = require('./tx');
+const { getMultiplier, getCacheMultiplier, getCreditTypeByAgentId, getAgentFixedCost } = require('./tx');
 const { Transaction, Balance } = require('~/db/models');
 
 const cancelRate = 1.15;
@@ -174,6 +174,15 @@ const updateBalance = async ({ user, incrementValue, setValues, creditType = nul
 
 /** Method to calculate and set the tokenValue for a transaction */
 function calculateTokenValue(txn) {
+  // Check if this agent has a fixed cost
+  const fixedCost = getAgentFixedCost(txn.agentId);
+  if (fixedCost !== null && txn.tokenType === 'completion') {
+    // For agents with fixed costs, use the fixed amount for completion tokens
+    txn.rate = 1;
+    txn.tokenValue = -fixedCost; // Negative because it's a deduction
+    return;
+  }
+  
   if (!txn.valueKey || !txn.tokenType) {
     txn.tokenValue = txn.rawAmount;
   }

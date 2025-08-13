@@ -2,7 +2,7 @@ const { logger } = require('@librechat/data-schemas');
 const { ViolationTypes } = require('librechat-data-provider');
 const { createAutoRefillTransaction } = require('./Transaction');
 const { logViolation } = require('~/cache');
-const { getMultiplier, getCreditTypeByAgentId } = require('./tx');
+const { getMultiplier, getCreditTypeByAgentId, getAgentFixedCost } = require('./tx');
 const { Balance } = require('~/db/models');
 
 function isInvalidDate(date) {
@@ -23,8 +23,22 @@ const checkBalanceRecord = async function ({
   endpointTokenConfig,
   agentId,
 }) {
-  const multiplier = getMultiplier({ valueKey, tokenType, model, endpoint, endpointTokenConfig });
-  const tokenCost = amount * multiplier;
+  // Check if this agent has a fixed cost
+  const fixedCost = getAgentFixedCost(agentId);
+  let tokenCost;
+  
+  if (fixedCost !== null && tokenType === 'prompt') {
+    // For agents with fixed costs, we check the fixed amount on prompt check
+    // (since we only charge on completion)
+    tokenCost = fixedCost;
+  } else if (fixedCost !== null && tokenType === 'completion') {
+    // Skip multiplier calculation for fixed cost agents on completion
+    tokenCost = 0; // Already checked on prompt
+  } else {
+    // Standard calculation for non-fixed cost agents
+    const multiplier = getMultiplier({ valueKey, tokenType, model, endpoint, endpointTokenConfig });
+    tokenCost = amount * multiplier;
+  }
 
   // Retrieve the balance record
   let record = await Balance.findOne({ user }).lean();
