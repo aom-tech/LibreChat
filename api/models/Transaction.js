@@ -45,6 +45,15 @@ const updateBalance = async ({ user, incrementValue, setValues, creditType = nul
         const potentialNewCredits = currentCredits + incrementValue;
         newCredits = Math.max(0, potentialNewCredits);
         
+        logger.debug('[updateBalance] Credit calculation for specific type:', {
+          creditType,
+          currentCredits,
+          incrementValue,
+          potentialNewCredits,
+          newCredits,
+          currentAvailableCredits
+        });
+        
         const updatedAvailableCredits = {
           ...currentAvailableCredits,
           [creditType]: newCredits,
@@ -195,17 +204,6 @@ function calculateTokenValue(txn) {
   const endpoint = txn.endpoint;
   const rawMultiplier = getMultiplier({ valueKey, tokenType, model, endpoint, endpointTokenConfig });
   
-  // Log if multiplier is undefined or invalid
-  if (rawMultiplier === undefined || rawMultiplier === null || isNaN(rawMultiplier)) {
-    logger.warn('[calculateTokenValue] Invalid multiplier received:', {
-      rawMultiplier,
-      valueKey,
-      tokenType,
-      model,
-      endpoint,
-      endpointTokenConfig: !!endpointTokenConfig
-    });
-  }
   
   // Ensure multiplier is always a valid number
   const multiplier = Math.abs(rawMultiplier || defaultRate);
@@ -274,6 +272,15 @@ async function createTransaction(txData) {
   let incrementValue = transaction.tokenValue;
   const creditType = getCreditTypeByAgentId(txData.agentId);
   
+  logger.debug('[createTransaction] Before updateBalance:', {
+    agentId: txData.agentId,
+    creditType,
+    incrementValue,
+    tokenValue: transaction.tokenValue,
+    tokenType: transaction.tokenType,
+    rawAmount: transaction.rawAmount
+  });
+  
   const balanceResponse = await updateBalance({
     user: transaction.user,
     incrementValue,
@@ -283,6 +290,13 @@ async function createTransaction(txData) {
   const responseBalance = creditType 
     ? balanceResponse.availableCredits?.[creditType] || 0
     : balanceResponse.tokenCredits;
+
+  logger.debug('[createTransaction] After updateBalance:', {
+    creditType,
+    responseBalance,
+    fullBalanceResponse: balanceResponse,
+    availableCredits: balanceResponse.availableCredits
+  });
 
   return {
     rate: transaction.rate,
@@ -315,6 +329,15 @@ async function createStructuredTransaction(txData) {
   let incrementValue = transaction.tokenValue;
   const creditType = getCreditTypeByAgentId(txData.agentId);
 
+  logger.debug('[createStructuredTransaction] Before updateBalance:', {
+    agentId: txData.agentId,
+    creditType,
+    incrementValue,
+    tokenValue: transaction.tokenValue,
+    tokenType: transaction.tokenType,
+    rawAmount: transaction.rawAmount
+  });
+
   const balanceResponse = await updateBalance({
     user: transaction.user,
     incrementValue,
@@ -324,6 +347,13 @@ async function createStructuredTransaction(txData) {
   const responseBalance = creditType 
     ? balanceResponse.availableCredits?.[creditType] || 0
     : balanceResponse.tokenCredits;
+
+  logger.debug('[createTransaction] After updateBalance:', {
+    creditType,
+    responseBalance,
+    fullBalanceResponse: balanceResponse,
+    availableCredits: balanceResponse.availableCredits
+  });
 
   return {
     rate: transaction.rate,
@@ -379,29 +409,7 @@ function calculateStructuredTokenValue(txn) {
 
     txn.rawAmount = -totalPromptTokens;
   } else if (txn.tokenType === 'completion') {
-    logger.debug('[calculateStructuredTokenValue] Before getMultiplier for completion:', {
-      tokenType: txn.tokenType,
-      model,
-      endpointTokenConfig: !!endpointTokenConfig,
-      rawAmount: txn.rawAmount,
-    });
-    
     const multiplier = getMultiplier({ tokenType: txn.tokenType, model, endpointTokenConfig });
-    
-    logger.debug('[calculateStructuredTokenValue] After getMultiplier:', {
-      multiplier,
-      multiplierType: typeof multiplier,
-      isNaN: isNaN(multiplier),
-    });
-    
-    if (multiplier === undefined || multiplier === null || isNaN(multiplier)) {
-      logger.error('[calculateStructuredTokenValue] Invalid multiplier received:', {
-        multiplier,
-        tokenType: txn.tokenType,
-        model,
-        endpointTokenConfig: !!endpointTokenConfig,
-      });
-    }
     
     const safeMultiplier = multiplier || defaultRate;
     txn.rate = Math.abs(safeMultiplier);
