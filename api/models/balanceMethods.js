@@ -117,7 +117,7 @@ const checkBalanceRecord = async function ({
     tokenType,
     amount,
     balance,
-    multiplier,
+    tokenCost,
     creditType,
     agentId,
     endpointTokenConfig: !!endpointTokenConfig,
