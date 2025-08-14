@@ -37,12 +37,51 @@ const checkBalanceRecord = async function ({
       tokenCost = 0; // Already checked on prompt
     } else {
       // Standard calculation for non-fixed cost agents
+      logger.debug('[checkBalanceRecord] Before getMultiplier call (with agentId):', {
+        valueKey,
+        tokenType,
+        model,
+        endpoint,
+        amount,
+        agentId,
+      });
       const multiplier = getMultiplier({ valueKey, tokenType, model, endpoint, endpointTokenConfig });
+      logger.debug('[checkBalanceRecord] After getMultiplier, multiplier value:', multiplier);
+      
+      if (multiplier === undefined || multiplier === null || isNaN(multiplier)) {
+        logger.error('[checkBalanceRecord] Invalid multiplier received:', {
+          multiplier,
+          valueKey,
+          tokenType,
+          model,
+          endpoint,
+        });
+      }
+      
       tokenCost = amount * multiplier;
     }
   } else {
     // Standard calculation when no agentId is provided
+    logger.debug('[checkBalanceRecord] Before getMultiplier call (no agentId):', {
+      valueKey,
+      tokenType,
+      model,
+      endpoint,
+      amount,
+    });
     const multiplier = getMultiplier({ valueKey, tokenType, model, endpoint, endpointTokenConfig });
+    logger.debug('[checkBalanceRecord] After getMultiplier, multiplier value:', multiplier);
+    
+    if (multiplier === undefined || multiplier === null || isNaN(multiplier)) {
+      logger.error('[checkBalanceRecord] Invalid multiplier received:', {
+        multiplier,
+        valueKey,
+        tokenType,
+        model,
+        endpoint,
+      });
+    }
+    
     tokenCost = amount * multiplier;
   }
 

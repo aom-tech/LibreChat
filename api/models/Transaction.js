@@ -379,9 +379,33 @@ function calculateStructuredTokenValue(txn) {
 
     txn.rawAmount = -totalPromptTokens;
   } else if (txn.tokenType === 'completion') {
+    logger.debug('[calculateStructuredTokenValue] Before getMultiplier for completion:', {
+      tokenType: txn.tokenType,
+      model,
+      endpointTokenConfig: !!endpointTokenConfig,
+      rawAmount: txn.rawAmount,
+    });
+    
     const multiplier = getMultiplier({ tokenType: txn.tokenType, model, endpointTokenConfig });
-    txn.rate = Math.abs(multiplier);
-    txn.tokenValue = -Math.abs(txn.rawAmount) * multiplier;
+    
+    logger.debug('[calculateStructuredTokenValue] After getMultiplier:', {
+      multiplier,
+      multiplierType: typeof multiplier,
+      isNaN: isNaN(multiplier),
+    });
+    
+    if (multiplier === undefined || multiplier === null || isNaN(multiplier)) {
+      logger.error('[calculateStructuredTokenValue] Invalid multiplier received:', {
+        multiplier,
+        tokenType: txn.tokenType,
+        model,
+        endpointTokenConfig: !!endpointTokenConfig,
+      });
+    }
+    
+    const safeMultiplier = multiplier || defaultRate;
+    txn.rate = Math.abs(safeMultiplier);
+    txn.tokenValue = -Math.abs(txn.rawAmount) * safeMultiplier;
     txn.rawAmount = -Math.abs(txn.rawAmount);
   }
 

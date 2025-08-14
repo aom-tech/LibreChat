@@ -1,4 +1,5 @@
 const { matchModelName } = require('../utils/tokens');
+const { logger } = require('@librechat/data-schemas');
 const defaultRate = 6;
 
 // Agent IDs to credit type mapping
@@ -304,35 +305,78 @@ const getValueKey = (model, endpoint) => {
  * @returns {number} The multiplier for the given parameters, or a default value if not found.
  */
 const getMultiplier = ({ valueKey, tokenType, model, endpoint, endpointTokenConfig }) => {
+  
+  logger.debug('[getMultiplier] Input params:', {
+    valueKey,
+    tokenType,
+    model,
+    endpoint,
+    endpointTokenConfig: !!endpointTokenConfig,
+  });
+  
   if (endpointTokenConfig) {
-    return endpointTokenConfig?.[model]?.[tokenType] ?? defaultRate;
+    const configValue = endpointTokenConfig?.[model]?.[tokenType];
+    logger.debug('[getMultiplier] Using endpointTokenConfig:', {
+      model,
+      tokenType,
+      configValue,
+      returning: configValue ?? defaultRate,
+    });
+    return configValue ?? defaultRate;
   }
 
   if (valueKey && tokenType) {
     // Check if tokenValues[valueKey] exists before accessing [tokenType]
     const values = tokenValues[valueKey];
+    logger.debug('[getMultiplier] Checking tokenValues with valueKey:', {
+      valueKey,
+      tokenType,
+      valuesExists: !!values,
+      valuesType: typeof values,
+    });
     if (values && typeof values === 'object') {
-      return values[tokenType] ?? defaultRate;
+      const result = values[tokenType] ?? defaultRate;
+      logger.debug('[getMultiplier] Found in tokenValues, returning:', result);
+      return result;
     }
+    logger.debug('[getMultiplier] No values found for valueKey, returning defaultRate:', defaultRate);
     return defaultRate;
   }
 
   if (!tokenType || !model) {
+    logger.debug('[getMultiplier] Missing tokenType or model, returning defaultRate:', {
+      tokenType,
+      model,
+      defaultRate,
+    });
     return defaultRate;
   }
 
   valueKey = getValueKey(model, endpoint);
+  logger.debug('[getMultiplier] Got valueKey from model:', {
+    model,
+    endpoint,
+    valueKey,
+  });
   if (!valueKey) {
+    logger.debug('[getMultiplier] No valueKey found, returning defaultRate:', defaultRate);
     return defaultRate;
   }
 
   // Check if tokenValues[valueKey] exists before accessing [tokenType]
   const values = tokenValues[valueKey];
   if (values && typeof values === 'object') {
-    return values[tokenType] ?? defaultRate;
+    const result = values[tokenType] ?? defaultRate;
+    logger.debug('[getMultiplier] Found in tokenValues (via getValueKey), returning:', {
+      valueKey,
+      tokenType,
+      result,
+    });
+    return result;
   }
   
   // If we got this far, return defaultRate
+  logger.debug('[getMultiplier] Final fallback, returning defaultRate:', defaultRate);
   return defaultRate;
 };
 
