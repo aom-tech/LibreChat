@@ -341,14 +341,14 @@ function calculateStructuredTokenValue(txn) {
     return;
   }
 
-  const { model, endpointTokenConfig } = txn;
+  const { model, endpointTokenConfig, valueKey, endpoint } = txn;
 
   if (txn.tokenType === 'prompt') {
-    const inputMultiplier = getMultiplier({ tokenType: 'prompt', model, endpointTokenConfig });
+    const inputMultiplier = getMultiplier({ valueKey, tokenType: 'prompt', model, endpoint, endpointTokenConfig });
     const writeMultiplier =
-      getCacheMultiplier({ cacheType: 'write', model, endpointTokenConfig }) ?? inputMultiplier;
+      getCacheMultiplier({ valueKey, cacheType: 'write', model, endpoint, endpointTokenConfig }) ?? inputMultiplier;
     const readMultiplier =
-      getCacheMultiplier({ cacheType: 'read', model, endpointTokenConfig }) ?? inputMultiplier;
+      getCacheMultiplier({ valueKey, cacheType: 'read', model, endpoint, endpointTokenConfig }) ?? inputMultiplier;
 
     txn.rateDetail = {
       input: inputMultiplier,
@@ -379,8 +379,9 @@ function calculateStructuredTokenValue(txn) {
 
     txn.rawAmount = -totalPromptTokens;
   } else if (txn.tokenType === 'completion') {
-    const multiplier = getMultiplier({ tokenType: txn.tokenType, model, endpointTokenConfig });
-    txn.rate = Math.abs(multiplier);
+    const rawMultiplier = getMultiplier({ valueKey, tokenType: txn.tokenType, model, endpoint, endpointTokenConfig });
+    const multiplier = Math.abs(rawMultiplier || defaultRate);
+    txn.rate = multiplier;
     txn.tokenValue = -Math.abs(txn.rawAmount) * multiplier;
     txn.rawAmount = -Math.abs(txn.rawAmount);
   }
