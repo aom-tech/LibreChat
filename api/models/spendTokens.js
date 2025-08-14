@@ -124,13 +124,9 @@ const spendStructuredTokens = async (txData, tokenUsage) => {
         user: txData.user,
         prompt: prompt?.prompt,
         promptRate: prompt?.rate,
-        promptBalance: prompt?.balance,
-        promptCreditType: prompt?.creditType,
         completion: completion?.completion,
         completionRate: completion?.rate,
-        completionBalance: completion?.balance,
-        completionCreditType: completion?.creditType,
-        finalBalance: completion?.balance ?? prompt?.balance,
+        balance: completion?.balance ?? prompt?.balance,
       });
     } else {
       logger.debug('[spendStructuredTokens] No transactions incurred against balance');

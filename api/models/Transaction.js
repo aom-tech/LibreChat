@@ -45,14 +45,6 @@ const updateBalance = async ({ user, incrementValue, setValues, creditType = nul
         const potentialNewCredits = currentCredits + incrementValue;
         newCredits = Math.max(0, potentialNewCredits);
         
-        logger.debug('[updateBalance] Credit calculation for specific type:', {
-          creditType,
-          currentCredits,
-          incrementValue,
-          potentialNewCredits,
-          newCredits,
-          currentAvailableCredits
-        });
         
         const updatedAvailableCredits = {
           ...currentAvailableCredits,
@@ -272,14 +264,6 @@ async function createTransaction(txData) {
   let incrementValue = transaction.tokenValue;
   const creditType = getCreditTypeByAgentId(txData.agentId);
   
-  logger.debug('[createTransaction] Before updateBalance:', {
-    agentId: txData.agentId,
-    creditType,
-    incrementValue,
-    tokenValue: transaction.tokenValue,
-    tokenType: transaction.tokenType,
-    rawAmount: transaction.rawAmount
-  });
   
   const balanceResponse = await updateBalance({
     user: transaction.user,
@@ -291,12 +275,6 @@ async function createTransaction(txData) {
     ? balanceResponse.availableCredits?.[creditType] || 0
     : balanceResponse.tokenCredits;
 
-  logger.debug('[createTransaction] After updateBalance:', {
-    creditType,
-    responseBalance,
-    fullBalanceResponse: balanceResponse,
-    availableCredits: balanceResponse.availableCredits
-  });
 
   return {
     rate: transaction.rate,
@@ -329,14 +307,6 @@ async function createStructuredTransaction(txData) {
   let incrementValue = transaction.tokenValue;
   const creditType = getCreditTypeByAgentId(txData.agentId);
 
-  logger.debug('[createStructuredTransaction] Before updateBalance:', {
-    agentId: txData.agentId,
-    creditType,
-    incrementValue,
-    tokenValue: transaction.tokenValue,
-    tokenType: transaction.tokenType,
-    rawAmount: transaction.rawAmount
-  });
 
   const balanceResponse = await updateBalance({
     user: transaction.user,
@@ -348,12 +318,6 @@ async function createStructuredTransaction(txData) {
     ? balanceResponse.availableCredits?.[creditType] || 0
     : balanceResponse.tokenCredits;
 
-  logger.debug('[createTransaction] After updateBalance:', {
-    creditType,
-    responseBalance,
-    fullBalanceResponse: balanceResponse,
-    availableCredits: balanceResponse.availableCredits
-  });
 
   return {
     rate: transaction.rate,
@@ -366,6 +330,25 @@ async function createStructuredTransaction(txData) {
 
 /** Method to calculate token value for structured tokens */
 function calculateStructuredTokenValue(txn) {
+  // Check if this agent has a fixed cost
+  if (txn.agentId) {
+    const fixedCost = getAgentFixedCost(txn.agentId);
+    if (fixedCost !== null) {
+      if (txn.tokenType === 'completion') {
+        // For agents with fixed costs, use the fixed amount for completion tokens
+        txn.rate = 1;
+        txn.tokenValue = -fixedCost; // Negative because it's a deduction
+        return;
+      } else if (txn.tokenType === 'prompt') {
+        // For fixed cost agents, don't charge on prompt (only on completion)
+        txn.rate = 0;
+        txn.tokenValue = 0;
+        txn.rawAmount = 0;
+        return;
+      }
+    }
+  }
+  
   if (!txn.tokenType) {
     txn.tokenValue = txn.rawAmount;
     return;
