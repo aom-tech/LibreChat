@@ -735,7 +735,23 @@ class AgentClient extends BaseClient {
 
       /** @type {TCustomConfig['endpoints']['agents']} */
       const agentsEConfig = this.options.req.app.locals[EModelEndpoint.agents];
-
+      // Извлечь изображения из payload
+      let imageUrls = null;
+      if (payload && Array.isArray(payload)) {
+        // Найти последнее сообщение пользователя с изображениями
+        for (let i = payload.length - 1; i >= 0; i--) {
+          const message = payload[i];
+          if (message.content && Array.isArray(message.content)) {
+            const images = message.content
+              .filter(part => part.type === 'image_url' && part.image_url?.url)
+              .map(part => part.image_url.url);
+            if (images.length > 0) {
+              image_urls = images;
+              break;
+            }
+          }
+        }
+      }
       config = {
         configurable: {
           thread_id: this.conversationId,
@@ -743,9 +759,7 @@ class AgentClient extends BaseClient {
           user_id: this.user ?? this.options.req.user?.id,
           hide_sequential_outputs: this.options.agent.hide_sequential_outputs,
           user: this.options.req.user,
-          lastUserMessage: initialMessages.find(msg => 
-            msg.constructor.name === 'HumanMessage' && msg.image_urls
-          ),
+          image_urls: image_urls, // Добавляем изображения в config
         },
         recursionLimit: agentsEConfig?.recursionLimit ?? 25,
         signal: abortController.signal,

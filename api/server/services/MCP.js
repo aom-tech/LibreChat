@@ -135,27 +135,28 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
   /** @type {(toolArguments: Object | string, config?: GraphRunnableConfig) => Promise<unknown>} */
   const _call = async (toolArguments, config) => {
     const userId = config?.configurable?.user?.id || config?.configurable?.user_id;
-    // ДОБАВИТЬ: Получение изображений из последнего сообщения пользователя
-    let imageData = null;
-    if (config?.configurable?.lastUserMessage?.image_urls) {
-      const imageUrls = config.configurable.lastUserMessage.image_urls;
-      if (imageUrls.length > 0) {
-        // Извлекаем base64 данные из первого изображения
-        const firstImage = imageUrls[0];
-        if (firstImage.image_url?.url?.startsWith('data:image/')) {
-          const base64Match = firstImage.image_url.url.match(/data:image\/[^;]+;base64,(.+)/);
-          if (base64Match) {
-            imageData = base64Match[1];
-          }
+    // Добавить изображения в аргументы, если они есть
+    const imageUrls = config?.configurable?.imageUrls;
+    if (imageUrls && imageUrls.length > 0) {
+      // Извлечь base64 данные из data URLs
+      const images = imageUrls.map(url => {
+        if (url && url.startsWith('data:image/')) {
+          const base64Data = url.split(',')[1];
+          return base64Data;
         }
-      }
-    }
-
-    // ДОБАВИТЬ: Автоматически добавляем изображение в аргументы, если оно есть
-    if (imageData && typeof toolArguments === 'object' && toolArguments !== null) {
-      // Если в схеме инструмента есть параметр image, добавляем его
-      if (!toolArguments.image) {
-        toolArguments.image = imageData;
+        return null;
+      }).filter(Boolean);
+      
+      if (images.length > 0) {
+        // Добавить изображения в аргументы инструмента
+        if (typeof toolArguments === 'object' && toolArguments !== null) {
+          toolArguments.images = images;
+        } else {
+          toolArguments = {
+            input: toolArguments,
+            images: images
+          };
+        }
       }
     }
     /** @type {ReturnType<typeof createAbortHandler>} */
