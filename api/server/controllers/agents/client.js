@@ -737,7 +737,7 @@ class AgentClient extends BaseClient {
       const agentsEConfig = this.options.req.app.locals[EModelEndpoint.agents];
       // Извлечь изображения из payload
       let image_urls = null;
-      logger.debug(payload)
+      // logger.debug(payload)
       if (payload && Array.isArray(payload)) {
         // Найти последнее сообщение пользователя с изображениями
         for (let i = payload.length - 1; i >= 0; i--) {
