@@ -165,7 +165,8 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
     /** @type {AbortSignal} */
     let derivedSignal = null;
 
-    logger.debug(toolArguments)
+    // logger.debug(toolArguments)
+    logger.debug('toolArguments', truncateLongStrings(toolArguments.images));
     try {
       const flowsCache = getLogStores(CacheKeys.FLOWS);
       const flowManager = getFlowStateManager(flowsCache);
