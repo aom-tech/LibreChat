@@ -743,6 +743,9 @@ class AgentClient extends BaseClient {
           user_id: this.user ?? this.options.req.user?.id,
           hide_sequential_outputs: this.options.agent.hide_sequential_outputs,
           user: this.options.req.user,
+          lastUserMessage: initialMessages.find(msg => 
+            msg.constructor.name === 'HumanMessage' && msg.image_urls
+          ),
         },
         recursionLimit: agentsEConfig?.recursionLimit ?? 25,
         signal: abortController.signal,
