@@ -1,5 +1,4 @@
 const { matchModelName } = require('../utils/tokens');
-const { logger } = require('@librechat/data-schemas');
 const defaultRate = 6;
 
 // Agent IDs to credit type mapping
@@ -8,14 +7,6 @@ const AGENT_CREDIT_TYPES = {
   'agent_srl6222FWjmA0XxeEGgGQ': 'image',
   'agent_b1rpKFVSmmevC7A2hkfLz': 'presentation',
   'agent_p_s8V9FmVfxgHGVIFjOne': 'video',
-};
-
-// Fixed token costs per request for specific agents
-const AGENT_FIXED_COSTS = {
-  'agent_-2vJDJqv7zoHlNeu5VX6f': 1000,  // 1000 image credits per request
-  'agent_srl6222FWjmA0XxeEGgGQ': 1000,  // 1000 image credits per request
-  'agent_b1rpKFVSmmevC7A2hkfLz': 5000,  // 5000 presentation credits per request
-  'agent_p_s8V9FmVfxgHGVIFjOne': 10000, // 10000 video credits per request
 };
 
 /**
@@ -29,19 +20,6 @@ const getCreditTypeByAgentId = (agentId) => {
   }
   
   return AGENT_CREDIT_TYPES[agentId] || 'text';
-};
-
-/**
- * Gets the fixed token cost for an agent if defined
- * @param {string} agentId - The agent ID
- * @returns {number|null} The fixed cost or null if not defined
- */
-const getAgentFixedCost = (agentId) => {
-  if (!agentId) {
-    return null;
-  }
-  
-  return AGENT_FIXED_COSTS[agentId] || null;
 };
 
 /**
@@ -306,22 +284,15 @@ const getValueKey = (model, endpoint) => {
  */
 const getMultiplier = ({ valueKey, tokenType, model, endpoint, endpointTokenConfig }) => {
   if (endpointTokenConfig) {
-    const configValue = endpointTokenConfig?.[model]?.[tokenType];
-    return configValue ?? defaultRate;
+    return endpointTokenConfig?.[model]?.[tokenType] ?? defaultRate;
   }
 
   if (valueKey && tokenType) {
-    // Check if tokenValues[valueKey] exists before accessing [tokenType]
-    const values = tokenValues[valueKey];
-    if (values && typeof values === 'object') {
-      const result = values[tokenType] ?? defaultRate;
-      return result;
-    }
-    return defaultRate;
+    return tokenValues[valueKey][tokenType] ?? defaultRate;
   }
 
   if (!tokenType || !model) {
-    return defaultRate;
+    return 1;
   }
 
   valueKey = getValueKey(model, endpoint);
@@ -329,15 +300,8 @@ const getMultiplier = ({ valueKey, tokenType, model, endpoint, endpointTokenConf
     return defaultRate;
   }
 
-  // Check if tokenValues[valueKey] exists before accessing [tokenType]
-  const values = tokenValues[valueKey];
-  if (values && typeof values === 'object') {
-    const result = values[tokenType] ?? defaultRate;
-    return result;
-  }
-  
-  // If we got this far, return defaultRate
-  return defaultRate;
+  // If we got this far, and values[tokenType] is undefined somehow, return a rough average of default multipliers
+  return tokenValues[valueKey]?.[tokenType] ?? defaultRate;
 };
 
 /**
@@ -382,7 +346,5 @@ module.exports = {
   defaultRate,
   cacheTokenValues,
   getCreditTypeByAgentId,
-  getAgentFixedCost,
   AGENT_CREDIT_TYPES,
-  AGENT_FIXED_COSTS,
 };

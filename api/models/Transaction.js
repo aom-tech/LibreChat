@@ -1,12 +1,6 @@
 const { logger } = require('@librechat/data-schemas');
 const { getBalanceConfig } = require('~/server/services/Config');
-const {
-  getMultiplier,
-  getCacheMultiplier,
-  getCreditTypeByAgentId,
-  getAgentFixedCost,
-  defaultRate,
-} = require('./tx');
+const { getMultiplier, getCacheMultiplier, getCreditTypeByAgentId } = require('./tx');
 const { Transaction, Balance } = require('~/db/models');
 
 const cancelRate = 1.15;
@@ -176,45 +170,13 @@ const updateBalance = async ({ user, incrementValue, setValues, creditType = nul
 
 /** Method to calculate and set the tokenValue for a transaction */
 function calculateTokenValue(txn) {
-  // Check if this agent has a fixed cost
-  if (txn.agentId) {
-    const fixedCost = getAgentFixedCost(txn.agentId);
-    if (fixedCost !== null) {
-      if (txn.tokenType === 'completion') {
-        // For agents with fixed costs, use the fixed amount for completion tokens
-        txn.rate = 1;
-        txn.tokenValue = -fixedCost; // Negative because it's a deduction
-        return;
-      } else if (txn.tokenType === 'prompt') {
-        // For fixed cost agents, don't charge on prompt (only on completion)
-        txn.rate = 0;
-        txn.tokenValue = 0;
-        return;
-      }
-    }
-  }
-
   if (!txn.valueKey || !txn.tokenType) {
     txn.tokenValue = txn.rawAmount;
-    return;
   }
-
   const { valueKey, tokenType, model, endpointTokenConfig } = txn;
-  // endpoint might be in txn or txn.endpoint
-  const endpoint = txn.endpoint;
-  const rawMultiplier = getMultiplier({
-    valueKey,
-    tokenType,
-    model,
-    endpoint,
-    endpointTokenConfig,
-  });
-
-  // Ensure multiplier is always a valid number
-  const multiplier = Math.abs(rawMultiplier || defaultRate);
+  const multiplier = Math.abs(getMultiplier({ valueKey, tokenType, model, endpointTokenConfig }));
   txn.rate = multiplier;
   txn.tokenValue = txn.rawAmount * multiplier;
-
   if (txn.context && txn.tokenType === 'completion' && txn.context === 'incomplete') {
     txn.tokenValue = Math.ceil(txn.tokenValue * cancelRate);
     txn.rate *= cancelRate;
@@ -341,25 +303,6 @@ async function createStructuredTransaction(txData) {
 
 /** Method to calculate token value for structured tokens */
 function calculateStructuredTokenValue(txn) {
-  // Check if this agent has a fixed cost
-  if (txn.agentId) {
-    const fixedCost = getAgentFixedCost(txn.agentId);
-    if (fixedCost !== null) {
-      if (txn.tokenType === 'completion') {
-        // For agents with fixed costs, use the fixed amount for completion tokens
-        txn.rate = 1;
-        txn.tokenValue = -fixedCost; // Negative because it's a deduction
-        return;
-      } else if (txn.tokenType === 'prompt') {
-        // For fixed cost agents, don't charge on prompt (only on completion)
-        txn.rate = 0;
-        txn.tokenValue = 0;
-        txn.rawAmount = 0;
-        return;
-      }
-    }
-  }
-
   if (!txn.tokenType) {
     txn.tokenValue = txn.rawAmount;
     return;
@@ -404,10 +347,8 @@ function calculateStructuredTokenValue(txn) {
     txn.rawAmount = -totalPromptTokens;
   } else if (txn.tokenType === 'completion') {
     const multiplier = getMultiplier({ tokenType: txn.tokenType, model, endpointTokenConfig });
-
-    const safeMultiplier = multiplier || defaultRate;
-    txn.rate = Math.abs(safeMultiplier);
-    txn.tokenValue = -Math.abs(txn.rawAmount) * safeMultiplier;
+    txn.rate = Math.abs(multiplier);
+    txn.tokenValue = -Math.abs(txn.rawAmount) * multiplier;
     txn.rawAmount = -Math.abs(txn.rawAmount);
   }
 
