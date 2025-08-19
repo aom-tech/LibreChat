@@ -7,6 +7,9 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
 const { FileContext, ContentTypes } = require('librechat-data-provider');
 const { logger } = require('~/config');
 const { spendTokens } = require('~/models/spendTokens');
+const { check: checkBalance } = require('~/models/balanceMethods');
+const { Balance } = require('~/db/models');
+const { FIXED_SERVICE_COSTS } = require('~/models/tx');
 
 const displayMessage =
   "Flux displayed an image. All generated images are already plainly visible, so don't repeat the descriptions in detail. Do not list download links as they are available in the UI already. The user may download the images by clicking on them, but do not mention anything about downloading to the user.";
@@ -210,6 +213,37 @@ class FluxAPI extends Tool {
       throw new Error('Missing required field: prompt');
     }
 
+    // Check image balance before generation
+    const userId = this.userId || this.req?.user?.id;
+    if (userId) {
+      try {
+        // Directly check image credits balance
+        const balanceDoc = await Balance.findOne({ user: userId }).lean();
+        
+        if (!balanceDoc) {
+          logger.warn('[FluxAPI] No balance document found for user:', userId);
+          return this.returnValue('Unable to verify image credits balance.');
+        }
+
+        const imageBalance = balanceDoc.availableCredits?.image || 0;
+        const requiredCredits = FIXED_SERVICE_COSTS.FLUX_IMAGE;
+
+        logger.debug('[FluxAPI] Image balance check:', {
+          userId,
+          imageBalance,
+          requiredCredits,
+          canGenerate: imageBalance >= requiredCredits,
+        });
+
+        if (imageBalance < requiredCredits) {
+          return this.returnValue(`Insufficient image credits. You have ${imageBalance} credits but need at least ${requiredCredits} to generate an image.`);
+        }
+      } catch (error) {
+        logger.error('[FluxAPI] Error checking image balance:', error);
+        // Continue if balance check fails to not block the service
+      }
+    }
+
     let payload = {
       prompt: imageData.prompt,
       prompt_upsampling: imageData.prompt_upsampling || false,
@@ -343,13 +377,13 @@ class FluxAPI extends Tool {
           creditType: 'image',
         };
 
-        // Charge fixed 1000 image tokens
+        // Charge fixed image tokens
         await spendTokens(txMetadata, {
           promptTokens: 0,
-          completionTokens: 1000,
+          completionTokens: FIXED_SERVICE_COSTS.FLUX_IMAGE,
         });
 
-        logger.info('[FluxAPI] Successfully charged 1000 image tokens');
+        logger.info(`[FluxAPI] Successfully charged ${FIXED_SERVICE_COSTS.FLUX_IMAGE} image tokens`);
       } else {
         logger.warn('[FluxAPI] Missing userId or conversationId, cannot charge tokens');
       }

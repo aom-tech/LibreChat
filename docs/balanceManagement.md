@@ -55,11 +55,34 @@ const tokenValues = {
 
 ## Implementation Guide
 
-### 1. Adding a New Fixed-Cost Service
+### 1. Define Fixed Costs
+
+First, add your service cost to `/api/models/tx.js`:
+
+```javascript
+const FIXED_SERVICE_COSTS = {
+  FLUX_IMAGE: 1000,      // Cost per image generation
+  PRESENTATION: 5000,    // Cost per presentation
+  VIDEO: 10000,          // Cost per video
+  YOUR_SERVICE: 2000,    // Add your service cost
+};
+```
+
+### 2. Adding a New Fixed-Cost Service
 
 ```javascript
 // In your service file (e.g., VideoGenerator.js)
 const { spendTokens } = require('~/models/spendTokens');
+const { FIXED_SERVICE_COSTS } = require('~/models/tx');
+const { Balance } = require('~/db/models');
+
+// Check balance before operation
+const balanceDoc = await Balance.findOne({ user: userId }).lean();
+const videoBalance = balanceDoc?.availableCredits?.video || 0;
+
+if (videoBalance < FIXED_SERVICE_COSTS.VIDEO) {
+  return `Insufficient video credits. You have ${videoBalance} but need ${FIXED_SERVICE_COSTS.VIDEO}`;
+}
 
 // After successful generation
 try {
@@ -78,20 +101,20 @@ try {
       creditType: 'video', // Credit type to deduct from
     };
 
-    // Charge fixed amount
+    // Charge fixed amount from constants
     await spendTokens(txMetadata, {
       promptTokens: 0,
-      completionTokens: 10000, // Your fixed cost
+      completionTokens: FIXED_SERVICE_COSTS.VIDEO,
     });
     
-    logger.info('[VideoGenerator] Successfully charged 10000 video tokens');
+    logger.info(`[VideoGenerator] Successfully charged ${FIXED_SERVICE_COSTS.VIDEO} video tokens`);
   }
 } catch (error) {
   logger.error('[VideoGenerator] Error spending video tokens:', error);
 }
 ```
 
-### 2. Adding Token Multiplier for New Model
+### 3. Adding Token Multiplier for New Model
 
 In `/api/models/tx.js`:
 
@@ -107,7 +130,7 @@ const tokenValues = Object.assign(
 );
 ```
 
-### 3. Key Implementation Considerations
+### 4. Key Implementation Considerations
 
 #### Tool Integration
 When creating tools that need to charge tokens:
@@ -136,7 +159,7 @@ if (!userId || !conversationId) {
 }
 ```
 
-### 4. Common Pitfalls and Solutions
+### 5. Common Pitfalls and Solutions
 
 #### Pitfall 1: Double Token Deduction
 **Problem**: Both the LLM and the tool charge tokens for the same request.
@@ -171,7 +194,7 @@ await chargeTokens(); // Never reached for agents
 **Problem**: System automatically selects credit type based on agent ID.
 **Solution**: Always explicitly specify `creditType` in your `spendTokens` call.
 
-### 5. Testing Token Deduction
+### 6. Testing Token Deduction
 
 1. **Enable Debug Logging**: Watch for these log messages:
 ```
@@ -183,10 +206,29 @@ await chargeTokens(); // Never reached for agents
 2. **Verify Correct Credit Type**: Check that the right credit type is being deducted
 3. **Check Multipliers**: Ensure the rate matches your configuration
 
-### 6. Balance Check Integration
+### 7. Balance Check Integration
 
 For services that need to check balance before operation:
 
+#### Option 1: Direct Balance Check (Recommended for Fixed-Cost Services)
+```javascript
+const { Balance } = require('~/db/models');
+
+// Check specific credit type directly
+const balanceDoc = await Balance.findOne({ user: userId }).lean();
+if (!balanceDoc) {
+  return 'Unable to verify balance';
+}
+
+const imageBalance = balanceDoc.availableCredits?.image || 0;
+const requiredCredits = 1000;
+
+if (imageBalance < requiredCredits) {
+  return `Insufficient image credits. You have ${imageBalance} credits but need ${requiredCredits}`;
+}
+```
+
+#### Option 2: Using Balance Check Method (For Dynamic Cost Calculation)
 ```javascript
 const { check } = require('~/models/balanceMethods');
 
@@ -195,13 +237,15 @@ const balanceCheck = await check({
   model: 'your-model',
   endpoint: endpoint,
   tokenType: 'prompt',
-  amount: 1000, // Your fixed cost
+  amount: 1000, // Your cost
 });
 
 if (!balanceCheck.canSpend) {
   throw new Error('Insufficient credits');
 }
 ```
+
+**Note**: The `check` method currently always uses 'text' credit type. For non-text services, use direct balance check.
 
 ## Summary
 

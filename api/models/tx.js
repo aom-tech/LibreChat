@@ -1,6 +1,13 @@
 const { matchModelName } = require('../utils/tokens');
 const defaultRate = 6;
 
+// Fixed costs for various services
+const FIXED_SERVICE_COSTS = {
+  FLUX_IMAGE: 1000,  // Cost per image generation
+  PRESENTATION: 5000, // Cost per presentation
+  VIDEO: 10000,      // Cost per video
+};
+
 // Agent IDs to credit type mapping
 const AGENT_CREDIT_TYPES = {
   'agent_-2vJDJqv7zoHlNeu5VX6f': 'image',
@@ -8,8 +15,6 @@ const AGENT_CREDIT_TYPES = {
   'agent_b1rpKFVSmmevC7A2hkfLz': 'presentation',
   'agent_p_s8V9FmVfxgHGVIFjOne': 'video',
 };
-
-//
 
 /**
  * Determines the credit type based on the agent ID
@@ -350,4 +355,5 @@ module.exports = {
   cacheTokenValues,
   getCreditTypeByAgentId,
   AGENT_CREDIT_TYPES,
+  FIXED_SERVICE_COSTS,
 };
