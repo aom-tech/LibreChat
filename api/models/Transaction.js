@@ -178,11 +178,18 @@ function calculateTokenValue(txn) {
   // Check if this agent has a fixed cost
   if (txn.agentId) {
     const fixedCost = getAgentFixedCost(txn.agentId);
-    if (fixedCost !== null && txn.tokenType === 'completion') {
-      // For agents with fixed costs, use the fixed amount for completion tokens
-      txn.rate = 1;
-      txn.tokenValue = -fixedCost; // Negative because it's a deduction
-      return;
+    if (fixedCost !== null) {
+      if (txn.tokenType === 'completion') {
+        // For agents with fixed costs, use the fixed amount for completion tokens
+        txn.rate = 1;
+        txn.tokenValue = -fixedCost; // Negative because it's a deduction
+        return;
+      } else if (txn.tokenType === 'prompt') {
+        // For fixed cost agents, don't charge on prompt (only on completion)
+        txn.rate = 0;
+        txn.tokenValue = 0;
+        return;
+      }
     }
   }
   

@@ -49,6 +49,7 @@ const BaseClient = require('~/app/clients/BaseClient');
 const { getRoleByName } = require('~/models/Role');
 const { loadAgent } = require('~/models/Agent');
 const { getMCPManager } = require('~/config');
+const { getAgentFixedCost } = require('~/models/tx');
 
 const omitTitleOptions = new Set([
   'stream',
@@ -600,6 +601,65 @@ class AgentClient extends BaseClient {
    */
   async recordCollectedUsage({ model, context = 'message', collectedUsage = this.collectedUsage }) {
     if (!collectedUsage || !collectedUsage.length) {
+      return;
+    }
+
+    // Check if this is a fixed-cost agent
+    const agentId = this.options.agent?.id;
+    const fixedCost = agentId ? getAgentFixedCost(agentId) : null;
+
+    // For fixed-cost agents, aggregate all usage and charge only once
+    if (fixedCost !== null) {
+      let totalInputTokens = 0;
+      let totalOutputTokens = 0;
+      let totalCacheCreation = 0;
+      let totalCacheRead = 0;
+
+      for (const usage of collectedUsage) {
+        logger.info('usage: ', JSON.stringify(usage, null, 2))
+        if (usage) {
+          totalInputTokens += Number(usage.input_tokens) || 0;
+          totalOutputTokens += Number(usage.output_tokens) || 0;
+          totalCacheCreation += Number(usage.input_token_details?.cache_creation) || 0;
+          totalCacheRead += Number(usage.input_token_details?.cache_read) || 0;
+        }
+      }
+
+      const txMetadata = {
+        context,
+        conversationId: this.conversationId,
+        user: this.user ?? this.options.req.user?.id,
+        endpoint: this.options.endpoint,
+        endpointTokenConfig: this.options.endpointTokenConfig,
+        model: model ?? this.model ?? this.options.agent.model_parameters.model,
+        agentId,
+      };
+
+      // For fixed-cost agents, charge the fixed cost only once
+      if (totalCacheCreation > 0 || totalCacheRead > 0) {
+        spendStructuredTokens(txMetadata, {
+          promptTokens: {
+            input: totalInputTokens,
+            write: totalCacheCreation,
+            read: totalCacheRead,
+          },
+          completionTokens: totalOutputTokens,
+        }).catch((err) => {
+          logger.error('[recordCollectedUsage] Error spending structured tokens for fixed-cost agent', err);
+        });
+      } else {
+        spendTokens(txMetadata, {
+          promptTokens: totalInputTokens,
+          completionTokens: totalOutputTokens,
+        }).catch((err) => {
+          logger.error('[recordCollectedUsage] Error spending tokens for fixed-cost agent', err);
+        });
+      }
+
+      this.usage = {
+        input_tokens: totalInputTokens + totalCacheCreation + totalCacheRead,
+        output_tokens: totalOutputTokens,
+      };
       return;
     }
     const input_tokens =
