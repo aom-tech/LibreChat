@@ -152,11 +152,6 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
         // Добавить изображения в аргументы инструмента
         if (typeof toolArguments === 'object' && toolArguments !== null) {
           toolArguments.images = images;
-        } else {
-          toolArguments = {
-            input: toolArguments,
-            images: images
-          };
         }
       }
     }
@@ -166,7 +161,7 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
     let derivedSignal = null;
 
     // logger.debug(toolArguments)
-    logger.debug('toolArguments', truncateLongStrings(toolArguments.images));
+    // logger.debug('toolArguments', truncateLongStrings(toolArguments.images));
     try {
       const flowsCache = getLogStores(CacheKeys.FLOWS);
       const flowManager = getFlowStateManager(flowsCache);
