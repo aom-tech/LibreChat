@@ -183,6 +183,14 @@ class FluxAPI extends Tool {
 
   async _call(data) {
     const { action = 'generate', ...imageData } = data;
+    
+    logger.debug('[FluxAPI] _call invoked with:', {
+      action,
+      hasReq: !!this.req,
+      hasUserId: !!this.userId,
+      reqUserId: this.req?.user?.id,
+      reqConversationId: this.req?.body?.conversationId,
+    });
 
     // Use provided API key for this request if available, otherwise use default
     const requestApiKey = this.apiKey || this.getApiKey();
@@ -295,6 +303,61 @@ class FluxAPI extends Tool {
     const imageUrl = resultData.sample;
     const imageName = `img-${uuidv4()}.png`;
 
+    // Spend 1000 image tokens for successful image generation
+    logger.info('[FluxAPI] Image generated successfully, preparing to charge tokens');
+    try {
+      // Get parameters from req if not directly provided
+      const userId = this.userId || this.req?.user?.id;
+      const conversationId = this.conversationId || this.req?.body?.conversationId;
+      const endpoint = this.endpoint || this.req?.body?.endpoint || 'agents';
+      const endpointTokenConfig = this.endpointTokenConfig || this.req?.body?.endpointTokenConfig;
+      
+      logger.info('[FluxAPI] Token charge parameters:', {
+        userId,
+        conversationId,
+        endpoint,
+        hasUserId: !!userId,
+        hasConversationId: !!conversationId,
+        directParams: {
+          userId: this.userId,
+          conversationId: this.conversationId,
+        },
+        fromReq: {
+          userId: this.req?.user?.id,
+          conversationId: this.req?.body?.conversationId,
+          endpoint: this.req?.body?.endpoint,
+          hasReq: !!this.req,
+          hasReqUser: !!this.req?.user,
+          hasReqBody: !!this.req?.body,
+        }
+      });
+      
+      if (userId && conversationId) {
+        const txMetadata = {
+          user: userId,
+          conversationId: conversationId,
+          context: 'flux_image_generation',
+          endpoint: endpoint,
+          endpointTokenConfig: endpointTokenConfig,
+          model: 'flux',
+          creditType: 'image',
+        };
+
+        // Charge fixed 1000 image tokens
+        await spendTokens(txMetadata, {
+          promptTokens: 0,
+          completionTokens: 1000,
+        });
+
+        logger.info('[FluxAPI] Successfully charged 1000 image tokens');
+      } else {
+        logger.warn('[FluxAPI] Missing userId or conversationId, cannot charge tokens');
+      }
+    } catch (error) {
+      logger.error('[FluxAPI] Error spending image tokens:', error);
+      // Continue even if token spending fails
+    }
+
     if (this.isAgent) {
       try {
         // Fetch the image and convert to base64
@@ -339,53 +402,6 @@ class FluxAPI extends Tool {
       });
 
       logger.debug('[FluxAPI] Image saved to path:', result.filepath);
-
-      // Spend 1000 image tokens for successful image generation
-      try {
-        // Get parameters from req if not directly provided
-        const userId = this.userId || this.req?.user?.id;
-        const conversationId = this.conversationId || this.req?.body?.conversationId;
-        const endpoint = this.endpoint || this.req?.body?.endpoint || 'agents';
-        const endpointTokenConfig = this.endpointTokenConfig || this.req?.body?.endpointTokenConfig;
-        
-        logger.debug('[FluxAPI] Token charge check:', {
-          userId,
-          conversationId,
-          endpoint,
-          hasUserId: !!userId,
-          hasConversationId: !!conversationId,
-          fromReq: {
-            userId: this.req?.user?.id,
-            conversationId: this.req?.body?.conversationId,
-            endpoint: this.req?.body?.endpoint,
-          }
-        });
-        
-        if (userId && conversationId) {
-          const txMetadata = {
-            user: userId,
-            conversationId: conversationId,
-            context: 'flux_image_generation',
-            endpoint: endpoint,
-            endpointTokenConfig: endpointTokenConfig,
-            model: 'flux',
-            creditType: 'image',
-          };
-
-          // Charge fixed 1000 image tokens
-          await spendTokens(txMetadata, {
-            promptTokens: 0,
-            completionTokens: 1000,
-          });
-
-          logger.debug('[FluxAPI] Successfully charged 1000 image tokens');
-        } else {
-          logger.warn('[FluxAPI] Missing userId or conversationId, cannot charge tokens');
-        }
-      } catch (error) {
-        logger.error('[FluxAPI] Error spending image tokens:', error);
-        // Continue even if token spending fails
-      }
 
       this.result = this.returnMetadata ? result : this.wrapInMarkdown(result.filepath);
       return this.returnValue(this.result);
