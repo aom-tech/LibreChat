@@ -1,6 +1,6 @@
 const { logger } = require('@librechat/data-schemas');
 const { getBalanceConfig } = require('~/server/services/Config');
-const { getMultiplier, getCacheMultiplier, getCreditTypeByAgentId } = require('./tx');
+const { getMultiplier, getCacheMultiplier } = require('./tx');
 const { Transaction, Balance } = require('~/db/models');
 
 const cancelRate = 1.15;
@@ -237,8 +237,8 @@ async function createTransaction(txData) {
   }
 
   let incrementValue = transaction.tokenValue;
-  // Use provided creditType or determine from agentId
-  const creditType = txData.creditType || getCreditTypeByAgentId(txData.agentId);
+  // Use provided creditType (for Flux) or default to text
+  const creditType = txData.creditType || 'text';
 
   const balanceResponse = await updateBalance({
     user: transaction.user,
@@ -279,8 +279,8 @@ async function createStructuredTransaction(txData) {
   }
 
   let incrementValue = transaction.tokenValue;
-  // Use provided creditType or determine from agentId
-  const creditType = txData.creditType || getCreditTypeByAgentId(txData.agentId);
+  // Use provided creditType (for Flux) or default to text
+  const creditType = txData.creditType || 'text';
 
   const balanceResponse = await updateBalance({
     user: transaction.user,

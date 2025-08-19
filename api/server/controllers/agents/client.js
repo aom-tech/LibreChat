@@ -49,7 +49,6 @@ const BaseClient = require('~/app/clients/BaseClient');
 const { getRoleByName } = require('~/models/Role');
 const { loadAgent } = require('~/models/Agent');
 const { getMCPManager } = require('~/config');
-const { getAgentFixedCost } = require('~/models/tx');
 
 const omitTitleOptions = new Set([
   'stream',
@@ -603,65 +602,6 @@ class AgentClient extends BaseClient {
     if (!collectedUsage || !collectedUsage.length) {
       return;
     }
-
-    // Check if this is a fixed-cost agent
-    const agentId = this.options.agent?.id;
-    const fixedCost = agentId ? getAgentFixedCost(agentId) : null;
-
-    // For fixed-cost agents, aggregate all usage and charge only once
-    if (fixedCost !== null) {
-      let totalInputTokens = 0;
-      let totalOutputTokens = 0;
-      let totalCacheCreation = 0;
-      let totalCacheRead = 0;
-
-      for (const usage of collectedUsage) {
-        logger.info('usage: ', JSON.stringify(usage, null, 2))
-        if (usage) {
-          totalInputTokens += Number(usage.input_tokens) || 0;
-          totalOutputTokens += Number(usage.output_tokens) || 0;
-          totalCacheCreation += Number(usage.input_token_details?.cache_creation) || 0;
-          totalCacheRead += Number(usage.input_token_details?.cache_read) || 0;
-        }
-      }
-
-      const txMetadata = {
-        context,
-        conversationId: this.conversationId,
-        user: this.user ?? this.options.req.user?.id,
-        endpoint: this.options.endpoint,
-        endpointTokenConfig: this.options.endpointTokenConfig,
-        model: model ?? this.model ?? this.options.agent.model_parameters.model,
-        agentId,
-      };
-
-      // For fixed-cost agents, charge the fixed cost only once
-      if (totalCacheCreation > 0 || totalCacheRead > 0) {
-        spendStructuredTokens(txMetadata, {
-          promptTokens: {
-            input: totalInputTokens,
-            write: totalCacheCreation,
-            read: totalCacheRead,
-          },
-          completionTokens: totalOutputTokens,
-        }).catch((err) => {
-          logger.error('[recordCollectedUsage] Error spending structured tokens for fixed-cost agent', err);
-        });
-      } else {
-        spendTokens(txMetadata, {
-          promptTokens: totalInputTokens,
-          completionTokens: totalOutputTokens,
-        }).catch((err) => {
-          logger.error('[recordCollectedUsage] Error spending tokens for fixed-cost agent', err);
-        });
-      }
-
-      this.usage = {
-        input_tokens: totalInputTokens + totalCacheCreation + totalCacheRead,
-        output_tokens: totalOutputTokens,
-      };
-      return;
-    }
     const input_tokens =
       (collectedUsage[0]?.input_tokens || 0) +
       (Number(collectedUsage[0]?.input_token_details?.cache_creation) || 0) +
@@ -795,24 +735,7 @@ class AgentClient extends BaseClient {
 
       /** @type {TCustomConfig['endpoints']['agents']} */
       const agentsEConfig = this.options.req.app.locals[EModelEndpoint.agents];
-      // Извлечь изображения из payload
-      let image_urls = null;
-      // logger.debug(payload)
-      if (payload && Array.isArray(payload)) {
-        // Найти последнее сообщение пользователя с изображениями
-        for (let i = payload.length - 1; i >= 0; i--) {
-          const message = payload[i];
-          if (message.role === 'user' && message.content && Array.isArray(message.content)) {
-            const images = message.content
-              .filter(part => part.type === 'image_url' && part.image_url?.url)
-              .map(part => part.image_url.url);
-            if (images.length > 0) {
-              image_urls = images;
-              break;
-            }
-          }
-        }
-      }
+
       config = {
         configurable: {
           thread_id: this.conversationId,
@@ -820,7 +743,6 @@ class AgentClient extends BaseClient {
           user_id: this.user ?? this.options.req.user?.id,
           hide_sequential_outputs: this.options.agent.hide_sequential_outputs,
           user: this.options.req.user,
-          image_urls: image_urls, // Добавляем изображения в config
         },
         recursionLimit: agentsEConfig?.recursionLimit ?? 25,
         signal: abortController.signal,
