@@ -13,6 +13,7 @@ const { createTransaction, createStructuredTransaction } = require('./Transactio
  * @param {EndpointTokenConfig} [txData.endpointTokenConfig] - The current endpoint token config.
  * @param {String} [txData.valueKey] - The value key (optional).
  * @param {String} [txData.agentId] - The agent ID for determining credit type (optional).
+ * @param {String} [txData.creditType] - The credit type to use ('text', 'image', 'presentation', 'video') (optional).
  * @param {Object} tokenUsage - The number of tokens used.
  * @param {Number} tokenUsage.promptTokens - The number of prompt tokens used.
  * @param {Number} tokenUsage.completionTokens - The number of completion tokens used.

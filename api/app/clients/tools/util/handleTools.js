@@ -219,6 +219,10 @@ const loadTools = async ({
     processFileURL: options.processFileURL,
     returnMetadata: options.returnMetadata,
     uploadImageBuffer: options.uploadImageBuffer,
+    userId: user,
+    conversationId: options.conversationId,
+    endpoint: options.endpoint,
+    endpointTokenConfig: options.endpointTokenConfig,
   };
 
   const toolOptions = {

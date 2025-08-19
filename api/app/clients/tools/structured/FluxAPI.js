@@ -6,9 +6,10 @@ const { Tool } = require('@langchain/core/tools');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const { FileContext, ContentTypes } = require('librechat-data-provider');
 const { logger } = require('~/config');
+const { spendTokens } = require('~/models/spendTokens');
 
 const displayMessage =
-  'Flux displayed an image. All generated images are already plainly visible, so don\'t repeat the descriptions in detail. Do not list download links as they are available in the UI already. The user may download the images by clicking on them, but do not mention anything about downloading to the user.';
+  "Flux displayed an image. All generated images are already plainly visible, so don't repeat the descriptions in detail. Do not list download links as they are available in the UI already. The user may download the images by clicking on them, but do not mention anything about downloading to the user.";
 
 /**
  * FluxAPI - A tool for generating high-quality images from text prompts using the Flux API.
@@ -33,6 +34,9 @@ class FluxAPI extends Tool {
 
     this.userId = fields.userId;
     this.fileStrategy = fields.fileStrategy;
+    this.conversationId = fields.conversationId;
+    this.endpoint = fields.endpoint;
+    this.endpointTokenConfig = fields.endpointTokenConfig;
 
     /** @type {boolean} **/
     this.isAgent = fields.isAgent;
@@ -335,15 +339,32 @@ class FluxAPI extends Tool {
 
       logger.debug('[FluxAPI] Image saved to path:', result.filepath);
 
-      // Calculate cost based on endpoint
-      /**
-       * TODO: Cost handling
-      const endpoint = imageData.endpoint || '/v1/flux-pro';
-      const endpointKey = Object.entries(FluxAPI.PRICING).find(([key, _]) =>
-        endpoint.includes(key.toLowerCase().replace(/_/g, '-')),
-      )?.[0];
-      const cost = FluxAPI.PRICING[endpointKey] || 0;
-       */
+      // Spend 1000 image tokens for successful image generation
+      try {
+        if (this.userId && this.conversationId) {
+          const txMetadata = {
+            user: this.userId,
+            conversationId: this.conversationId,
+            context: 'flux_image_generation',
+            endpoint: this.endpoint,
+            endpointTokenConfig: this.endpointTokenConfig,
+            model: 'flux',
+            creditType: 'image',
+          };
+
+          // Charge fixed 1000 image tokens
+          await spendTokens(txMetadata, {
+            promptTokens: 0,
+            completionTokens: 1000,
+          });
+
+          logger.debug('[FluxAPI] Successfully charged 1000 image tokens');
+        }
+      } catch (error) {
+        logger.error('[FluxAPI] Error spending image tokens:', error);
+        // Continue even if token spending fails
+      }
+
       this.result = this.returnMetadata ? result : this.wrapInMarkdown(result.filepath);
       return this.returnValue(this.result);
     } catch (error) {

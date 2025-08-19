@@ -1,6 +1,12 @@
 const { logger } = require('@librechat/data-schemas');
 const { getBalanceConfig } = require('~/server/services/Config');
-const { getMultiplier, getCacheMultiplier, getCreditTypeByAgentId, getAgentFixedCost, defaultRate } = require('./tx');
+const {
+  getMultiplier,
+  getCacheMultiplier,
+  getCreditTypeByAgentId,
+  getAgentFixedCost,
+  defaultRate,
+} = require('./tx');
 const { Transaction, Balance } = require('~/db/models');
 
 const cancelRate = 1.15;
@@ -28,7 +34,7 @@ const updateBalance = async ({ user, incrementValue, setValues, creditType = nul
     try {
       // 1. Read the current document state
       currentBalanceDoc = await Balance.findOne({ user }).lean();
-      
+
       let currentCredits;
       let newCredits;
       let updatePayload;
@@ -44,13 +50,12 @@ const updateBalance = async ({ user, incrementValue, setValues, creditType = nul
         currentCredits = currentAvailableCredits[creditType] || 0;
         const potentialNewCredits = currentCredits + incrementValue;
         newCredits = Math.max(0, potentialNewCredits);
-        
-        
+
         const updatedAvailableCredits = {
           ...currentAvailableCredits,
           [creditType]: newCredits,
         };
-        
+
         updatePayload = {
           $set: {
             availableCredits: updatedAvailableCredits,
@@ -62,7 +67,7 @@ const updateBalance = async ({ user, incrementValue, setValues, creditType = nul
         currentCredits = currentBalanceDoc ? currentBalanceDoc.tokenCredits : 0;
         const potentialNewCredits = currentCredits + incrementValue;
         newCredits = Math.max(0, potentialNewCredits);
-        
+
         updatePayload = {
           $set: {
             tokenCredits: newCredits,
@@ -84,15 +89,11 @@ const updateBalance = async ({ user, incrementValue, setValues, creditType = nul
           // For legacy tokenCredits
           query.tokenCredits = currentCredits;
         }
-        
-        updatedBalance = await Balance.findOneAndUpdate(
-          query,
-          updatePayload,
-          {
-            new: true, // Return the modified document
-            // lean: true, // .lean() is applied after query execution in Mongoose >= 6
-          },
-        ).lean(); // Use lean() for plain JS object
+
+        updatedBalance = await Balance.findOneAndUpdate(query, updatePayload, {
+          new: true, // Return the modified document
+          // lean: true, // .lean() is applied after query execution in Mongoose >= 6
+        }).lean(); // Use lean() for plain JS object
 
         if (updatedBalance) {
           // Success! The update was applied based on the expected current state.
@@ -192,23 +193,28 @@ function calculateTokenValue(txn) {
       }
     }
   }
-  
+
   if (!txn.valueKey || !txn.tokenType) {
     txn.tokenValue = txn.rawAmount;
     return;
   }
-  
+
   const { valueKey, tokenType, model, endpointTokenConfig } = txn;
   // endpoint might be in txn or txn.endpoint
   const endpoint = txn.endpoint;
-  const rawMultiplier = getMultiplier({ valueKey, tokenType, model, endpoint, endpointTokenConfig });
-  
-  
+  const rawMultiplier = getMultiplier({
+    valueKey,
+    tokenType,
+    model,
+    endpoint,
+    endpointTokenConfig,
+  });
+
   // Ensure multiplier is always a valid number
   const multiplier = Math.abs(rawMultiplier || defaultRate);
   txn.rate = multiplier;
   txn.tokenValue = txn.rawAmount * multiplier;
-  
+
   if (txn.context && txn.tokenType === 'completion' && txn.context === 'incomplete') {
     txn.tokenValue = Math.ceil(txn.tokenValue * cancelRate);
     txn.rate *= cancelRate;
@@ -269,19 +275,18 @@ async function createTransaction(txData) {
   }
 
   let incrementValue = transaction.tokenValue;
-  const creditType = getCreditTypeByAgentId(txData.agentId);
-  
-  
+  // Use provided creditType or determine from agentId
+  const creditType = txData.creditType || getCreditTypeByAgentId(txData.agentId);
+
   const balanceResponse = await updateBalance({
     user: transaction.user,
     incrementValue,
     creditType,
   });
 
-  const responseBalance = creditType 
+  const responseBalance = creditType
     ? balanceResponse.availableCredits?.[creditType] || 0
     : balanceResponse.tokenCredits;
-
 
   return {
     rate: transaction.rate,
@@ -312,8 +317,8 @@ async function createStructuredTransaction(txData) {
   }
 
   let incrementValue = transaction.tokenValue;
-  const creditType = getCreditTypeByAgentId(txData.agentId);
-
+  // Use provided creditType or determine from agentId
+  const creditType = txData.creditType || getCreditTypeByAgentId(txData.agentId);
 
   const balanceResponse = await updateBalance({
     user: transaction.user,
@@ -321,10 +326,9 @@ async function createStructuredTransaction(txData) {
     creditType,
   });
 
-  const responseBalance = creditType 
+  const responseBalance = creditType
     ? balanceResponse.availableCredits?.[creditType] || 0
     : balanceResponse.tokenCredits;
-
 
   return {
     rate: transaction.rate,
@@ -355,7 +359,7 @@ function calculateStructuredTokenValue(txn) {
       }
     }
   }
-  
+
   if (!txn.tokenType) {
     txn.tokenValue = txn.rawAmount;
     return;
@@ -400,7 +404,7 @@ function calculateStructuredTokenValue(txn) {
     txn.rawAmount = -totalPromptTokens;
   } else if (txn.tokenType === 'completion') {
     const multiplier = getMultiplier({ tokenType: txn.tokenType, model, endpointTokenConfig });
-    
+
     const safeMultiplier = multiplier || defaultRate;
     txn.rate = Math.abs(safeMultiplier);
     txn.tokenValue = -Math.abs(txn.rawAmount) * safeMultiplier;
