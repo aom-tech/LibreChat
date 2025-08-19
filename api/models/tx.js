@@ -9,6 +9,8 @@ const AGENT_CREDIT_TYPES = {
   'agent_p_s8V9FmVfxgHGVIFjOne': 'video',
 };
 
+//
+
 /**
  * Determines the credit type based on the agent ID
  * @param {string} agentId - The agent ID
@@ -18,7 +20,7 @@ const getCreditTypeByAgentId = (agentId) => {
   if (!agentId) {
     return 'text';
   }
-  
+
   return AGENT_CREDIT_TYPES[agentId] || 'text';
 };
 
