@@ -37,6 +37,7 @@ class FluxAPI extends Tool {
     this.conversationId = fields.conversationId;
     this.endpoint = fields.endpoint;
     this.endpointTokenConfig = fields.endpointTokenConfig;
+    this.req = fields.req;
 
     /** @type {boolean} **/
     this.isAgent = fields.isAgent;
@@ -341,13 +342,32 @@ class FluxAPI extends Tool {
 
       // Spend 1000 image tokens for successful image generation
       try {
-        if (this.userId && this.conversationId) {
+        // Get parameters from req if not directly provided
+        const userId = this.userId || this.req?.user?.id;
+        const conversationId = this.conversationId || this.req?.body?.conversationId;
+        const endpoint = this.endpoint || this.req?.body?.endpoint || 'agents';
+        const endpointTokenConfig = this.endpointTokenConfig || this.req?.body?.endpointTokenConfig;
+        
+        logger.debug('[FluxAPI] Token charge check:', {
+          userId,
+          conversationId,
+          endpoint,
+          hasUserId: !!userId,
+          hasConversationId: !!conversationId,
+          fromReq: {
+            userId: this.req?.user?.id,
+            conversationId: this.req?.body?.conversationId,
+            endpoint: this.req?.body?.endpoint,
+          }
+        });
+        
+        if (userId && conversationId) {
           const txMetadata = {
-            user: this.userId,
-            conversationId: this.conversationId,
+            user: userId,
+            conversationId: conversationId,
             context: 'flux_image_generation',
-            endpoint: this.endpoint,
-            endpointTokenConfig: this.endpointTokenConfig,
+            endpoint: endpoint,
+            endpointTokenConfig: endpointTokenConfig,
             model: 'flux',
             creditType: 'image',
           };
@@ -359,6 +379,8 @@ class FluxAPI extends Tool {
           });
 
           logger.debug('[FluxAPI] Successfully charged 1000 image tokens');
+        } else {
+          logger.warn('[FluxAPI] Missing userId or conversationId, cannot charge tokens');
         }
       } catch (error) {
         logger.error('[FluxAPI] Error spending image tokens:', error);
