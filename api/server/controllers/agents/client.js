@@ -802,7 +802,7 @@ class AgentClient extends BaseClient {
         // Найти последнее сообщение пользователя с изображениями
         for (let i = payload.length - 1; i >= 0; i--) {
           const message = payload[i];
-          if (message.content && Array.isArray(message.content)) {
+          if (message.role === 'user' && message.content && Array.isArray(message.content)) {
             const images = message.content
               .filter(part => part.type === 'image_url' && part.image_url?.url)
               .map(part => part.image_url.url);
