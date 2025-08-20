@@ -169,6 +169,8 @@ if (!userId || !conversationId) {
 **Problem**: Forgetting to add model to `tokenValues` results in 6x multiplier.
 **Solution**: Always add your model with appropriate multipliers (use 1 for fixed-cost services).
 
+**Critical for Custom Credits**: When using custom credit types (image, presentation, video), ALWAYS add the model/server name to `tokenValues` with multiplier 1. Otherwise, your fixed costs will be multiplied by 6!
+
 #### Pitfall 3: Early Returns Skipping Token Charge
 **Problem**: Token charging code after early returns never executes.
 **Solution**: Place token charging immediately after successful operation, before any returns.
@@ -257,3 +259,82 @@ The key to proper balance management is:
 5. **Request Context**: Ensure tools have access to user and conversation data
 
 This system allows for flexible pricing models while maintaining clear separation between different service types.
+
+## MCP Tools Integration
+
+MCP (Model Control Protocol) tools can also use the token deduction system. This is implemented in `/api/server/services/MCP.js`.
+
+### Adding Token Deduction to MCP Tools
+
+1. **Identify Tool Type**: Check the tool name or server name to identify if it requires token deduction
+```javascript
+const isPresentationTool = toolName.toLowerCase().includes('powerpoint') || 
+                          toolName.toLowerCase().includes('presentation') ||
+                          serverName.toLowerCase().includes('slidespeak');
+```
+
+2. **Check Balance Before Execution**: Similar to other services
+```javascript
+if (isPresentationTool && userId) {
+  const balanceDoc = await Balance.findOne({ user: userId }).lean();
+  const presentationBalance = balanceDoc.availableCredits?.presentation || 0;
+  
+  if (presentationBalance < FIXED_SERVICE_COSTS.PRESENTATION) {
+    throw new Error(`Insufficient presentation credits...`);
+  }
+}
+```
+
+3. **Charge Tokens After Success**: After the MCP tool executes successfully
+```javascript
+if (isPresentationTool && userId && conversationId) {
+  const txMetadata = {
+    user: userId,
+    conversationId: conversationId,
+    context: 'presentation_generation',
+    endpoint: endpoint,
+    model: serverName,
+    creditType: 'presentation',
+  };
+
+  await spendTokens(txMetadata, {
+    promptTokens: 0,
+    completionTokens: FIXED_SERVICE_COSTS.PRESENTATION,
+  });
+}
+```
+
+### Supported MCP Tools with Token Deduction
+
+- **Presentation Generation**: Any MCP tool with names containing "powerpoint", "presentation", or from "slidespeak" server
+  - Costs: 1000 presentation tokens per generation
+  - Credit Type: `presentation`
+
+### CRITICAL: Adding Token Multipliers for MCP Servers
+
+**⚠️ IMPORTANT**: When implementing token deduction for MCP tools or any custom services, you MUST add the server/model name to `tokenValues` in `/api/models/tx.js` with a multiplier of 1:
+
+```javascript
+const tokenValues = Object.assign(
+  {
+    'flux': { prompt: 1, completion: 1 },
+    'slidespeak-server': { prompt: 1, completion: 1 }, // CRITICAL: Add this!
+    'your-mcp-server': { prompt: 1, completion: 1 },   // For any new MCP server
+    // ... other models
+  }
+);
+```
+
+**Why this is critical**:
+- If the model is not in `tokenValues`, it will use `defaultRate = 6`
+- This means 1000 tokens will be charged as 6000 tokens!
+- Always use multiplier `1` for fixed-cost services
+
+**Example of the problem**:
+```
+// Without adding to tokenValues:
+// Charging 1000 tokens → Actually charges 6000 tokens (1000 * 6)
+
+// After adding to tokenValues with multiplier 1:
+// Charging 1000 tokens → Correctly charges 1000 tokens (1000 * 1)
+```

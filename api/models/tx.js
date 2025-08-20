@@ -4,7 +4,7 @@ const defaultRate = 6;
 // Fixed costs for various services
 const FIXED_SERVICE_COSTS = {
   FLUX_IMAGE: 1000,  // Cost per image generation
-  PRESENTATION: 5000, // Cost per presentation
+  PRESENTATION: 1000, // Cost per presentation
   VIDEO: 10000,      // Cost per video
 };
 
@@ -100,6 +100,7 @@ const bedrockValues = {
 const tokenValues = Object.assign(
   {
     'flux': { prompt: 1, completion: 1 }, // Fixed rate for image generation
+    'slidespeak-server': { prompt: 1, completion: 1 }, // Fixed rate for presentation generation
     '8k': { prompt: 30, completion: 60 },
     '32k': { prompt: 60, completion: 120 },
     '4k': { prompt: 1.5, completion: 2 },
@@ -215,6 +216,11 @@ const getValueKey = (model, endpoint) => {
   const modelName = matchModelName(model, endpoint);
   if (!modelName) {
     return undefined;
+  }
+  
+  // Check if this is an MCP server model that should use fixed rates
+  if (modelName.includes('-server') && tokenValues[modelName]) {
+    return modelName;
   }
 
   if (modelName.includes('gpt-3.5-turbo-16k')) {
