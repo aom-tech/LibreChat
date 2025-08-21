@@ -44,11 +44,45 @@
     <div class="hero-visual">
       <div class="visual-placeholder">
         <div class="visual-card">
-          <div class="card-header">AI Dashboard</div>
+          <div class="card-header">
+            <span class="card-badge">Генерация курса</span>
+            <span class="card-status">В процессе...</span>
+          </div>
           <div class="card-content">
-            <div class="pulse-line"></div>
-            <div class="pulse-line"></div>
-            <div class="pulse-line"></div>
+            <div class="generation-item completed">
+              <span class="check-icon">✓</span>
+              <div class="item-text">
+                <strong>Анализ аудитории</strong>
+                <span>Предприниматели 25-45 лет</span>
+              </div>
+            </div>
+            <div class="generation-item completed">
+              <span class="check-icon">✓</span>
+              <div class="item-text">
+                <strong>Тема курса</strong>
+                <span>AI для автоматизации бизнеса</span>
+              </div>
+            </div>
+            <div class="generation-item active">
+              <span class="loader-icon">⟳</span>
+              <div class="item-text">
+                <strong>Создание контента</strong>
+                <span>Модуль 3 из 7...</span>
+              </div>
+            </div>
+            <div class="generation-item pending">
+              <span class="pending-icon">○</span>
+              <div class="item-text">
+                <strong>Генерация видео</strong>
+                <span>Ожидание</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="progress-bar">
+              <div class="progress-fill"></div>
+            </div>
+            <span class="progress-text">62% завершено</span>
           </div>
         </div>
       </div>
@@ -160,41 +194,135 @@
     border-radius: 0.75rem;
     padding: 1.5rem;
     width: 100%;
-    max-width: 400px;
+    max-width: 450px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   }
 
   .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-badge {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+  }
+
+  .card-status {
+    color: var(--secondary);
+    font-size: 0.875rem;
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .generation-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .generation-item.completed {
+    background: #f0fdf4;
+  }
+
+  .generation-item.active {
+    background: #fef3c7;
+    animation: activeGlow 2s ease-in-out infinite;
+  }
+
+  @keyframes activeGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    50% { box-shadow: 0 0 10px 2px rgba(245, 158, 11, 0.2); }
+  }
+
+  .generation-item.pending {
+    opacity: 0.6;
+  }
+
+  .check-icon {
+    color: var(--secondary);
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+
+  .loader-icon {
+    color: var(--accent);
+    font-size: 1.25rem;
+    animation: rotate 1s linear infinite;
+  }
+
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .pending-icon {
+    color: #d1d5db;
+    font-size: 1.25rem;
+  }
+
+  .item-text {
+    flex: 1;
+  }
+
+  .item-text strong {
+    display: block;
     color: var(--dark);
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
   }
 
-  .pulse-line {
-    height: 12px;
-    background: linear-gradient(90deg, #e5e7eb 0%, #d1d5db 50%, #e5e7eb 100%);
-    border-radius: 0.25rem;
-    margin-bottom: 0.75rem;
-    animation: pulse 2s ease-in-out infinite;
+  .item-text span {
+    color: var(--gray);
+    font-size: 0.75rem;
   }
 
-  .pulse-line:nth-child(2) {
-    width: 80%;
-    animation-delay: 0.2s;
+  .card-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
   }
 
-  .pulse-line:nth-child(3) {
-    width: 60%;
-    animation-delay: 0.4s;
+  .progress-bar {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
   }
 
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 0.6;
-    }
-    50% {
-      opacity: 1;
-    }
+  .progress-fill {
+    height: 100%;
+    width: 62%;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+    border-radius: 3px;
+    animation: progressGrow 2s ease-out;
+  }
+
+  @keyframes progressGrow {
+    from { width: 0; }
+    to { width: 62%; }
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+    color: var(--gray);
+    display: block;
+    text-align: center;
   }
 
   @media (max-width: 767px) {
