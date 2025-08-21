@@ -1,0 +1,216 @@
+---
+
+---
+
+<section class="hero section">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span>⚡ Без кода</span>
+        <span>⚙️ API и облако</span>
+        <span>💳 Оплата картой РФ</span>
+      </div>
+      
+      <h1 class="hero-title">
+        Единая AI-платформа для бизнеса и авторов. 
+        <span class="text-gradient">Оплата картой РФ.</span>
+      </h1>
+      
+      <p class="hero-subtitle">
+        Доступ к передовым нейросетям, запуск ИИ-агентов и коробочное решение для создания курсов за минуты.
+      </p>
+      
+      <div class="hero-actions">
+        <a href="#" class="btn btn-primary btn-large">Попробовать бесплатно</a>
+        <a href="#" class="btn btn-secondary btn-large">Запросить демо</a>
+      </div>
+      
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-value">50+</div>
+          <div class="stat-label">AI моделей</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">1000+</div>
+          <div class="stat-label">Компаний</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">24/7</div>
+          <div class="stat-label">Поддержка</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="hero-visual">
+      <div class="visual-placeholder">
+        <div class="visual-card">
+          <div class="card-header">AI Dashboard</div>
+          <div class="card-content">
+            <div class="pulse-line"></div>
+            <div class="pulse-line"></div>
+            <div class="pulse-line"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    background: linear-gradient(180deg, #f9fafb 0%, rgba(249, 250, 251, 0) 100%);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .hero-content {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--white);
+    border: 1px solid #e5e7eb;
+    border-radius: 2rem;
+    margin-bottom: 2rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray);
+  }
+
+  .hero-badge span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .hero-title {
+    margin-bottom: 1.5rem;
+    font-weight: 800;
+  }
+
+  .hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--gray);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+
+  .btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+  }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    padding: 2rem;
+    background: var(--white);
+    border-radius: 1rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    margin-top: 3rem;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .stat-label {
+    font-size: 0.875rem;
+    color: var(--gray);
+    margin-top: 0.25rem;
+  }
+
+  .hero-visual {
+    margin-top: 4rem;
+    position: relative;
+  }
+
+  .visual-placeholder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 1rem;
+    padding: 2rem;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .visual-card {
+    background: var(--white);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  .card-header {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--dark);
+  }
+
+  .pulse-line {
+    height: 12px;
+    background: linear-gradient(90deg, #e5e7eb 0%, #d1d5db 50%, #e5e7eb 100%);
+    border-radius: 0.25rem;
+    margin-bottom: 0.75rem;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .pulse-line:nth-child(2) {
+    width: 80%;
+    animation-delay: 0.2s;
+  }
+
+  .pulse-line:nth-child(3) {
+    width: 60%;
+    animation-delay: 0.4s;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .hero-badge {
+      font-size: 0.75rem;
+      gap: 0.5rem;
+    }
+
+    .hero-stats {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+    }
+  }
+</style>

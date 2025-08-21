@@ -1,0 +1,227 @@
+---
+
+---
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-section">
+        <div class="footer-brand">
+          <h3 class="brand-name">Cogneex</h3>
+          <p class="brand-description">Единая AI-платформа для бизнеса и авторов с оплатой картой РФ</p>
+        </div>
+        <div class="footer-social">
+          <a href="#" aria-label="Telegram">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.657-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+            </svg>
+          </a>
+          <a href="#" aria-label="WhatsApp">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.784 23.456l4.5-1.442C7.236 23.364 9.546 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm5.996 17.003c-.252.708-1.244 1.317-2.035 1.492-.514.114-1.184.205-3.442-.738-2.887-1.205-4.747-4.131-4.89-4.32-.139-.189-1.139-1.518-1.139-2.898 0-1.38.723-2.058 .978-2.34.252-.279.552-.348.735-.348.177 0 .354.002.507.009.162.007.379-.061.593.453.252.6.855 2.085.93 2.238.075.15.126.327.003.525-.123.201-.186.324-.372.504-.183.177-.387.396-.552.531-.18.147-.366.306-.156.6.207.291.924 1.524 1.983 2.469 1.362 1.215 2.511 1.593 2.868 1.773.354.177.561.15.768-.09.204-.243.876-.1.023 1.386-.525.279-.291.522-.552.723-1.011.078-.189.12-.36.12-.552z"/>
+            </svg>
+          </a>
+          <a href="#" aria-label="Email">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+              <path d="m22 7-10 5L2 7"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+      
+      <div class="footer-section">
+        <h4 class="footer-title">Продукт</h4>
+        <ul class="footer-links">
+          <li><a href="#features">Возможности</a></li>
+          <li><a href="#course-box">Решение для курсов</a></li>
+          <li><a href="#pricing">Цены</a></li>
+          <li><a href="#">API документация</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-section">
+        <h4 class="footer-title">Компания</h4>
+        <ul class="footer-links">
+          <li><a href="#">О нас</a></li>
+          <li><a href="#">Блог</a></li>
+          <li><a href="#">Карьера</a></li>
+          <li><a href="#">Контакты</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-section">
+        <h4 class="footer-title">Правовая информация</h4>
+        <ul class="footer-links">
+          <li><a href="/legal/offer">Договор оферты</a></li>
+          <li><a href="/legal/privacy">Политика конфиденциальности</a></li>
+          <li><a href="/legal/pd-policy">Обработка персональных данных</a></li>
+          <li><a href="/legal/refund">Возврат средств</a></li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="footer-bottom">
+      <div class="footer-company">
+        <p>© 2024 ООО «Когникс». Все права защищены.</p>
+        <p class="footer-requisites">ИНН: 7707083893 | ОГРН: 1027700132195</p>
+      </div>
+      <div class="footer-payment">
+        <span>Принимаем к оплате:</span>
+        <div class="payment-icons">
+          <span class="payment-icon">Visa</span>
+          <span class="payment-icon">MC</span>
+          <span class="payment-icon">МИР</span>
+          <span class="payment-icon">СБП</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--dark);
+    color: var(--white);
+    padding: 4rem 0 2rem;
+  }
+
+  .footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 3rem;
+    margin-bottom: 3rem;
+  }
+
+  @media (min-width: 768px) {
+    .footer-content {
+      grid-template-columns: 2fr 1fr 1fr 1.5fr;
+    }
+  }
+
+  .footer-section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .footer-brand {
+    margin-bottom: 1.5rem;
+  }
+
+  .brand-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+  }
+
+  .brand-description {
+    color: #9ca3af;
+    line-height: 1.6;
+  }
+
+  .footer-social {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .footer-social a {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    transition: all 0.3s ease;
+  }
+
+  .footer-social a:hover {
+    background: var(--primary);
+    color: var(--white);
+    transform: translateY(-2px);
+  }
+
+  .footer-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 1rem;
+  }
+
+  .footer-links {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .footer-links a {
+    color: #d1d5db;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .footer-links a:hover {
+    color: var(--primary);
+  }
+
+  .footer-bottom {
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+  }
+
+  .footer-company p {
+    color: #9ca3af;
+    font-size: 0.875rem;
+  }
+
+  .footer-requisites {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .footer-payment {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: #9ca3af;
+  }
+
+  .payment-icons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .payment-icon {
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  @media (max-width: 767px) {
+    .footer-content {
+      grid-template-columns: 1fr;
+    }
+
+    .footer-bottom {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

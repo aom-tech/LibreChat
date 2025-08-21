@@ -1,0 +1,133 @@
+---
+
+---
+
+<header class="header">
+  <div class="container">
+    <nav class="nav">
+      <a href="/" class="logo">
+        <span class="logo-text">Cogneex</span>
+      </a>
+      
+      <ul class="nav-menu">
+        <li><a href="#how-it-works">Как это работает</a></li>
+        <li><a href="#features">Возможности</a></li>
+        <li><a href="#course-box">Для курсов</a></li>
+        <li><a href="#pricing">Цены</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+      
+      <div class="nav-actions">
+        <a href="#" class="btn btn-primary">Попробовать бесплатно</a>
+      </div>
+
+      <button class="mobile-toggle" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e5e7eb;
+    z-index: 1000;
+    padding: 1rem 0;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .logo {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .logo-text {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .nav-menu {
+    display: none;
+    list-style: none;
+    gap: 2rem;
+    margin: 0;
+  }
+
+  @media (min-width: 768px) {
+    .nav-menu {
+      display: flex;
+    }
+  }
+
+  .nav-menu a {
+    color: var(--dark);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .nav-menu a:hover {
+    color: var(--primary);
+  }
+
+  .nav-actions {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .nav-actions {
+      display: flex;
+      gap: 1rem;
+    }
+  }
+
+  .mobile-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-toggle {
+      display: none;
+    }
+  }
+
+  .mobile-toggle span {
+    width: 24px;
+    height: 2px;
+    background: var(--dark);
+    transition: all 0.3s ease;
+  }
+</style>
+
+<script>
+  const toggle = document.querySelector('.mobile-toggle');
+  const menu = document.querySelector('.nav-menu');
+  
+  toggle?.addEventListener('click', () => {
+    menu?.classList.toggle('active');
+  });
+</script>

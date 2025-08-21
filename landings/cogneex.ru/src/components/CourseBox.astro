@@ -1,0 +1,320 @@
+---
+
+---
+
+<section id="course-box" class="section course-box">
+  <div class="container">
+    <div class="course-box-wrapper">
+      <div class="course-box-content">
+        <div class="badge">🚀 Коробочное решение</div>
+        <h2 class="course-box-title">
+          Создавайте курсы за <span class="text-gradient">2 клика</span> с ИИ-агентами
+        </h2>
+        <p class="course-box-description">
+          Платформа анализирует вашу аудиторию, <strong>генерирует темы</strong>, 
+          автоматически дополняет <strong>текстами и тестами</strong>. 
+          Ещё один клик — и <strong>готовая презентация</strong> с изображениями и видео.
+        </p>
+        
+        <div class="course-steps">
+          <div class="course-step">
+            <div class="course-step-icon">📊</div>
+            <div class="course-step-text">
+              <h4>Анализ ЦА</h4>
+              <p>Изучаем вашу аудиторию</p>
+            </div>
+          </div>
+          <div class="arrow">→</div>
+          
+          <div class="course-step">
+            <div class="course-step-icon">💡</div>
+            <div class="course-step-text">
+              <h4>Темы</h4>
+              <p>Генерируем актуальные темы</p>
+            </div>
+          </div>
+          <div class="arrow">→</div>
+          
+          <div class="course-step">
+            <div class="course-step-icon">📝</div>
+            <div class="course-step-text">
+              <h4>Тексты/Тесты</h4>
+              <p>Создаем контент и задания</p>
+            </div>
+          </div>
+          <div class="arrow">→</div>
+          
+          <div class="course-step">
+            <div class="course-step-icon">🎬</div>
+            <div class="course-step-text">
+              <h4>Презентации/Видео</h4>
+              <p>Оформляем визуально</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="course-box-actions">
+          <a href="https://platform.example/" class="btn btn-accent btn-large">
+            Создать курс в 1 клик
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 0.5rem;">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </a>
+          <p class="action-note">Без регистрации • 3 минуты на создание</p>
+        </div>
+      </div>
+      
+      <div class="course-box-visual">
+        <div class="visual-card floating">
+          <div class="card-badge">AI генерация</div>
+          <div class="card-preview">
+            <div class="preview-header">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+            <div class="preview-content">
+              <div class="preview-title">Модуль 1: Введение в AI</div>
+              <div class="preview-items">
+                <div class="preview-item">✓ Урок 1: Основы нейросетей</div>
+                <div class="preview-item">✓ Урок 2: Практика с ChatGPT</div>
+                <div class="preview-item">✓ Тест: 10 вопросов</div>
+                <div class="preview-item generating">⏳ Генерация презентации...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .course-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .course-box::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: rotate 30s linear infinite;
+  }
+
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .course-box-wrapper {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+
+  @media (min-width: 1024px) {
+    .course-box-wrapper {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .course-box-content {
+    color: var(--white);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    backdrop-filter: blur(10px);
+  }
+
+  .course-box-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    margin-bottom: 1.5rem;
+    font-weight: 800;
+  }
+
+  .course-box-title .text-gradient {
+    background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .course-box-description {
+    font-size: 1.125rem;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+  }
+
+  .course-box-description strong {
+    color: #ffd89b;
+    font-weight: 600;
+  }
+
+  .course-steps {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  @media (min-width: 768px) {
+    .course-steps {
+      flex-wrap: nowrap;
+    }
+  }
+
+  .course-step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    backdrop-filter: blur(10px);
+  }
+
+  .course-step-icon {
+    font-size: 1.5rem;
+  }
+
+  .course-step-text h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .course-step-text p {
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  .arrow {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.5rem;
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .arrow {
+      display: block;
+    }
+  }
+
+  .course-box-actions {
+    margin-top: 2rem;
+  }
+
+  .action-note {
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    opacity: 0.8;
+  }
+
+  .course-box-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .visual-card {
+    background: var(--white);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 100%;
+  }
+
+  .floating {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  .card-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--white);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .card-preview {
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .preview-header {
+    background: #e5e7eb;
+    padding: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #9ca3af;
+  }
+
+  .preview-content {
+    padding: 1rem;
+  }
+
+  .preview-title {
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 1rem;
+  }
+
+  .preview-item {
+    padding: 0.5rem 0;
+    color: var(--gray);
+    font-size: 0.875rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .preview-item:last-child {
+    border-bottom: none;
+  }
+
+  .generating {
+    color: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+</style>
