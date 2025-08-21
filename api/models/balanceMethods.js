@@ -2,7 +2,7 @@ const { logger } = require('@librechat/data-schemas');
 const { ViolationTypes } = require('librechat-data-provider');
 const { createAutoRefillTransaction } = require('./Transaction');
 const { logViolation } = require('~/cache');
-const { getMultiplier, getCreditTypeByAgentId } = require('./tx');
+const { getMultiplier } = require('./tx');
 const { Balance } = require('~/db/models');
 
 function isInvalidDate(date) {
@@ -38,17 +38,9 @@ const checkBalanceRecord = async function ({
     };
   }
   
-  // Determine which credit type to use
-  const creditType = getCreditTypeByAgentId(agentId);
-  let balance;
-  
-  if (agentId) {
-    // Use specific credit type for agents (including 'text')
-    balance = record.availableCredits?.[creditType] || 0;
-  } else {
-    // Use legacy tokenCredits for non-agent requests
-    balance = record.tokenCredits;
-  }
+  // Always use text credits for balance checking
+  const creditType = 'text';
+  let balance = record.tokenCredits;
 
   logger.debug('[Balance.check] Initial state', {
     user,

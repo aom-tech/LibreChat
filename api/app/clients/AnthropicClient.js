@@ -351,6 +351,7 @@ class AnthropicClient extends BaseClient {
         user: this.user,
         conversationId: this.conversationId,
         model: model ?? this.modelOptions.model,
+        endpoint: this.options.endpoint,
         endpointTokenConfig: this.options.endpointTokenConfig,
         agentId: this.options.agent?.id,
       },

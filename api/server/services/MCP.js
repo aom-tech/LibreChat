@@ -14,6 +14,9 @@ const { findToken, createToken, updateToken } = require('~/models');
 const { getMCPManager, getFlowStateManager } = require('~/config');
 const { getCachedTools, loadCustomConfig } = require('./Config');
 const { getLogStores } = require('~/cache');
+const { spendTokens } = require('~/models/spendTokens');
+const { FIXED_SERVICE_COSTS } = require('~/models/tx');
+const { Balance } = require('~/db/models');
 
 /**
  * @param {object} params
@@ -135,11 +138,33 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
   /** @type {(toolArguments: Object | string, config?: GraphRunnableConfig) => Promise<unknown>} */
   const _call = async (toolArguments, config) => {
     const userId = config?.configurable?.user?.id || config?.configurable?.user_id;
+    logger.debug(config)
+    // Добавить изображения в аргументы, если они есть
+    const imageUrls = config?.configurable?.image_urls;
+    if (imageUrls && imageUrls.length > 0) {
+      // Извлечь base64 данные из data URLs
+      const images = imageUrls.map(url => {
+        if (url && url.startsWith('data:image/')) {
+          const base64Data = url.split(',')[1];
+          return base64Data;
+        }
+        return null;
+      }).filter(Boolean);
+      
+      if (images.length > 0) {
+        // Добавить изображения в аргументы инструмента
+        if (typeof toolArguments === 'object' && toolArguments !== null) {
+          toolArguments.images = images;
+        }
+      }
+    }
     /** @type {ReturnType<typeof createAbortHandler>} */
     let abortHandler = null;
     /** @type {AbortSignal} */
     let derivedSignal = null;
 
+    // logger.debug(toolArguments)
+    // logger.debug('toolArguments', truncateLongStrings(toolArguments.images));
     try {
       const flowsCache = getLogStores(CacheKeys.FLOWS);
       const flowManager = getFlowStateManager(flowsCache);
@@ -171,6 +196,40 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
       const customUserVars =
         config?.configurable?.userMCPAuthMap?.[`${Constants.mcp_prefix}${serverName}`];
 
+      // Check if this is a presentation generation tool
+      const isPresentationTool = toolName.toLowerCase().includes('powerpoint') || 
+                                toolName.toLowerCase().includes('presentation') ||
+                                serverName.toLowerCase().includes('slidespeak');
+      
+      // Check balance for presentation tools
+      if (isPresentationTool && userId) {
+        try {
+          const balanceDoc = await Balance.findOne({ user: userId }).lean();
+          
+          if (!balanceDoc) {
+            logger.warn(`[MCP][${serverName}][${toolName}] No balance document found for user:`, userId);
+            throw new Error('Unable to verify presentation credits balance.');
+          }
+
+          const presentationBalance = balanceDoc.availableCredits?.presentation || 0;
+          const requiredCredits = FIXED_SERVICE_COSTS.PRESENTATION;
+
+          logger.debug(`[MCP][${serverName}][${toolName}] Presentation balance check:`, {
+            userId,
+            presentationBalance,
+            requiredCredits,
+            canGenerate: presentationBalance >= requiredCredits,
+          });
+
+          if (presentationBalance < requiredCredits) {
+            throw new Error(`Insufficient presentation credits. You have ${presentationBalance} credits but need at least ${requiredCredits} to generate a presentation.`);
+          }
+        } catch (error) {
+          logger.error(`[MCP][${serverName}][${toolName}] Error checking presentation balance:`, error);
+          throw error;
+        }
+      }
+
       const result = await mcpManager.callTool({
         serverName,
         toolName,
@@ -190,6 +249,39 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
         oauthStart,
         oauthEnd,
       });
+
+      // Charge presentation tokens after successful generation
+      if (isPresentationTool && userId) {
+        logger.info(`[MCP][${serverName}][${toolName}] Presentation generated successfully, preparing to charge tokens`);
+        try {
+          const conversationId = config?.configurable?.thread_id;
+          const endpoint = config?.metadata?.endpoint || 'agents';
+          
+          if (conversationId) {
+            const txMetadata = {
+              user: userId,
+              conversationId: conversationId,
+              context: 'presentation_generation',
+              endpoint: endpoint,
+              model: serverName,
+              creditType: 'presentation',
+            };
+
+            // Charge fixed presentation tokens
+            await spendTokens(txMetadata, {
+              promptTokens: 0,
+              completionTokens: FIXED_SERVICE_COSTS.PRESENTATION,
+            });
+
+            logger.info(`[MCP][${serverName}][${toolName}] Successfully charged ${FIXED_SERVICE_COSTS.PRESENTATION} presentation tokens`);
+          } else {
+            logger.warn(`[MCP][${serverName}][${toolName}] Missing conversationId, cannot charge tokens`);
+          }
+        } catch (error) {
+          logger.error(`[MCP][${serverName}][${toolName}] Error spending presentation tokens:`, error);
+          // Continue even if token spending fails
+        }
+      }
 
       if (isAssistantsEndpoint(provider) && Array.isArray(result)) {
         return result[0];
