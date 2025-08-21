@@ -18,39 +18,46 @@
         
         <div class="course-steps">
           <div class="course-step">
+            <span class="step-number">1</span>
             <div class="course-step-icon">📊</div>
             <div class="course-step-text">
               <h4>Анализ ЦА</h4>
               <p>Изучаем вашу аудиторию</p>
             </div>
           </div>
-          <div class="arrow">→</div>
           
           <div class="course-step">
+            <span class="step-number">2</span>
             <div class="course-step-icon">💡</div>
             <div class="course-step-text">
               <h4>Темы</h4>
               <p>Генерируем актуальные темы</p>
             </div>
           </div>
-          <div class="arrow">→</div>
           
           <div class="course-step">
+            <span class="step-number">3</span>
             <div class="course-step-icon">📝</div>
             <div class="course-step-text">
               <h4>Тексты/Тесты</h4>
               <p>Создаем контент и задания</p>
             </div>
           </div>
-          <div class="arrow">→</div>
           
           <div class="course-step">
+            <span class="step-number">4</span>
             <div class="course-step-icon">🎬</div>
             <div class="course-step-text">
               <h4>Презентации/Видео</h4>
               <p>Оформляем визуально</p>
             </div>
           </div>
+          
+          <!-- Стрелки для десктопа -->
+          <div class="arrow arrow-horizontal-1">→</div>
+          <div class="arrow arrow-vertical-1">↓</div>
+          <div class="arrow arrow-horizontal-2">→</div>
+          <div class="arrow arrow-vertical-2">↓</div>
         </div>
         
         <div class="course-box-actions">
@@ -173,16 +180,18 @@
   }
 
   .course-steps {
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 1rem;
     margin-bottom: 2rem;
-    flex-wrap: wrap;
+    position: relative;
   }
 
   @media (min-width: 768px) {
     .course-steps {
-      flex-wrap: nowrap;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 1.5rem;
     }
   }
 
@@ -191,35 +200,96 @@
     align-items: center;
     gap: 0.75rem;
     background: rgba(255, 255, 255, 0.1);
-    padding: 0.75rem 1rem;
+    padding: 1rem 1.25rem;
     border-radius: 0.75rem;
     backdrop-filter: blur(10px);
+    position: relative;
+    min-height: 80px;
+  }
+
+  .step-number {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 215, 155, 0.9);
+    color: #764ba2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 
   .course-step-icon {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
+    flex-shrink: 0;
   }
 
   .course-step-text h4 {
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 600;
     margin-bottom: 0.25rem;
   }
 
   .course-step-text p {
-    font-size: 0.75rem;
-    opacity: 0.8;
+    font-size: 0.813rem;
+    opacity: 0.9;
   }
 
   .arrow {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 1.5rem;
     display: none;
   }
 
   @media (min-width: 768px) {
     .arrow {
+      position: absolute;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 1.25rem;
       display: block;
+    }
+
+    .arrow-horizontal-1 {
+      top: 25%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+    }
+
+    .arrow-horizontal-2 {
+      bottom: 25%;
+      left: 50%;
+      transform: translateX(-50%) translateY(50%);
+    }
+
+    .arrow-vertical-1 {
+      top: 50%;
+      left: 25%;
+      transform: translateY(-50%) rotate(0deg);
+    }
+
+    .arrow-vertical-2 {
+      top: 50%;
+      right: 25%;
+      transform: translateY(-50%) rotate(0deg);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .course-step {
+      position: relative;
+    }
+    
+    .course-step:not(:last-child)::after {
+      content: '↓';
+      position: absolute;
+      bottom: -1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 1.25rem;
     }
   }
 
