@@ -1,0 +1,240 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Заявка отправлена — Cogneex">
+  <Header />
+  <main class="success-page">
+    <div class="container">
+      <div class="success-content">
+        <div class="success-icon">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        
+        <h1 class="success-title">Заявка успешно отправлена!</h1>
+        
+        <p class="success-description">
+          Спасибо за интерес к нашей платформе. Мы свяжемся с вами в течение 24 часов.
+        </p>
+        
+        <div class="success-info">
+          <h2>Что дальше?</h2>
+          <ul class="success-steps">
+            <li>
+              <span class="step-number">1</span>
+              <div class="step-content">
+                <h3>Проверьте почту</h3>
+                <p>Мы отправили подтверждение на указанный email</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-number">2</span>
+              <div class="step-content">
+                <h3>Ожидайте звонка</h3>
+                <p>Наш менеджер свяжется с вами для уточнения деталей</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-number">3</span>
+              <div class="step-content">
+                <h3>Получите доступ</h3>
+                <p>После согласования вы получите доступ к платформе</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="success-actions">
+          <a href="/" class="btn btn-primary">Вернуться на главную</a>
+          <a href="#" class="btn btn-secondary">Документация API</a>
+        </div>
+        
+        <div class="success-contact">
+          <p>Есть вопросы? Свяжитесь с нами:</p>
+          <div class="contact-links">
+            <a href="mailto:info@cogneex.ru">info@cogneex.ru</a>
+            <a href="tel:+74951234567">+7 (495) 123-45-67</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  .success-page {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    padding: 4rem 0;
+    background: linear-gradient(180deg, #f9fafb 0%, var(--white) 100%);
+  }
+
+  .success-content {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .success-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 2rem;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--secondary);
+    animation: scaleIn 0.5s ease-out;
+  }
+
+  @keyframes scaleIn {
+    from {
+      transform: scale(0);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .success-title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--dark);
+    animation: fadeInUp 0.6s ease-out 0.2s both;
+  }
+
+  .success-description {
+    font-size: 1.25rem;
+    color: var(--gray);
+    margin-bottom: 3rem;
+    animation: fadeInUp 0.6s ease-out 0.3s both;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .success-info {
+    background: var(--white);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    animation: fadeInUp 0.6s ease-out 0.4s both;
+  }
+
+  .success-info h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+  }
+
+  .success-steps {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+  }
+
+  .success-steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .success-steps li:last-child {
+    margin-bottom: 0;
+  }
+
+  .step-number {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .step-content h3 {
+    font-size: 1.125rem;
+    margin-bottom: 0.25rem;
+    color: var(--dark);
+  }
+
+  .step-content p {
+    color: var(--gray);
+    font-size: 0.875rem;
+  }
+
+  .success-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    animation: fadeInUp 0.6s ease-out 0.5s both;
+  }
+
+  .success-contact {
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+    animation: fadeInUp 0.6s ease-out 0.6s both;
+  }
+
+  .success-contact p {
+    color: var(--gray);
+    margin-bottom: 1rem;
+  }
+
+  .contact-links {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+  }
+
+  .contact-links a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .contact-links a:hover {
+    color: var(--primary-dark);
+  }
+
+  @media (max-width: 767px) {
+    .success-title {
+      font-size: 2rem;
+    }
+
+    .success-actions {
+      flex-direction: column;
+    }
+
+    .contact-links {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+</style>

@@ -1,0 +1,87 @@
+---
+
+---
+
+<script>
+  // Плавный скролл к форме и переключение табов
+  document.addEventListener('DOMContentLoaded', () => {
+    // Находим все ссылки на форму
+    const formLinks = document.querySelectorAll('a[href="#lead-form"]');
+    
+    formLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // Получаем тип формы из data-атрибута
+        const formType = (e.currentTarget as HTMLElement).dataset.formType;
+        
+        // Находим форму
+        const formSection = document.getElementById('lead-form');
+        if (!formSection) return;
+        
+        // Плавный скролл к форме
+        formSection.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'center' 
+        });
+        
+        // Если указан тип формы, переключаем таб
+        if (formType) {
+          setTimeout(() => {
+            const tabBtn = document.querySelector(`.tab-btn[data-type="${formType}"]`) as HTMLButtonElement;
+            if (tabBtn) {
+              tabBtn.click();
+            }
+          }, 500); // Небольшая задержка для завершения скролла
+        }
+      });
+    });
+    
+    // Обработка прямых переходов по хешу
+    if (window.location.hash === '#lead-form') {
+      const formSection = document.getElementById('lead-form');
+      if (formSection) {
+        setTimeout(() => {
+          formSection.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'center' 
+          });
+        }, 100);
+      }
+    }
+  });
+  
+  // Добавляем класс для анимации при появлении формы в viewport
+  const observerOptions = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.1
+  };
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('form-visible');
+      }
+    });
+  }, observerOptions);
+  
+  // Наблюдаем за формой
+  const formElement = document.querySelector('.lead-form');
+  if (formElement) {
+    observer.observe(formElement);
+  }
+</script>
+
+<style>
+  .lead-form {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease-out;
+  }
+  
+  .lead-form.form-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>

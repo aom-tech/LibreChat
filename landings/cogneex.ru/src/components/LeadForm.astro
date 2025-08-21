@@ -1,0 +1,362 @@
+---
+
+---
+
+<section id="lead-form" class="section lead-form">
+  <div class="container">
+    <div class="form-wrapper">
+      <div class="form-header">
+        <h2 class="form-title">Начните использовать AI уже сегодня</h2>
+        <p class="form-subtitle">Оставьте заявку и получите бесплатный доступ на 7 дней</p>
+      </div>
+      
+      <form id="leadForm" class="form">
+        <div class="form-tabs">
+          <button type="button" class="tab-btn active" data-type="b2c">Для себя</button>
+          <button type="button" class="tab-btn" data-type="b2b">Для компании</button>
+        </div>
+        
+        <!-- B2C форма -->
+        <div class="form-content" data-form="b2c">
+          <div class="form-group">
+            <label for="email-b2c">Email *</label>
+            <input type="email" id="email-b2c" name="email" required placeholder="your@email.com">
+          </div>
+          
+          <div class="form-group">
+            <label for="goal">Цель использования</label>
+            <select id="goal" name="goal">
+              <option value="">Выберите цель</option>
+              <option value="courses">Создание курсов</option>
+              <option value="content">Генерация контента</option>
+              <option value="development">Разработка</option>
+              <option value="research">Исследования</option>
+              <option value="other">Другое</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- B2B форма -->
+        <div class="form-content hidden" data-form="b2b">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="name">Имя *</label>
+              <input type="text" id="name" name="name" placeholder="Иван Иванов">
+            </div>
+            
+            <div class="form-group">
+              <label for="company">Компания *</label>
+              <input type="text" id="company" name="company" placeholder="ООО Компания">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="role">Должность</label>
+              <input type="text" id="role" name="role" placeholder="CEO">
+            </div>
+            
+            <div class="form-group">
+              <label for="email-b2b">Email *</label>
+              <input type="email" id="email-b2b" name="email" placeholder="your@company.com">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="phone">Телефон</label>
+            <input type="tel" id="phone" name="phone" placeholder="+7 (999) 123-45-67">
+          </div>
+          
+          <div class="form-group">
+            <label for="interest">Интересует</label>
+            <select id="interest" name="interest">
+              <option value="demo">Демонстрация платформы</option>
+              <option value="enterprise">Enterprise решение</option>
+              <option value="course_box">Коробочное решение для курсов</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="comment">Комментарий</label>
+            <textarea id="comment" name="comment" rows="3" placeholder="Расскажите о ваших задачах"></textarea>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="consent" required>
+            <span>Согласен с <a href="/legal/privacy" target="_blank">политикой конфиденциальности</a> и на обработку персональных данных</span>
+          </label>
+        </div>
+        
+        <!-- Honeypot для защиты от ботов -->
+        <input type="text" name="website" style="display: none;" tabindex="-1" autocomplete="off">
+        
+        <button type="submit" class="btn btn-primary btn-block btn-large">
+          <span class="btn-text">Отправить заявку</span>
+          <span class="btn-loader hidden">Отправка...</span>
+        </button>
+        
+        <div class="form-message hidden"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+  .lead-form {
+    background: linear-gradient(180deg, #f9fafb 0%, var(--white) 100%);
+  }
+
+  .form-wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+    background: var(--white);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  }
+
+  .form-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .form-title {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-subtitle {
+    color: var(--gray);
+    font-size: 1.125rem;
+  }
+
+  .form-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 0.75rem;
+    background: transparent;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    color: var(--gray);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .tab-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
+  }
+
+  .form-content.hidden {
+    display: none;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 767px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--dark);
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .form-group input.error,
+  .form-group select.error,
+  .form-group textarea.error {
+    border-color: #ef4444;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--gray);
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    margin-top: 0.25rem;
+    width: auto;
+  }
+
+  .checkbox-label a {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+
+  .btn-large {
+    padding: 1rem;
+    font-size: 1.125rem;
+  }
+
+  .btn-loader {
+    display: none;
+  }
+
+  .btn.loading .btn-text {
+    display: none;
+  }
+
+  .btn.loading .btn-loader {
+    display: inline-block;
+  }
+
+  .form-message {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    text-align: center;
+  }
+
+  .form-message.success {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .form-message.error {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+</style>
+
+<script>
+  const form = document.getElementById('leadForm') as HTMLFormElement;
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const formContents = document.querySelectorAll('.form-content');
+  const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+  const formMessage = form.querySelector('.form-message') as HTMLDivElement;
+  
+  // Переключение табов
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = (btn as HTMLButtonElement).dataset.type;
+      
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      formContents.forEach(content => {
+        const el = content as HTMLElement;
+        if (el.dataset.form === type) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+    });
+  });
+  
+  // Отправка формы
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Проверка honeypot
+    const honeypot = (form.querySelector('input[name="website"]') as HTMLInputElement).value;
+    if (honeypot) {
+      console.log('Bot detected');
+      return;
+    }
+    
+    // Показываем загрузку
+    submitBtn.classList.add('loading');
+    submitBtn.disabled = true;
+    formMessage.classList.add('hidden');
+    
+    // Определяем тип формы
+    const activeTab = document.querySelector('.tab-btn.active') as HTMLButtonElement;
+    const formType = activeTab.dataset.type;
+    
+    // Собираем данные
+    const formData = new FormData(form);
+    const data: any = {
+      type: formType,
+      consent: formData.get('consent') === 'on'
+    };
+    
+    // Собираем поля в зависимости от типа
+    if (formType === 'b2c') {
+      data.email = formData.get('email');
+      data.goal = formData.get('goal');
+    } else {
+      data.name = formData.get('name');
+      data.company = formData.get('company');
+      data.role = formData.get('role');
+      data.email = formData.get('email');
+      data.phone = formData.get('phone');
+      data.interest = formData.get('interest');
+      data.comment = formData.get('comment');
+    }
+    
+    try {
+      const response = await fetch('/api/lead', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        // Успех
+        window.location.href = '/success';
+      } else {
+        // Ошибка
+        formMessage.textContent = result.error || 'Произошла ошибка. Попробуйте позже.';
+        formMessage.classList.remove('hidden', 'success');
+        formMessage.classList.add('error');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      formMessage.textContent = 'Ошибка сети. Проверьте соединение и попробуйте снова.';
+      formMessage.classList.remove('hidden', 'success');
+      formMessage.classList.add('error');
+    } finally {
+      submitBtn.classList.remove('loading');
+      submitBtn.disabled = false;
+    }
+  });
+</script>
