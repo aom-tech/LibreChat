@@ -13,7 +13,7 @@
       <form id="leadForm" class="form">
         <div class="form-tabs">
           <button type="button" class="tab-btn active" data-type="b2c">Для себя</button>
-          <button type="button" class="tab-btn" data-type="b2b">Для компании</button>
+          <button type="button" class="tab-btn" data-type="b2b"><span class="tab-text">Для компании</span></button>
         </div>
         
         <!-- B2C форма -->
@@ -148,6 +148,18 @@
     color: var(--gray);
     cursor: pointer;
     transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+  
+  .tab-text {
+    display: inline-block;
+  }
+  
+  @media (max-width: 480px) {
+    .tab-btn {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.875rem;
+    }
   }
 
   .tab-btn.active {
