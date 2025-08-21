@@ -1,0 +1,145 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Test SberCRM Webhook">
+  <div style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+    <h1>SberCRM Webhook Test</h1>
+    
+    <div style="margin-bottom: 2rem; padding: 1rem; background: #e0e0e0; border-radius: 0.5rem;">
+      <h3>Environment Variables:</h3>
+      <pre id="envVars"></pre>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+      <button id="testWebhookBtn" style="padding: 1rem; background: #0066cc; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+        Test Webhook URL
+      </button>
+      <button id="showFormatBtn" style="padding: 1rem; background: #6f42c1; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+        Show SberCRM Format
+      </button>
+      <button id="testFormDataBtn" style="padding: 1rem; background: #28a745; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+        Test B2C Lead
+      </button>
+      <button id="createTestLeadBtn" style="padding: 1rem; background: #dc3545; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+        Test B2B Lead
+      </button>
+    </div>
+    
+    <div id="result" style="padding: 1rem; background: #f8f9fa; border-radius: 0.5rem; border: 1px solid #dee2e6; max-height: 500px; overflow-y: auto;">
+      <h4>Результат:</h4>
+      <pre id="resultText">Нажмите любую кнопку для тестирования...</pre>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // Show environment variables
+  const webhookId = import.meta.env.PUBLIC_SBERCRM_WEBHOOK_ID;
+  const webhookUrl = webhookId ? `https://app.sbercrm.com/react-gateway/api/webhook/${webhookId}` : 'Not configured';
+  
+  document.getElementById('envVars')!.textContent = JSON.stringify({
+    webhookId: webhookId ? '✓ Set' : '✗ Not set',
+    webhookUrl: webhookUrl,
+    telegramBot: import.meta.env.PUBLIC_TELEGRAM_BOT_TOKEN ? '✓ Set' : '✗ Not set',
+  }, null, 2);
+
+  async function showResult(text, isError = false) {
+    const resultText = document.getElementById('resultText');
+    if (resultText) {
+      resultText.textContent = text;
+      resultText.style.color = isError ? '#dc3545' : '#000';
+    }
+  }
+
+  // Test webhook URL
+  document.getElementById('testWebhookBtn')?.addEventListener('click', async () => {
+    try {
+      showResult('Testing webhook URL...');
+      
+      if (!import.meta.env.PUBLIC_SBERCRM_WEBHOOK_ID) {
+        showResult('❌ Webhook ID not configured in .env file', true);
+        return;
+      }
+      
+      const { SberCRMClient } = await import('../lib/sbercrm-client.js');
+      const client = new SberCRMClient(import.meta.env.PUBLIC_SBERCRM_WEBHOOK_ID);
+
+      const testResult = await client.testWebhook();
+      showResult(`Webhook test result:\n${JSON.stringify(testResult, null, 2)}`);
+      
+    } catch (error) {
+      showResult(`❌ Webhook test failed:\n${error.message}`, true);
+    }
+  });
+
+  // Show SberCRM format
+  document.getElementById('showFormatBtn')?.addEventListener('click', async () => {
+    const sampleFormat = {
+      name: "B2B заявка с сайта CogneeX",
+      description: "Тип заявки: B2B\\nИмя: Иван Иванов\\nEmail: ivan@company.ru\\nТелефон: +79999999999\\nКомпания: ООО Инновационные технологии\\nДолжность: IT-директор\\nКоличество сотрудников: 50-100\\nИнтересует: Enterprise решение\\nКомментарий: Нужна консультация по внедрению AI решений\\nUTM: source: google, medium: cpc, campaign: ai_solutions\\nИсточник: https://cogneex.ru\\nВремя: 21.08.2025, 13:30:15\\nUser Agent: Mozilla/5.0..."
+    };
+    
+    showResult(`Формат данных для SberCRM webhook:\n\n${JSON.stringify(sampleFormat, null, 2)}`);
+  });
+
+  // Test B2C lead
+  document.getElementById('testFormDataBtn')?.addEventListener('click', async () => {
+    try {
+      showResult('Отправляем тестовую B2C заявку...');
+      
+      const { submitLeadToSberCRM } = await import('../lib/sbercrm-client.js');
+      
+      const sampleB2CData = {
+        type: 'b2c',
+        name: 'Анна Петрова',
+        email: 'anna.petrova@gmail.com',
+        goal: 'Создание онлайн-курсов',
+        source: window.location.href,
+        utm_source: 'google',
+        utm_medium: 'organic',
+        utm_campaign: 'course_creation'
+      };
+
+      const result = await submitLeadToSberCRM(sampleB2CData);
+      showResult(`✅ B2C заявка успешно отправлена!\n\nОтвет:\n${JSON.stringify(result, null, 2)}`);
+      
+    } catch (error) {
+      showResult(`❌ Ошибка отправки B2C заявки:\n${error.message}`, true);
+    }
+  });
+
+  // Test B2B lead  
+  document.getElementById('createTestLeadBtn')?.addEventListener('click', async () => {
+    try {
+      showResult('Отправляем тестовую B2B заявку...');
+      
+      const { submitLeadToSberCRM } = await import('../lib/sbercrm-client.js');
+      
+      const testData = {
+        type: 'b2b',
+        name: 'Сергей Иванович Петров',
+        email: 's.petrov@testcompany.ru',
+        phone: '+7(495)123-45-67',
+        company: 'ООО "Инновационные технологии"',
+        role: 'IT-директор',
+        employees: '50-100',
+        comment: 'Рассматриваем внедрение AI решений для автоматизации бизнес-процессов. Интересуют курсы для команды и консультации.',
+        source: window.location.href,
+        utm_source: 'google',
+        utm_medium: 'cpc',
+        utm_campaign: 'b2b_ai_solutions',
+        utm_term: 'автоматизация с ai',
+        utm_content: 'landing_b2b_form'
+      };
+
+      const result = await submitLeadToSberCRM(testData);
+      const leadId = result._embedded?.leads?.[0]?.id;
+      
+      showResult(`✅ B2B заявка успешно отправлена!\n\nID лида: ${leadId}\n\nПолный ответ:\n${JSON.stringify(result, null, 2)}`);
+      
+    } catch (error) {
+      showResult(`❌ Ошибка отправки B2B заявки:\n${error.message}\n\n⚠️ Проверьте WEBHOOK_ID в .env файле`, true);
+    }
+  });
+</script>

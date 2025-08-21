@@ -263,100 +263,120 @@
 </style>
 
 <script>
-  const form = document.getElementById('leadForm') as HTMLFormElement;
-  const tabBtns = document.querySelectorAll('.tab-btn');
-  const formContents = document.querySelectorAll('.form-content');
-  const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-  const formMessage = form.querySelector('.form-message') as HTMLDivElement;
-  
-  // Переключение табов
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const type = (btn as HTMLButtonElement).dataset.type;
-      
-      tabBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      formContents.forEach(content => {
-        const el = content as HTMLElement;
-        if (el.dataset.form === type) {
-          el.classList.remove('hidden');
-        } else {
-          el.classList.add('hidden');
-        }
-      });
-    });
-  });
-  
-  // Отправка формы
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  // Динамическая загрузка SberCRM клиента
+  async function loadSberCRMClient() {
+    const { submitLeadToSberCRM, sendTelegramNotification } = await import('../lib/sbercrm-client.js');
+    return { submitLeadToSberCRM, sendTelegramNotification };
+  }
+
+  // Initialize form handling
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('leadForm');
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const formContents = document.querySelectorAll('.form-content');
+    const submitBtn = form?.querySelector('button[type="submit"]');
+    const formMessage = form?.querySelector('.form-message');
     
-    // Проверка honeypot
-    const honeypot = (form.querySelector('input[name="website"]') as HTMLInputElement).value;
-    if (honeypot) {
-      console.log('Bot detected');
+    if (!form || !submitBtn || !formMessage) {
+      console.error('Form elements not found');
       return;
     }
     
-    // Показываем загрузку
-    submitBtn.classList.add('loading');
-    submitBtn.disabled = true;
-    formMessage.classList.add('hidden');
+    // Tab switching
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.type;
+        
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        formContents.forEach(content => {
+          if (content.dataset.form === type) {
+            content.classList.remove('hidden');
+          } else {
+            content.classList.add('hidden');
+          }
+        });
+      });
+    });
     
-    // Определяем тип формы
-    const activeTab = document.querySelector('.tab-btn.active') as HTMLButtonElement;
-    const formType = activeTab.dataset.type;
-    
-    // Собираем данные
-    const formData = new FormData(form);
-    const data: any = {
-      type: formType,
-      consent: formData.get('consent') === 'on'
-    };
-    
-    // Собираем поля в зависимости от типа
-    if (formType === 'b2c') {
-      data.email = formData.get('email');
-      data.goal = formData.get('goal');
-    } else {
-      data.name = formData.get('name');
-      data.company = formData.get('company');
-      data.role = formData.get('role');
-      data.email = formData.get('email');
-      data.phone = formData.get('phone');
-      data.interest = formData.get('interest');
-      data.comment = formData.get('comment');
-    }
-    
-    try {
-      const response = await fetch('/api/lead', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+    // Form submission
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Check honeypot
+      const honeypotInput = form.querySelector('input[name="website"]');
+      if (honeypotInput?.value) {
+        console.log('Bot detected');
+        return;
+      }
+      
+      // Show loading
+      submitBtn.classList.add('loading');
+      submitBtn.disabled = true;
+      formMessage.classList.add('hidden');
+      
+      // Get form type
+      const activeTab = document.querySelector('.tab-btn.active');
+      const formType = activeTab?.dataset.type || 'b2c';
+      
+      // Collect data
+      const formData = new FormData(form);
+      const data = {
+        type: formType,
+        consent: formData.get('consent') === 'on',
+        source: window.location.href,
+        userAgent: navigator.userAgent,
+      };
+      
+      // Collect fields based on type
+      if (formType === 'b2c') {
+        data.email = formData.get('email');
+        data.goal = formData.get('goal');
+        data.interest = data.goal;
+      } else {
+        data.name = formData.get('name');
+        data.company = formData.get('company');
+        data.role = formData.get('role');
+        data.email = formData.get('email');
+        data.phone = formData.get('phone');
+        data.interest = formData.get('interest');
+        data.comment = formData.get('comment');
+        data.needs = data.comment;
+      }
+      
+      // Add UTM parameters if present
+      const urlParams = new URLSearchParams(window.location.search);
+      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(param => {
+        const value = urlParams.get(param);
+        if (value) data[param] = value;
       });
       
-      const result = await response.json();
-      
-      if (response.ok) {
-        // Успех
+      try {
+        // Загружаем SberCRM клиент
+        const { submitLeadToSberCRM, sendTelegramNotification } = await loadSberCRMClient();
+        
+        // Отправляем лид в SberCRM
+        const result = await submitLeadToSberCRM(data);
+        console.log('Лид успешно создан в SberCRM:', result);
+        
+        // Получаем ID созданного лида
+        const leadId = result._embedded?.leads?.[0]?.id;
+        
+        // Отправляем уведомление в Telegram (не блокируем при ошибке)
+        sendTelegramNotification(data, leadId).catch(console.error);
+        
+        // Успех - редирект на страницу успеха
         window.location.href = '/success';
-      } else {
-        // Ошибка
-        formMessage.textContent = result.error || 'Произошла ошибка. Попробуйте позже.';
+      } catch (error) {
+        console.error('Ошибка при отправке заявки:', error);
+        formMessage.textContent = 'Произошла ошибка при отправке заявки. Попробуйте позже или свяжитесь с нами напрямую.';
         formMessage.classList.remove('hidden', 'success');
         formMessage.classList.add('error');
+        
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
       }
-    } catch (error) {
-      console.error('Error:', error);
-      formMessage.textContent = 'Ошибка сети. Проверьте соединение и попробуйте снова.';
-      formMessage.classList.remove('hidden', 'success');
-      formMessage.classList.add('error');
-    } finally {
-      submitBtn.classList.remove('loading');
-      submitBtn.disabled = false;
-    }
+    });
   });
 </script>
