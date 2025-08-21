@@ -43,46 +43,46 @@
     
     <div class="hero-visual">
       <div class="visual-placeholder">
-        <div class="visual-card">
-          <div class="card-header">
-            <span class="card-badge">Генерация курса</span>
-            <span class="card-status">В процессе...</span>
+        <div class="chat-container">
+          <div class="chat-header">
+            <div class="chat-models">
+              <span class="model-badge active">GPT-4</span>
+              <span class="model-badge">Claude 3</span>
+              <span class="model-badge">Gemini</span>
+            </div>
+            <span class="chat-status">
+              <span class="status-dot"></span>
+              Онлайн
+            </span>
           </div>
-          <div class="card-content">
-            <div class="generation-item completed">
-              <span class="check-icon">✓</span>
-              <div class="item-text">
-                <strong>Анализ аудитории</strong>
-                <span>Предприниматели 25-45 лет</span>
+          <div class="chat-messages">
+            <div class="message user">
+              <div class="message-avatar">👤</div>
+              <div class="message-content">
+                <p>Создай план онлайн-курса по AI для бизнеса</p>
               </div>
             </div>
-            <div class="generation-item completed">
-              <span class="check-icon">✓</span>
-              <div class="item-text">
-                <strong>Тема курса</strong>
-                <span>AI для автоматизации бизнеса</span>
-              </div>
-            </div>
-            <div class="generation-item active">
-              <span class="loader-icon">⟳</span>
-              <div class="item-text">
-                <strong>Создание контента</strong>
-                <span>Модуль 3 из 7...</span>
-              </div>
-            </div>
-            <div class="generation-item pending">
-              <span class="pending-icon">○</span>
-              <div class="item-text">
-                <strong>Генерация видео</strong>
-                <span>Ожидание</span>
+            <div class="message assistant">
+              <div class="message-avatar">🤖</div>
+              <div class="message-content">
+                <p>Создаю структуру курса "AI для автоматизации бизнеса":</p>
+                <ul class="course-list">
+                  <li>✅ Модуль 1: Основы искусственного интеллекта</li>
+                  <li>✅ Модуль 2: ChatGPT для бизнес-процессов</li>
+                  <li>✅ Модуль 3: Автоматизация маркетинга</li>
+                  <li class="typing">Модуль 4: Аналитика данных<span class="cursor">|</span></li>
+                </ul>
               </div>
             </div>
           </div>
-          <div class="card-footer">
-            <div class="progress-bar">
-              <div class="progress-fill"></div>
-            </div>
-            <span class="progress-text">62% завершено</span>
+          <div class="chat-input">
+            <input type="text" placeholder="Напишите запрос..." disabled />
+            <button class="send-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -189,140 +189,197 @@
     justify-content: center;
   }
 
-  .visual-card {
+  .chat-container {
     background: var(--white);
     border-radius: 0.75rem;
-    padding: 1.5rem;
     width: 100%;
-    max-width: 450px;
+    max-width: 500px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
   }
 
-  .card-header {
+  .chat-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fafafa;
   }
 
-  .card-badge {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    color: var(--white);
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
+  .chat-models {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .model-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
     font-size: 0.75rem;
     font-weight: 600;
+    background: #e5e7eb;
+    color: var(--gray);
+    cursor: pointer;
+    transition: all 0.2s ease;
   }
 
-  .card-status {
-    color: var(--secondary);
+  .model-badge.active {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--white);
+  }
+
+  .chat-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-size: 0.875rem;
-    animation: blink 2s ease-in-out infinite;
+    color: var(--gray);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--secondary);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.2); }
+  }
+
+  .chat-messages {
+    padding: 1.5rem;
+    min-height: 280px;
+    max-height: 280px;
+    overflow-y: auto;
+    background: var(--white);
+  }
+
+  .message {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    animation: fadeInUp 0.5s ease-out;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .message-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    flex-shrink: 0;
+  }
+
+  .message.user .message-avatar {
+    background: #f3f4f6;
+  }
+
+  .message.assistant .message-avatar {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+  }
+
+  .message-content {
+    flex: 1;
+  }
+
+  .message-content p {
+    margin: 0 0 0.5rem 0;
+    color: var(--dark);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .course-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .course-list li {
+    padding: 0.375rem 0;
+    font-size: 0.813rem;
+    color: var(--gray);
+    animation: fadeIn 0.5s ease-out backwards;
+  }
+
+  .course-list li:nth-child(1) { animation-delay: 0.2s; }
+  .course-list li:nth-child(2) { animation-delay: 0.4s; }
+  .course-list li:nth-child(3) { animation-delay: 0.6s; }
+  .course-list li:nth-child(4) { animation-delay: 0.8s; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .typing {
+    color: var(--dark);
+  }
+
+  .cursor {
+    animation: blink 1s ease-in-out infinite;
+    color: var(--primary);
+    font-weight: 400;
   }
 
   @keyframes blink {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+    50% { opacity: 0; }
   }
 
-  .generation-item {
+  .chat-input {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    background: #fafafa;
+  }
+
+  .chat-input input {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    background: var(--white);
+  }
+
+  .chat-input input::placeholder {
+    color: #9ca3af;
+  }
+
+  .send-btn {
+    padding: 0.5rem 1rem;
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
-    transition: all 0.3s ease;
+    justify-content: center;
+    transition: all 0.2s ease;
   }
 
-  .generation-item.completed {
-    background: #f0fdf4;
-  }
-
-  .generation-item.active {
-    background: #fef3c7;
-    animation: activeGlow 2s ease-in-out infinite;
-  }
-
-  @keyframes activeGlow {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
-    50% { box-shadow: 0 0 10px 2px rgba(245, 158, 11, 0.2); }
-  }
-
-  .generation-item.pending {
-    opacity: 0.6;
-  }
-
-  .check-icon {
-    color: var(--secondary);
-    font-size: 1.25rem;
-    font-weight: bold;
-  }
-
-  .loader-icon {
-    color: var(--accent);
-    font-size: 1.25rem;
-    animation: rotate 1s linear infinite;
-  }
-
-  @keyframes rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
-  .pending-icon {
-    color: #d1d5db;
-    font-size: 1.25rem;
-  }
-
-  .item-text {
-    flex: 1;
-  }
-
-  .item-text strong {
-    display: block;
-    color: var(--dark);
-    font-size: 0.875rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .item-text span {
-    color: var(--gray);
-    font-size: 0.75rem;
-  }
-
-  .card-footer {
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid #e5e7eb;
-  }
-
-  .progress-bar {
-    height: 6px;
-    background: #e5e7eb;
-    border-radius: 3px;
-    overflow: hidden;
-    margin-bottom: 0.5rem;
-  }
-
-  .progress-fill {
-    height: 100%;
-    width: 62%;
-    background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
-    border-radius: 3px;
-    animation: progressGrow 2s ease-out;
-  }
-
-  @keyframes progressGrow {
-    from { width: 0; }
-    to { width: 62%; }
-  }
-
-  .progress-text {
-    font-size: 0.75rem;
-    color: var(--gray);
-    display: block;
-    text-align: center;
+  .send-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
   }
 
   @media (max-width: 767px) {
