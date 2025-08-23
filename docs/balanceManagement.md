@@ -260,6 +260,24 @@ The key to proper balance management is:
 
 This system allows for flexible pricing models while maintaining clear separation between different service types.
 
+## OpenAI Image Tools Integration
+
+OpenAI Image tools (`image_gen_oai` and `image_edit_oai`) are integrated with the balance system:
+
+### Configuration
+- Uses custom base URL from `IMAGE_GEN_OAI_BASEURL` environment variable
+- Model name: `gpt-image-1` (must be added to `tokenValues` with multiplier 1)
+- Fixed cost: 1000 image tokens per generation/edit
+- Credit type: `image`
+
+### Features
+1. **Balance Check**: Verifies sufficient image credits before generation/editing
+2. **Fixed Token Deduction**: 1000 tokens from `availableCredits.image`
+3. **Error Handling**: Continues operation if token spending fails
+4. **Supports Both Tools**:
+   - `image_gen_oai`: Generate new images from text
+   - `image_edit_oai`: Edit existing images with text prompts
+
 ## MCP Tools Integration
 
 MCP (Model Control Protocol) tools can also use the token deduction system. This is implemented in `/api/server/services/MCP.js`.

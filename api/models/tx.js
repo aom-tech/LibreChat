@@ -101,6 +101,7 @@ const tokenValues = Object.assign(
   {
     'flux': { prompt: 1, completion: 1 }, // Fixed rate for image generation
     'slidespeak-server': { prompt: 1, completion: 1 }, // Fixed rate for presentation generation
+    'gpt-image-1': { prompt: 1, completion: 1 }, // Fixed rate for OpenAI image generation
     '8k': { prompt: 30, completion: 60 },
     '32k': { prompt: 60, completion: 120 },
     '4k': { prompt: 1.5, completion: 2 },
