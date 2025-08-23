@@ -13,6 +13,7 @@ const {
 const { updateUserPluginAuth, deleteUserPluginAuth } = require('~/server/services/PluginService');
 const { updateUserPluginsService, deleteUserKey } = require('~/server/services/UserService');
 const { verifyEmail, resendVerificationEmail } = require('~/server/services/AuthService');
+const setUserTrial = require('~/server/utils/setUserTrial');
 const { needsRefresh, getNewS3URL } = require('~/server/services/Files/S3/crud');
 const { Tools, Constants, FileSources } = require('librechat-data-provider');
 const { processDeleteRequest } = require('~/server/services/Files/process');
@@ -237,6 +238,10 @@ const verifyEmailController = async (req, res) => {
     if (verifyEmailService instanceof Error) {
       return res.status(400).json(verifyEmailService);
     } else {
+      // set trial
+      if (verifyEmailService.user && verifyEmailService.user._id) {
+        await setUserTrial(verifyEmailService.user._id.toString());
+      }
       return res.status(200).json(verifyEmailService);
     }
   } catch (e) {

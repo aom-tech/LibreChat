@@ -24,6 +24,7 @@ const { isEmailDomainAllowed } = require('~/server/services/domains');
 const { checkEmailConfig, sendEmail } = require('~/server/utils');
 const { getBalanceConfig } = require('~/server/services/Config');
 const { registerSchema } = require('~/strategies/validators');
+const setUserTrial = require('~/server/utils/setUserTrial');
 
 const domains = {
   client: process.env.DOMAIN_CLIENT,
@@ -231,6 +232,8 @@ const registerUser = async (user, additionalData = {}) => {
       });
     } else {
       await updateUser(newUserId, { emailVerified: true });
+      // set trial
+      await setUserTrial(newUserId.toString());
     }
 
     return { status: 200, message: genericVerificationMessage };
