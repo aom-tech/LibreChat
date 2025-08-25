@@ -1,12 +1,11 @@
 import React from 'react';
+import { useToastContext, Button } from '@librechat/client';
 import { useGetSubscriptionStatus, useActivateSubscription } from '~/data-provider';
-import { Button } from '~/components/ui';
-import { useToast } from '~/hooks';
 
 const DevSubscriptionTest: React.FC = () => {
   const { data: statusData, refetch } = useGetSubscriptionStatus();
   const activateMutation = useActivateSubscription();
-  const { showToast } = useToast();
+  const { showToast } = useToastContext();
 
   // Only show in development
   if (process.env.NODE_ENV === 'production') {
@@ -37,21 +36,21 @@ const DevSubscriptionTest: React.FC = () => {
       </div>
       <div className="flex flex-col gap-1">
         <Button
-          size="xs"
+          size="sm"
           onClick={() => handleActivate('basic')}
           disabled={activateMutation.isLoading}
         >
           Activate Basic
         </Button>
         <Button
-          size="xs"
+          size="sm"
           onClick={() => handleActivate('pro')}
           disabled={activateMutation.isLoading}
         >
           Activate Pro
         </Button>
         <Button
-          size="xs"
+          size="sm"
           onClick={() => handleActivate('enterprise')}
           disabled={activateMutation.isLoading}
         >

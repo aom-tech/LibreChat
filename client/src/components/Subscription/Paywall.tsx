@@ -1,12 +1,12 @@
 import React from 'react';
 import { Check, X } from 'lucide-react';
+import { useToastContext, Button } from '@librechat/client';
 import {
   useGetSubscriptionPlans,
   useCreateCheckoutSession,
   type BillingPlan,
 } from '~/data-provider/subscription';
-import { Button } from '~/components/ui';
-import { useToast, useLocalize } from '~/hooks';
+import { useLocalize } from '~/hooks';
 
 interface PlanFeature {
   text: string;
@@ -14,7 +14,7 @@ interface PlanFeature {
 }
 
 const Paywall: React.FC = () => {
-  const { showToast } = useToast();
+  const { showToast } = useToastContext();
   const localize = useLocalize();
   const { data: plans, isLoading: plansLoading } = useGetSubscriptionPlans();
   const checkoutMutation = useCreateCheckoutSession();

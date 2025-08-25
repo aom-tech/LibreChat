@@ -1,13 +1,13 @@
 import React from 'react';
 import { CreditCard, AlertCircle, Calendar, Package } from 'lucide-react';
+import { useToastContext, Button } from '@librechat/client';
 import { useGetSubscriptionStatus, useCancelSubscription } from '~/data-provider/subscription';
-import { Button, Card, CardContent, CardHeader, CardTitle } from '~/components/ui';
-import { useToast, useLocalize } from '~/hooks';
+import { useLocalize } from '~/hooks';
 
 const SubscriptionManagement: React.FC = () => {
   const { data: subscriptionData, isLoading } = useGetSubscriptionStatus();
   const cancelMutation = useCancelSubscription();
-  const { showToast } = useToast();
+  const { showToast } = useToastContext();
   const localize = useLocalize();
 
   const handleCancelSubscription = async () => {
@@ -27,11 +27,11 @@ const SubscriptionManagement: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-8">
+      <div className="rounded-lg border bg-white dark:bg-gray-800">
+        <div className="flex items-center justify-center py-8">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -39,14 +39,14 @@ const SubscriptionManagement: React.FC = () => {
   const isActive = subscription?.isActive || false;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <div className="rounded-lg border bg-white dark:bg-gray-800">
+      <div className="p-6">
+        <h3 className="flex items-center gap-2 text-lg font-semibold">
           <CreditCard className="h-5 w-5" />
           {localize('com_ui_subscription')}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h3>
+      </div>
+      <div className="px-6 pb-6">
         {isActive ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -114,8 +114,8 @@ const SubscriptionManagement: React.FC = () => {
             </Button>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
