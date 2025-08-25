@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { webcrypto } = require('node:crypto');
 const { isEnabled } = require('@librechat/api');
 const { logger } = require('@librechat/data-schemas');
@@ -23,6 +24,7 @@ const { isEmailDomainAllowed } = require('~/server/services/domains');
 const { checkEmailConfig, sendEmail } = require('~/server/utils');
 const { getBalanceConfig } = require('~/server/services/Config');
 const { registerSchema } = require('~/strategies/validators');
+const setUserTrial = require('~/server/utils/setUserTrial');
 
 const domains = {
   client: process.env.DOMAIN_CLIENT,
@@ -230,6 +232,8 @@ const registerUser = async (user, additionalData = {}) => {
       });
     } else {
       await updateUser(newUserId, { emailVerified: true });
+      // set trial
+      await setUserTrial(newUserId.toString());
     }
 
     return { status: 200, message: genericVerificationMessage };
@@ -499,6 +503,18 @@ const resendVerificationEmail = async (req) => {
     };
   }
 };
+/**
+ * Generate a short-lived JWT token
+ * @param {String} userId - The ID of the user
+ * @param {String} [expireIn='5m'] - The expiration time for the token (default is 5 minutes)
+ * @returns {String} - The generated JWT token
+ */
+const generateShortLivedToken = (userId, expireIn = '5m') => {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: expireIn,
+    algorithm: 'HS256',
+  });
+};
 
 module.exports = {
   logoutUser,
@@ -506,7 +522,8 @@ module.exports = {
   registerUser,
   setAuthTokens,
   resetPassword,
+  setOpenIDAuthTokens,
   requestPasswordReset,
   resendVerificationEmail,
-  setOpenIDAuthTokens,
+  generateShortLivedToken,
 };

@@ -1,15 +1,17 @@
 import { useMemo } from 'react';
+import { useMediaQuery } from '@librechat/client';
 import { useOutletContext } from 'react-router-dom';
 import { getConfigDefaults, PermissionTypes, Permissions } from 'librechat-data-provider';
 import type { ContextType } from '~/common';
 import ModelSelector from './Menus/Endpoints/ModelSelector';
 import { PresetsMenu, HeaderNewChat, OpenSidebar } from './Menus';
+import { TourButton, useAutoTour } from '~/components/Tour';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
-import { useMediaQuery, useHasAccess } from '~/hooks';
 import BookmarkMenu from './Menus/BookmarkMenu';
 import { TemporaryChat } from './TemporaryChat';
 import AddMultiConvo from './AddMultiConvo';
+import { useHasAccess } from '~/hooks';
 
 const defaultInterface = getConfigDefaults().interface;
 
@@ -20,6 +22,8 @@ export default function Header() {
     () => startupConfig?.interface ?? defaultInterface,
     [startupConfig],
   );
+
+  useAutoTour();
 
   const hasAccessToBookmarks = useHasAccess({
     permissionType: PermissionTypes.BOOKMARKS,
@@ -54,10 +58,11 @@ export default function Header() {
               !isSmallScreen ? 'transition-all duration-200 ease-in-out' : ''
             } ${!navVisible ? 'translate-x-0' : 'translate-x-[-100px]'}`}
           >
-            <ModelSelector startupConfig={startupConfig} />
+            <ModelSelector startupConfig={startupConfig} data-tour="model-selector" />
             {interfaceConfig.presets === true && interfaceConfig.modelSelect && <PresetsMenu />}
             {hasAccessToBookmarks === true && <BookmarkMenu />}
             {hasAccessToMultiConvo === true && <AddMultiConvo />}
+            <TourButton tourType="main-app" size="icon" variant="outline" />
             {isSmallScreen && (
               <>
                 <ExportAndShareMenu

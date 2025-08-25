@@ -2,411 +2,150 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Essential Commands
+## Common Development Commands
 
 ### Development
 ```bash
-# Install dependencies
-npm install
+# Install dependencies (clean install)
+npm ci
 
-# Run backend in development mode
-npm run backend:dev
+# Build required packages before first run
+npm run build:data-provider
+npm run build:data-schemas
+npm run build:api
 
-# Run frontend in development mode  
-npm run frontend:dev
+# Run development servers
+npm run backend:dev    # Backend with nodemon (port 3080)
+npm run frontend:dev   # Frontend with Vite (port 5173)
 
-# Run both frontend and backend (in separate terminals)
-npm run backend:dev
-npm run frontend:dev
+# Alternative: Run with Bun runtime
+npm run b:api         # Backend with Bun
+npm run b:client      # Frontend with Bun
 ```
 
 ### Testing
 ```bash
-# Run client tests
-npm run test:client
+# Unit tests
+npm run test:api      # Backend tests
+npm run test:client   # Frontend tests
 
-# Run API tests  
-npm run test:api
-
-# Run specific test file
-npm run test:client -- path/to/test.spec.js
-
-# Run e2e tests
-npm run e2e
-npm run e2e:headed  # with browser visible
+# E2E tests (requires Playwright)
+npx playwright install   # First time setup
+npm run e2e             # Run E2E tests
+npm run e2e:headed      # Run with browser visible
+npm run e2e:debug       # Debug mode
 ```
 
 ### Code Quality
 ```bash
-# Lint code
-npm run lint
-npm run lint:fix  # auto-fix issues
-
-# Format code
-npm run format
+npm run lint          # Run ESLint
+npm run lint:fix      # Auto-fix linting issues
+npm run format        # Format with Prettier
 ```
 
-### Building
+### Build for Production
 ```bash
-# Build frontend for production
-npm run frontend
-
-# Build with Docker
-docker-compose build
+npm run frontend      # Build entire frontend (packages + client)
+npm run backend       # Run backend in production mode
 ```
 
-## Architecture Overview
+## High-Level Architecture
 
-LibreChat is a monorepo using npm workspaces with three main packages:
+### Project Structure
+LibreChat is a monorepo using npm workspaces:
+- `/api` - Express.js backend server
+- `/client` - React frontend application
+- `/packages` - Shared packages:
+  - `data-provider` - API client and React Query setup
+  - `data-schemas` - TypeScript type definitions
+  - `api` - Shared API utilities
+  - `client` - Shared UI components
 
-- **api/** - Express.js backend server
-  - Handles authentication (Passport.js with JWT, OAuth, LDAP, SAML)
-  - Integrates with AI providers (OpenAI, Anthropic, Google, Azure, AWS Bedrock)
-  - MongoDB for data persistence, optional Redis for caching
-  - Code Interpreter API for sandboxed code execution
-  - MCP (Model Context Protocol) support for agents and tools
+### Backend Architecture
+- **Entry Point**: `api/server/index.js` - Express server on port 3080
+- **Routes**: Modular structure in `api/server/routes/`
+- **Controllers**: Business logic in `api/server/controllers/`
+- **Models**: MongoDB schemas in `api/models/`
+- **AI Clients**: Provider abstractions in `api/app/clients/`
+  - Base client pattern with provider-specific implementations
+  - Unified interface for OpenAI, Anthropic, Google, etc.
 
-- **client/** - React frontend application
-  - Built with Vite and TypeScript
-  - State management using Recoil
-  - API communication via Tanstack Query
-  - UI components: Radix UI + Tailwind CSS
-  - Internationalization with react-i18next
-
-- **packages/** - Shared packages
-  - data-provider: Shared data access layer
-  - data-schemas: Type definitions and schemas
-  - api: Shared API utilities
-
-## Key Configuration
-
-The application is configured primarily through `librechat.yaml` which controls:
-- AI model endpoints and configurations
-- Authentication methods and providers
-- Feature toggles (agents, bookmarks, multi-conversation)
-- Interface customization
-- Balance/credit system settings
-- Speech/TTS configurations
-
-Environment variables handle sensitive configurations like API keys and database connections.
-
-## Important Development Notes
-
-1. When modifying AI provider integrations, check the `/api/app/clients/` directory
-2. Frontend routing is handled in `/client/src/routes/`
-3. Shared types and schemas are in `/packages/data-schemas/`
-4. Agent and tool implementations are in `/api/server/services/agents/`
-5. The application supports Docker deployment with both development and production compose files
-
-## Testing Approach
-
-- Unit tests use Jest for both client and API
-- E2E tests use Playwright
-- Test files follow the pattern `*.spec.js` or `*.test.js`
-- Client tests are in `__tests__` directories within the client folder
-- API tests are in `/api/test/`
-
-## Frontend Architecture Details
-
-### Directory Structure
-```
-client/src/
-├── @types/          # TypeScript type definitions
-├── a11y/            # Accessibility components
-├── common/          # Shared types and constants
-├── components/      # React components (feature-based)
-│   ├── Auth/        # Authentication components
-│   ├── Chat/        # Chat interface components
-│   ├── Endpoints/   # Endpoint configuration
-│   ├── Nav/         # Navigation components
-│   ├── Tour/        # User onboarding tour
-│   └── ui/          # Reusable UI components
-├── data-provider/   # React Query data layer
-├── hooks/           # Custom React hooks
-├── locales/         # i18n translations
-├── Providers/       # React Context providers
-├── routes/          # Route definitions
-├── store/           # Recoil state atoms
-└── utils/           # Utility functions
-```
-
-### State Management (Recoil)
-
-Global state is managed with Recoil atoms organized by domain:
-
-- **User State**: `store/user.ts` - Authentication and user preferences
-- **Chat State**: `store/submission.ts` - Active conversation state
-- **Settings**: `store/settings.ts` - App configuration
-- **Endpoints**: `store/endpoints.ts` - Available AI models
-- **Agents**: `store/agents.ts` - Agent configurations
-
-Example atom usage:
-```typescript
-import { useRecoilState } from 'recoil';
-import store from '~/store';
-
-const [user, setUser] = useRecoilState(store.user);
-```
-
-### Data Fetching Patterns
-
-React Query (Tanstack Query) handles all server state:
-
-- **Queries**: `useGet*` naming convention
-  - `useGetMessagesByConvoId` - Fetch messages
-  - `useGetEndpointsQuery` - Get available endpoints
-  - `useGetSearchEnabledQuery` - Check search capability
-
-- **Mutations**: `useCreate*`, `useUpdate*`, `useDelete*`
-  - Optimistic updates for better UX
-  - Automatic cache invalidation
-  - Error handling with toast notifications
-
-### Component Patterns
-
-1. **Feature-based organization**: Components grouped by feature (Chat, Auth, Nav)
-2. **Compound components**: Dialog, Dropdown with sub-components
-3. **Container/Presentation separation**: Logic in containers, UI in presentation components
-4. **Custom hooks for reusable logic**: `useLocalize`, `useAuthRedirect`, `useConversation`
-
-### Key Custom Hooks
-
-- **Chat Hooks** (`hooks/Chat/`):
-  - `useTextToSpeech` - TTS functionality
-  - `useChatFormInput` - Chat input handling
-  - `useMessageHandler` - Message processing
-
-- **SSE Hooks** (`hooks/SSE/`):
-  - `useSSE` - Server-sent events handling
-  - Real-time message streaming
-
-- **Audio Hooks** (`hooks/Audio/`):
-  - `useAudioPlayer` - Audio playback
-  - `useAudioRecorder` - Voice recording
-
-### Routing Structure
-
-React Router v6 with nested routes:
-
-```typescript
-// Main routes in routes/index.tsx
-<Route path="/" element={<Navigate to="/agents" />} />
-<Route path="/agents" element={<AgentSelectRoute />} />
-<Route path="/c/:conversationId" element={<ChatRoute />} />
-<Route path="/search" element={<SearchView />} />
-```
-
-Protected routes use `AuthLayout` for authentication checks.
-
-### UI Component Library
-
-Built on Radix UI primitives with Tailwind CSS:
-
-- **Dialog**: Modal dialogs with accessibility
-- **Dropdown**: Dropdown menus
-- **Switch**: Toggle switches
-- **Tabs**: Tab interfaces
-- **Toast**: Notification system
-
-All components support dark/light themes via CSS variables.
-
-### Build Configuration (Vite)
-
-Key Vite configurations:
-- Module federation for micro-frontend architecture
-- PWA support with service worker
-- Optimized chunking strategy
-- Proxy configuration for API requests
-- Environment-specific builds
-
-### Development Tips
-
-1. **Adding new features**: Create feature folder in `components/`
-2. **State management**: Add Recoil atoms in `store/`
-3. **API integration**: Add queries/mutations in `data-provider/`
-4. **Styling**: Use Tailwind classes, extend theme in `tailwind.config.js`
-5. **Testing**: Add tests in `__tests__` folders
-6. **Translations**: Update locale files in `locales/`
-
-## Backend Architecture Details
-
-### Directory Structure
-```
-api/
-├── app/                    # Core application logic
-│   ├── clients/           # AI provider client implementations
-│   └── index.js          # App entry point
-├── cache/                 # Caching layer (Redis/MongoDB)
-├── config/                # Configuration management
-├── db/                    # Database connection setup
-├── models/                # Business logic for data operations
-├── server/                # Express server setup
-│   ├── controllers/       # Request handlers
-│   ├── middleware/        # Express middleware
-│   ├── routes/           # API route definitions
-│   ├── services/         # Business services
-│   └── utils/            # Server utilities
-├── strategies/            # Passport authentication strategies
-└── utils/                 # General utilities
-```
+### Frontend Architecture
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **State Management**: 
+  - Recoil for client state (atoms in `client/src/store/`)
+  - React Query for server state (`packages/data-provider/`)
+- **Routing**: React Router v6
+- **Styling**: Tailwind CSS
+- **API Communication**: Centralized in `packages/data-provider/`
 
 ### Authentication System
+- **Strategies**: JWT (primary), OAuth2, LDAP, SAML, OpenID
+- **Implementation**: Passport.js with custom strategies in `api/strategies/`
+- **Middleware**: JWT validation, rate limiting, ban checks
 
-Multiple authentication strategies via Passport.js:
+### Database Schema
+MongoDB with Mongoose:
+- `User` - User accounts with roles and preferences
+- `Conversation` - Chat threads with expiration
+- `Message` - Individual messages with parent-child relationships
+- `File` - Uploaded files and attachments
+- `Assistant/Agent` - AI assistant configurations
+- `Transaction` - Token usage tracking
 
-- **JWT**: Bearer token for API access (`strategies/jwtStrategy.js`)
-- **Local**: Username/password (`strategies/localStrategy.js`)
-- **OAuth**: Google, GitHub, Discord, Facebook, Apple
-- **LDAP**: Enterprise directory integration
-- **OpenID Connect**: Generic OIDC providers
-- **SAML**: Enterprise SSO
-- **2FA**: TOTP with backup codes
+### AI Provider Integration
+- **Abstraction**: `BaseClient` class provides unified interface
+- **Providers**: OpenAI, Anthropic, Google, Azure, custom endpoints
+- **Features**: Streaming, vision support, function calling, plugins
+- **Token Management**: Usage tracking and balance management
 
-### API Routes Structure
+### Key Patterns
+1. **Streaming**: Real-time message streaming with SSE
+2. **Plugins**: Extensible plugin system for additional capabilities
+3. **Error Handling**: Centralized error controller with API boundaries
+4. **Caching**: Redis support with Keyv abstraction
+5. **Search**: Meilisearch integration for full-text search
 
-Organized by feature domain:
-```
-/api/auth       - Authentication endpoints
-/api/agents     - AI agents management
-/api/ask        - Chat completion requests
-/api/assistants - OpenAI Assistants API
-/api/balance    - Token/credit management
-/api/convos     - Conversation CRUD
-/api/files      - File upload/management
-/api/messages   - Message operations
-/api/models     - Model listing
-/api/endpoints  - Endpoint configuration
-/api/mcp        - Model Context Protocol
-```
+## Development Guidelines
 
-### AI Provider Clients
+### Before Making Changes
+1. Run `npm run update` to sync with latest changes
+2. Clear browser localStorage/cookies when testing auth changes
+3. Check existing patterns in similar files before implementing new features
 
-All clients extend `BaseClient` class:
+### Code Style
+- **Linting**: ESLint configuration enforced
+- **Formatting**: Prettier for consistent style
+- **Imports**: Order by npm packages → types → local imports
+- **Naming**: camelCase for files, PascalCase for React components
 
-- **OpenAIClient** (`app/clients/OpenAIClient.js`)
-  - OpenAI and Azure OpenAI support
-  - Function calling
-  - Vision models
-  - Assistants API
+### Testing Requirements
+- Write unit tests for new features
+- Ensure all tests pass before submitting changes
+- E2E tests for critical user flows
 
-- **AnthropicClient** (`app/clients/AnthropicClient.js`)
-  - Claude models
-  - Vision support
-  - Tool calling
+### Common Pitfalls
+- Frontend is TypeScript, backend is JavaScript (migration in progress)
+- Always build packages before running development servers
+- Environment variables must be set in `.env` file
+- MongoDB must be running for local development
+- Some features require additional services (Redis, Meilisearch)
 
-- **GoogleClient** (`app/clients/GoogleClient.js`)
-  - Gemini models
-  - Vertex AI support
+### Working with AI Providers
+- New providers should extend `BaseClient`
+- Implement required methods: `sendCompletion`, `getCompletion`
+- Handle streaming vs non-streaming responses
+- Proper error handling and token counting
 
-- **Custom Endpoints** (`app/clients/ChatGPTClient.js`)
-  - Generic OpenAI-compatible APIs
-  - Custom model configurations
+### State Management
+- Use Recoil atoms for global client state
+- React Query for all server data fetching
+- Avoid prop drilling - use context or state management
+- Optimistic updates for better UX
 
-### Database Layer
-
-MongoDB with Mongoose schemas:
-
-- **Core Models** (from `@librechat/data-schemas`):
-  - User, Message, Conversation
-  - Agent, Action, File
-  - Transaction, Balance
-  - Role (RBAC)
-
-- **Model Operations** (`models/`):
-  - CRUD operations with business logic
-  - Query optimization
-  - Data validation
-
-### Middleware Stack
-
-Key middleware components:
-
-1. **Rate Limiting** (`middleware/limiters/`)
-   - Per-endpoint rate limits
-   - User-based throttling
-   - Custom limit configurations
-
-2. **Validation** (`middleware/validators/`)
-   - Request/response validation
-   - Joi schema validation
-   - File upload validation
-
-3. **Authentication** (`middleware/auth/`)
-   - JWT verification
-   - Session management
-   - Role-based access control
-
-4. **Security**
-   - Ban system checks
-   - Content moderation
-   - CORS configuration
-   - MongoDB injection prevention
-
-### Real-time Communication
-
-Server-Sent Events (SSE) for streaming:
-
-- **StreamResponse** utilities in `server/utils/`
-- Token-by-token message streaming
-- Error propagation in streams
-- Assistant run streaming
-
-### Services Architecture
-
-Core services in `server/services/`:
-
-- **AppService**: Application lifecycle
-- **ModelService**: Model configuration
-- **FileService**: Multi-storage support (S3, Azure, Firebase, Local)
-- **AuthService**: Authentication helpers
-- **ToolService**: Agent tool management
-- **AssistantService**: OpenAI Assistants
-- **ActionService**: Custom actions
-- **MCPManager**: MCP server management
-
-### Agent System
-
-Advanced agent capabilities:
-
-- **LangChain Integration**: Custom agents with tools
-- **Function Calling**: OpenAI function support
-- **Tool Management**: Dynamic tool loading
-- **MCP Protocol**: External tool servers
-- **Action System**: Custom agent actions
-
-### Error Handling
-
-Comprehensive error management:
-
-- Global error controller (`controllers/ErrorController.js`)
-- Stream error handling for SSE
-- Validation error formatting
-- MongoDB error handling
-- Process-level error catching
-
-### Configuration
-
-Flexible configuration system:
-
-- Environment variables (primary)
-- `librechat.yaml` configuration
-- Dynamic endpoint configuration
-- Per-provider settings
-- Rate limit customization
-
-### Development Patterns
-
-1. **Service Layer**: Business logic in services
-2. **Repository Pattern**: Data access through models
-3. **Strategy Pattern**: Auth and storage strategies
-4. **Factory Pattern**: Client creation
-5. **Middleware Pipeline**: Express middleware chain
-6. **Caching Strategy**: Redis/MongoDB caching
-
-### Adding New Features
-
-1. **New AI Provider**: Extend `BaseClient` in `app/clients/`
-2. **New Route**: Add to `server/routes/` with middleware
-3. **New Service**: Create in `server/services/`
-4. **New Auth Strategy**: Add to `strategies/`
-5. **Database Model**: Define schema in `@librechat/data-schemas`
+### API Development
+- Follow RESTful conventions
+- Use middleware for authentication and validation
+- Consistent error response format
+- Document new endpoints in route files

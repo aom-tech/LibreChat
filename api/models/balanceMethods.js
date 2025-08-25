@@ -21,6 +21,7 @@ const checkBalanceRecord = async function ({
   tokenType,
   amount,
   endpointTokenConfig,
+  agentId,
 }) {
   const multiplier = getMultiplier({ valueKey, tokenType, model, endpoint, endpointTokenConfig });
   const tokenCost = amount * multiplier;
@@ -33,8 +34,12 @@ const checkBalanceRecord = async function ({
       canSpend: false,
       balance: 0,
       tokenCost,
+      creditType: 'text',
     };
   }
+  
+  // Always use text credits for balance checking
+  const creditType = 'text';
   let balance = record.tokenCredits;
 
   logger.debug('[Balance.check] Initial state', {
@@ -46,6 +51,8 @@ const checkBalanceRecord = async function ({
     amount,
     balance,
     multiplier,
+    creditType,
+    agentId,
     endpointTokenConfig: !!endpointTokenConfig,
   });
 
@@ -73,8 +80,8 @@ const checkBalanceRecord = async function ({
     }
   }
 
-  logger.debug('[Balance.check] Token cost', { tokenCost });
-  return { canSpend: balance >= tokenCost, balance, tokenCost };
+  logger.debug('[Balance.check] Token cost', { tokenCost, creditType });
+  return { canSpend: balance >= tokenCost, balance, tokenCost, creditType };
 };
 
 /**
@@ -126,11 +133,12 @@ const addIntervalToDate = (date, value, unit) => {
  * @param {number} params.txData.amount - The amount of tokens.
  * @param {string} params.txData.model - The model name or identifier.
  * @param {string} [params.txData.endpointTokenConfig] - The token configuration for the endpoint.
+ * @param {string} [params.txData.agentId] - The agent ID for determining credit type.
  * @returns {Promise<boolean>} Throws error if the user cannot spend the amount.
  * @throws {Error} Throws an error if there's an issue with the balance check.
  */
 const checkBalance = async ({ req, res, txData }) => {
-  const { canSpend, balance, tokenCost } = await checkBalanceRecord(txData);
+  const { canSpend, balance, tokenCost, creditType } = await checkBalanceRecord(txData);
   if (canSpend) {
     return true;
   }

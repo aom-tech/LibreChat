@@ -1,12 +1,9 @@
 import React, { useCallback } from 'react';
-import { useRecoilValue } from 'recoil';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import type { TMessage } from 'librechat-data-provider';
 import { QueryKeys, Constants } from 'librechat-data-provider';
-import type { TMessage, TStartupConfig } from 'librechat-data-provider';
-import { NewChatIcon, MobileSidebar, Sidebar } from '~/components/svg';
-import { getDefaultModelSpec, getModelSpecPreset } from '~/utils';
-import { TooltipAnchor, Button } from '~/components/ui';
+import { NewChatIcon, MobileSidebar, Sidebar, TooltipAnchor, Button } from '@librechat/client';
 import { useLocalize, useNewConvo } from '~/hooks';
 import store from '~/store';
 
@@ -33,7 +30,7 @@ export default function NewChat({
   const clickHandler: React.MouseEventHandler<HTMLButtonElement> = useCallback(
     (e) => {
       if (e.button === 0 && (e.ctrlKey || e.metaKey)) {
-        window.open('/agents', '_blank');
+        window.open('/c/new', '_blank');
         return;
       }
       queryClient.setQueryData<TMessage[]>(
@@ -41,7 +38,7 @@ export default function NewChat({
         [],
       );
       queryClient.invalidateQueries([QueryKeys.messages]);
-      navigate('/agents', { state: { focusChat: true } });
+      navigate('/c/new', { state: { focusChat: true } });
       if (isSmallScreen) {
         toggleNav();
       }
@@ -59,6 +56,7 @@ export default function NewChat({
               size="icon"
               variant="outline"
               data-testid="close-sidebar-button"
+              data-tour="sidebar-toggle"
               aria-label={localize('com_nav_close_sidebar')}
               className="rounded-full border-none bg-transparent p-2 hover:bg-surface-hover md:rounded-xl"
               onClick={toggleNav}

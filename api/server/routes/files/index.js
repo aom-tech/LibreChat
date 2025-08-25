@@ -8,9 +8,15 @@ const files = require('./files');
 const images = require('./images');
 const avatar = require('./avatar');
 const speech = require('./speech');
+const stream = require('./stream');
 
 const initialize = async () => {
   const router = express.Router();
+
+  // Public routes (no authentication required)
+  router.use('/stream', stream);
+
+  // Apply authentication middleware for all other routes
   router.use(requireJwtAuth);
   router.use(checkBan);
   router.use(uaParser);

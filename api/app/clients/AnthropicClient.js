@@ -334,6 +334,7 @@ class AnthropicClient extends BaseClient {
           conversationId: this.conversationId,
           model: model ?? this.modelOptions.model,
           endpointTokenConfig: this.options.endpointTokenConfig,
+          agentId: this.options.agent?.id,
         },
         {
           promptTokens: { input, write, read },
@@ -350,7 +351,9 @@ class AnthropicClient extends BaseClient {
         user: this.user,
         conversationId: this.conversationId,
         model: model ?? this.modelOptions.model,
+        endpoint: this.options.endpoint,
         endpointTokenConfig: this.options.endpointTokenConfig,
+        agentId: this.options.agent?.id,
       },
       { promptTokens, completionTokens },
     );

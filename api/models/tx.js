@@ -1,5 +1,33 @@
-const { matchModelName } = require('../utils');
+const { matchModelName } = require('../utils/tokens');
 const defaultRate = 6;
+
+// Fixed costs for various services
+const FIXED_SERVICE_COSTS = {
+  FLUX_IMAGE: 1000,  // Cost per image generation
+  PRESENTATION: 1000, // Cost per presentation
+  VIDEO: 1000,      // Cost per video
+};
+
+// Agent IDs to credit type mapping
+const AGENT_CREDIT_TYPES = {
+  'agent_-2vJDJqv7zoHlNeu5VX6f': 'image',
+  'agent_srl6222FWjmA0XxeEGgGQ': 'image',
+  'agent_b1rpKFVSmmevC7A2hkfLz': 'presentation',
+  'agent_p_s8V9FmVfxgHGVIFjOne': 'video',
+};
+
+/**
+ * Determines the credit type based on the agent ID
+ * @param {string} agentId - The agent ID
+ * @returns {'text' | 'image' | 'presentation' | 'video'} The credit type
+ */
+const getCreditTypeByAgentId = (agentId) => {
+  if (!agentId) {
+    return 'text';
+  }
+
+  return AGENT_CREDIT_TYPES[agentId] || 'text';
+};
 
 /**
  * AWS Bedrock pricing
@@ -71,6 +99,11 @@ const bedrockValues = {
  */
 const tokenValues = Object.assign(
   {
+    'flux': { prompt: 1, completion: 1 }, // Fixed rate for image generation
+    'slidespeak-server': { prompt: 1, completion: 1 }, // Fixed rate for presentation generation
+    'gpt-image-1': { prompt: 1, completion: 1 }, // Fixed rate for OpenAI image generation
+    'veo-mcp': { prompt: 1, completion: 1 }, // Fixed rate for video generation
+    'veo2-mcp': { prompt: 1, completion: 1 }, // Fixed rate for video generation v2
     '8k': { prompt: 30, completion: 60 },
     '32k': { prompt: 60, completion: 120 },
     '4k': { prompt: 1.5, completion: 2 },
@@ -87,6 +120,9 @@ const tokenValues = Object.assign(
     'gpt-4.1': { prompt: 2, completion: 8 },
     'gpt-4.5': { prompt: 75, completion: 150 },
     'gpt-4o-mini': { prompt: 0.15, completion: 0.6 },
+    'gpt-5': { prompt: 1.25, completion: 10 },
+    'gpt-5-mini': { prompt: 0.25, completion: 2 },
+    'gpt-5-nano': { prompt: 0.05, completion: 0.4 },
     'gpt-4o': { prompt: 2.5, completion: 10 },
     'gpt-4o-2024-05-13': { prompt: 5, completion: 15 },
     'gpt-4-1106': { prompt: 10, completion: 30 },
@@ -135,10 +171,11 @@ const tokenValues = Object.assign(
     'grok-2-1212': { prompt: 2.0, completion: 10.0 },
     'grok-2-latest': { prompt: 2.0, completion: 10.0 },
     'grok-2': { prompt: 2.0, completion: 10.0 },
-    'grok-3-mini-fast': { prompt: 0.4, completion: 4 },
+    'grok-3-mini-fast': { prompt: 0.6, completion: 4 },
     'grok-3-mini': { prompt: 0.3, completion: 0.5 },
     'grok-3-fast': { prompt: 5.0, completion: 25.0 },
     'grok-3': { prompt: 3.0, completion: 15.0 },
+    'grok-4': { prompt: 3.0, completion: 15.0 },
     'grok-beta': { prompt: 5.0, completion: 15.0 },
     'mistral-large': { prompt: 2.0, completion: 6.0 },
     'pixtral-large': { prompt: 2.0, completion: 6.0 },
@@ -146,6 +183,9 @@ const tokenValues = Object.assign(
     codestral: { prompt: 0.3, completion: 0.9 },
     'ministral-8b': { prompt: 0.1, completion: 0.1 },
     'ministral-3b': { prompt: 0.04, completion: 0.04 },
+    // GPT-OSS models
+    'gpt-oss-20b': { prompt: 0.05, completion: 0.2 },
+    'gpt-oss-120b': { prompt: 0.15, completion: 0.6 },
   },
   bedrockValues,
 );
@@ -181,6 +221,11 @@ const getValueKey = (model, endpoint) => {
     return undefined;
   }
 
+  // Check if this is an MCP server model that should use fixed rates
+  if (modelName.includes('-server') && tokenValues[modelName]) {
+    return modelName;
+  }
+
   if (modelName.includes('gpt-3.5-turbo-16k')) {
     return '16k';
   } else if (modelName.includes('gpt-3.5-turbo-0125')) {
@@ -213,6 +258,12 @@ const getValueKey = (model, endpoint) => {
     return 'gpt-4.1';
   } else if (modelName.includes('gpt-4o-2024-05-13')) {
     return 'gpt-4o-2024-05-13';
+  } else if (modelName.includes('gpt-5-nano')) {
+    return 'gpt-5-nano';
+  } else if (modelName.includes('gpt-5-mini')) {
+    return 'gpt-5-mini';
+  } else if (modelName.includes('gpt-5')) {
+    return 'gpt-5';
   } else if (modelName.includes('gpt-4o-mini')) {
     return 'gpt-4o-mini';
   } else if (modelName.includes('gpt-4o')) {
@@ -311,4 +362,7 @@ module.exports = {
   getCacheMultiplier,
   defaultRate,
   cacheTokenValues,
+  getCreditTypeByAgentId,
+  AGENT_CREDIT_TYPES,
+  FIXED_SERVICE_COSTS,
 };

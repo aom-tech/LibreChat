@@ -1,8 +1,7 @@
 import React, { forwardRef } from 'react';
 import { useWatch } from 'react-hook-form';
 import type { Control } from 'react-hook-form';
-import { TooltipAnchor } from '~/components/ui';
-import { SendIcon } from '~/components/svg';
+import { SendIcon, TooltipAnchor } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 
@@ -27,6 +26,7 @@ const SubmitButton = React.memo(
               'rounded-full bg-text-primary p-1.5 text-text-primary outline-offset-4 transition-all duration-200 disabled:cursor-not-allowed disabled:text-text-secondary disabled:opacity-10',
             )}
             data-testid="send-button"
+            data-tour="send-button"
             type="submit"
           >
             <span className="" data-state="closed">

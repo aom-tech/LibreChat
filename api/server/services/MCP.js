@@ -2,18 +2,21 @@ const { z } = require('zod');
 const { tool } = require('@langchain/core/tools');
 const { logger } = require('@librechat/data-schemas');
 const { Time, CacheKeys, StepTypes } = require('librechat-data-provider');
-const { sendEvent, normalizeServerName, MCPOAuthHandler } = require('@librechat/api');
 const { Constants: AgentConstants, Providers, GraphEvents } = require('@librechat/agents');
+const { Constants, ContentTypes, isAssistantsEndpoint } = require('librechat-data-provider');
 const {
-  Constants,
-  ContentTypes,
-  isAssistantsEndpoint,
-  convertJsonSchemaToZod,
-} = require('librechat-data-provider');
-const { getMCPManager, getFlowStateManager } = require('~/config');
+  sendEvent,
+  MCPOAuthHandler,
+  normalizeServerName,
+  convertWithResolvedRefs,
+} = require('@librechat/api');
 const { findToken, createToken, updateToken } = require('~/models');
-const { getCachedTools } = require('./Config');
+const { getMCPManager, getFlowStateManager } = require('~/config');
+const { getCachedTools, loadCustomConfig } = require('./Config');
 const { getLogStores } = require('~/cache');
+const { spendTokens } = require('~/models/spendTokens');
+const { FIXED_SERVICE_COSTS } = require('~/models/tx');
+const { Balance } = require('~/db/models');
 
 /**
  * @param {object} params
@@ -104,7 +107,7 @@ function createAbortHandler({ userId, serverName, toolName, flowManager }) {
  * @returns { Promise<typeof tool | { _call: (toolInput: Object | string) => unknown}> } An object with `_call` method to execute the tool input.
  */
 async function createMCPTool({ req, res, toolKey, provider: _provider }) {
-  const availableTools = await getCachedTools({ includeGlobal: true });
+  const availableTools = await getCachedTools({ userId: req.user?.id, includeGlobal: true });
   const toolDefinition = availableTools?.[toolKey]?.function;
   if (!toolDefinition) {
     logger.error(`Tool ${toolKey} not found in available tools`);
@@ -113,7 +116,7 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
   /** @type {LCTool} */
   const { description, parameters } = toolDefinition;
   const isGoogle = _provider === Providers.VERTEXAI || _provider === Providers.GOOGLE;
-  let schema = convertJsonSchemaToZod(parameters, {
+  let schema = convertWithResolvedRefs(parameters, {
     allowEmptyObject: !isGoogle,
     transformOneOfAnyOf: true,
   });
@@ -135,11 +138,33 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
   /** @type {(toolArguments: Object | string, config?: GraphRunnableConfig) => Promise<unknown>} */
   const _call = async (toolArguments, config) => {
     const userId = config?.configurable?.user?.id || config?.configurable?.user_id;
+    logger.debug(config)
+    // Добавить изображения в аргументы, если они есть
+    const imageUrls = config?.configurable?.image_urls;
+    if (imageUrls && imageUrls.length > 0) {
+      // Извлечь base64 данные из data URLs
+      const images = imageUrls.map(url => {
+        if (url && url.startsWith('data:image/')) {
+          const base64Data = url.split(',')[1];
+          return base64Data;
+        }
+        return null;
+      }).filter(Boolean);
+
+      if (images.length > 0) {
+        // Добавить изображения в аргументы инструмента
+        if (typeof toolArguments === 'object' && toolArguments !== null) {
+          toolArguments.images = images;
+        }
+      }
+    }
     /** @type {ReturnType<typeof createAbortHandler>} */
     let abortHandler = null;
     /** @type {AbortSignal} */
     let derivedSignal = null;
 
+    // logger.debug(toolArguments)
+    // logger.debug('toolArguments', truncateLongStrings(toolArguments.images));
     try {
       const flowsCache = getLogStores(CacheKeys.FLOWS);
       const flowManager = getFlowStateManager(flowsCache);
@@ -171,6 +196,92 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
       const customUserVars =
         config?.configurable?.userMCPAuthMap?.[`${Constants.mcp_prefix}${serverName}`];
 
+      // Check if this is a presentation generation tool
+      const isPresentationTool = toolName.toLowerCase().includes('powerpoint') ||
+                                toolName.toLowerCase().includes('presentation') ||
+                                serverName.toLowerCase().includes('slidespeak');
+
+      // Check if this is a video generation tool
+      const isVideoTool = toolName.toLowerCase().includes('video') ||
+                         serverName.toLowerCase().includes('veo');
+
+      // Extract duration for video tools
+      let videoDurationSeconds = 0;
+      if (isVideoTool && toolArguments) {
+        if (typeof toolArguments === 'object' && toolArguments.duration_seconds) {
+          videoDurationSeconds = parseInt(toolArguments.duration_seconds) || 0;
+        } else if (typeof toolArguments === 'string') {
+          try {
+            const parsed = JSON.parse(toolArguments);
+            videoDurationSeconds = parseInt(parsed.duration_seconds) || 0;
+          } catch (e) {
+            logger.debug('[MCP] Could not parse video duration from toolArguments');
+          }
+        }
+      }
+
+      // Calculate video cost: FIXED_SERVICE_COSTS.VIDEO credits per 5 seconds
+      const videoCost = Math.ceil(videoDurationSeconds / 5) * FIXED_SERVICE_COSTS.VIDEO;
+
+      // Check balance for presentation tools
+      if (isPresentationTool && userId) {
+        try {
+          const balanceDoc = await Balance.findOne({ user: userId }).lean();
+
+          if (!balanceDoc) {
+            logger.warn(`[MCP][${serverName}][${toolName}] No balance document found for user:`, userId);
+            throw new Error('Unable to verify presentation credits balance.');
+          }
+
+          const presentationBalance = balanceDoc.availableCredits?.presentation || 0;
+          const requiredCredits = FIXED_SERVICE_COSTS.PRESENTATION;
+
+          logger.debug(`[MCP][${serverName}][${toolName}] Presentation balance check:`, {
+            userId,
+            presentationBalance,
+            requiredCredits,
+            canGenerate: presentationBalance >= requiredCredits,
+          });
+
+          if (presentationBalance < requiredCredits) {
+            throw new Error(`Insufficient presentation credits. You have ${presentationBalance} credits but need at least ${requiredCredits} to generate a presentation.`);
+          }
+        } catch (error) {
+          logger.error(`[MCP][${serverName}][${toolName}] Error checking presentation balance:`, error);
+          throw error;
+        }
+      }
+
+      // Check balance for video tools
+      if (isVideoTool && userId && videoDurationSeconds > 0) {
+        try {
+          const balanceDoc = await Balance.findOne({ user: userId }).lean();
+
+          if (!balanceDoc) {
+            logger.warn(`[MCP][${serverName}][${toolName}] No balance document found for user:`, userId);
+            throw new Error('Unable to verify video credits balance.');
+          }
+
+          const videoBalance = balanceDoc.availableCredits?.video || 0;
+          const requiredCredits = videoCost;
+
+          logger.debug(`[MCP][${serverName}][${toolName}] Video balance check:`, {
+            userId,
+            videoBalance,
+            requiredCredits,
+            videoDurationSeconds,
+            canGenerate: videoBalance >= requiredCredits,
+          });
+
+          if (videoBalance < requiredCredits) {
+            throw new Error(`Insufficient video credits. You have ${videoBalance} credits but need at least ${requiredCredits} to generate a ${videoDurationSeconds} second video.`);
+          }
+        } catch (error) {
+          logger.error(`[MCP][${serverName}][${toolName}] Error checking video balance:`, error);
+          throw error;
+        }
+      }
+
       const result = await mcpManager.callTool({
         serverName,
         toolName,
@@ -190,6 +301,72 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
         oauthStart,
         oauthEnd,
       });
+
+      // Charge presentation tokens after successful generation
+      if (isPresentationTool && userId) {
+        logger.info(`[MCP][${serverName}][${toolName}] Presentation generated successfully, preparing to charge tokens`);
+        try {
+          const conversationId = config?.configurable?.thread_id;
+          const endpoint = config?.metadata?.endpoint || 'agents';
+
+          if (conversationId) {
+            const txMetadata = {
+              user: userId,
+              conversationId: conversationId,
+              context: 'presentation_generation',
+              endpoint: endpoint,
+              model: serverName,
+              creditType: 'presentation',
+            };
+
+            // Charge fixed presentation tokens
+            await spendTokens(txMetadata, {
+              promptTokens: 0,
+              completionTokens: FIXED_SERVICE_COSTS.PRESENTATION,
+            });
+
+            logger.info(`[MCP][${serverName}][${toolName}] Successfully charged ${FIXED_SERVICE_COSTS.PRESENTATION} presentation tokens`);
+          } else {
+            logger.warn(`[MCP][${serverName}][${toolName}] Missing conversationId, cannot charge tokens`);
+          }
+        } catch (error) {
+          logger.error(`[MCP][${serverName}][${toolName}] Error spending presentation tokens:`, error);
+          // Continue even if token spending fails
+        }
+      }
+
+      // Charge video tokens after successful generation
+      if (isVideoTool && userId && videoDurationSeconds > 0) {
+        logger.info(`[MCP][${serverName}][${toolName}] Video generated successfully, preparing to charge tokens`);
+        try {
+          const conversationId = config?.configurable?.thread_id;
+          const endpoint = config?.metadata?.endpoint || 'agents';
+
+          if (conversationId) {
+            const txMetadata = {
+              user: userId,
+              conversationId: conversationId,
+              context: 'video_generation',
+              endpoint: endpoint,
+              model: serverName,
+              creditType: 'video',
+            };
+
+            // Charge calculated video tokens
+            await spendTokens(txMetadata, {
+              promptTokens: 0,
+              completionTokens: videoCost,
+            });
+
+            logger.info(`[MCP][${serverName}][${toolName}] Successfully charged ${videoCost} video tokens for ${videoDurationSeconds} second video`);
+          } else {
+            logger.warn(`[MCP][${serverName}][${toolName}] Missing conversationId, cannot charge tokens`);
+          }
+        } catch (error) {
+          logger.error(`[MCP][${serverName}][${toolName}] Error spending video tokens:`, error);
+          // Continue even if token spending fails
+        }
+      }
 
       if (isAssistantsEndpoint(provider) && Array.isArray(result)) {
         return result[0];
@@ -235,9 +412,139 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
     responseFormat: AgentConstants.CONTENT_AND_ARTIFACT,
   });
   toolInstance.mcp = true;
+  toolInstance.mcpRawServerName = serverName;
   return toolInstance;
+}
+
+/**
+ * Get MCP setup data including config, connections, and OAuth servers
+ * @param {string} userId - The user ID
+ * @returns {Object} Object containing mcpConfig, appConnections, userConnections, and oauthServers
+ */
+async function getMCPSetupData(userId) {
+  const printConfig = false;
+  const config = await loadCustomConfig(printConfig);
+  const mcpConfig = config?.mcpServers;
+
+  if (!mcpConfig) {
+    throw new Error('MCP config not found');
+  }
+
+  const mcpManager = getMCPManager(userId);
+  const appConnections = mcpManager.getAllConnections() || new Map();
+  const userConnections = mcpManager.getUserConnections(userId) || new Map();
+  const oauthServers = mcpManager.getOAuthServers() || new Set();
+
+  return {
+    mcpConfig,
+    appConnections,
+    userConnections,
+    oauthServers,
+  };
+}
+
+/**
+ * Check OAuth flow status for a user and server
+ * @param {string} userId - The user ID
+ * @param {string} serverName - The server name
+ * @returns {Object} Object containing hasActiveFlow and hasFailedFlow flags
+ */
+async function checkOAuthFlowStatus(userId, serverName) {
+  const flowsCache = getLogStores(CacheKeys.FLOWS);
+  const flowManager = getFlowStateManager(flowsCache);
+  const flowId = MCPOAuthHandler.generateFlowId(userId, serverName);
+
+  try {
+    const flowState = await flowManager.getFlowState(flowId, 'mcp_oauth');
+    if (!flowState) {
+      return { hasActiveFlow: false, hasFailedFlow: false };
+    }
+
+    const flowAge = Date.now() - flowState.createdAt;
+    const flowTTL = flowState.ttl || 180000; // Default 3 minutes
+
+    if (flowState.status === 'FAILED' || flowAge > flowTTL) {
+      const wasCancelled = flowState.error && flowState.error.includes('cancelled');
+
+      if (wasCancelled) {
+        logger.debug(`[MCP Connection Status] Found cancelled OAuth flow for ${serverName}`, {
+          flowId,
+          status: flowState.status,
+          error: flowState.error,
+        });
+        return { hasActiveFlow: false, hasFailedFlow: false };
+      } else {
+        logger.debug(`[MCP Connection Status] Found failed OAuth flow for ${serverName}`, {
+          flowId,
+          status: flowState.status,
+          flowAge,
+          flowTTL,
+          timedOut: flowAge > flowTTL,
+          error: flowState.error,
+        });
+        return { hasActiveFlow: false, hasFailedFlow: true };
+      }
+    }
+
+    if (flowState.status === 'PENDING') {
+      logger.debug(`[MCP Connection Status] Found active OAuth flow for ${serverName}`, {
+        flowId,
+        flowAge,
+        flowTTL,
+      });
+      return { hasActiveFlow: true, hasFailedFlow: false };
+    }
+
+    return { hasActiveFlow: false, hasFailedFlow: false };
+  } catch (error) {
+    logger.error(`[MCP Connection Status] Error checking OAuth flows for ${serverName}:`, error);
+    return { hasActiveFlow: false, hasFailedFlow: false };
+  }
+}
+
+/**
+ * Get connection status for a specific MCP server
+ * @param {string} userId - The user ID
+ * @param {string} serverName - The server name
+ * @param {Map} appConnections - App-level connections
+ * @param {Map} userConnections - User-level connections
+ * @param {Set} oauthServers - Set of OAuth servers
+ * @returns {Object} Object containing requiresOAuth and connectionState
+ */
+async function getServerConnectionStatus(
+  userId,
+  serverName,
+  appConnections,
+  userConnections,
+  oauthServers,
+) {
+  const getConnectionState = () =>
+    appConnections.get(serverName)?.connectionState ??
+    userConnections.get(serverName)?.connectionState ??
+    'disconnected';
+
+  const baseConnectionState = getConnectionState();
+  let finalConnectionState = baseConnectionState;
+
+  if (baseConnectionState === 'disconnected' && oauthServers.has(serverName)) {
+    const { hasActiveFlow, hasFailedFlow } = await checkOAuthFlowStatus(userId, serverName);
+
+    if (hasFailedFlow) {
+      finalConnectionState = 'error';
+    } else if (hasActiveFlow) {
+      finalConnectionState = 'connecting';
+    }
+  }
+
+  return {
+    requiresOAuth: oauthServers.has(serverName),
+    connectionState: finalConnectionState,
+  };
 }
 
 module.exports = {
   createMCPTool,
+  getMCPSetupData,
+  checkOAuthFlowStatus,
+  getServerConnectionStatus,
 };

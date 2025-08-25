@@ -1,9 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { QueryKeys, Constants } from 'librechat-data-provider';
+import { TooltipAnchor, Button, NewChatIcon } from '@librechat/client';
 import type { TMessage } from 'librechat-data-provider';
-import { TooltipAnchor, Button } from '~/components/ui';
-import { NewChatIcon } from '~/components/svg';
 import { useChatContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
 
@@ -15,7 +14,7 @@ export default function HeaderNewChat() {
 
   const clickHandler: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     if (e.button === 0 && (e.ctrlKey || e.metaKey)) {
-      window.open('/agents', '_blank');
+      window.open('/c/new', '_blank');
       return;
     }
     queryClient.setQueryData<TMessage[]>(
@@ -23,7 +22,7 @@ export default function HeaderNewChat() {
       [],
     );
     queryClient.invalidateQueries([QueryKeys.messages]);
-    navigate('/agents');
+    navigate('/c/new');
   };
 
   return (

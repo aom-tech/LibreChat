@@ -3,14 +3,17 @@ const axios = require('axios');
 const { v4 } = require('uuid');
 const OpenAI = require('openai');
 const FormData = require('form-data');
+const { ProxyAgent } = require('undici');
 const { tool } = require('@langchain/core/tools');
 const { logAxiosError } = require('@librechat/api');
 const { logger } = require('@librechat/data-schemas');
-const { HttpsProxyAgent } = require('https-proxy-agent');
 const { ContentTypes, EImageOutputType } = require('librechat-data-provider');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { extractBaseURL } = require('~/utils');
 const { getFiles } = require('~/models/File');
+const { spendTokens } = require('~/models/spendTokens');
+const { FIXED_SERVICE_COSTS } = require('~/models/tx');
+const { Balance } = require('~/db/models');
 
 /** Default descriptions for image generation tool  */
 const DEFAULT_IMAGE_GEN_DESCRIPTION = `
@@ -43,20 +46,20 @@ Both generated and referenced image IDs will be returned in the response, so you
 `.trim();
 
 /** Default prompt descriptions  */
-const DEFAULT_IMAGE_GEN_PROMPT_DESCRIPTION = `Describe the image you want in detail. 
-      Be highly specific—break your idea into layers: 
+const DEFAULT_IMAGE_GEN_PROMPT_DESCRIPTION = `Describe the image you want in detail.
+      Be highly specific—break your idea into layers:
       (1) main concept and subject,
       (2) composition and position,
       (3) lighting and mood,
       (4) style, medium, or camera details,
       (5) important features (age, expression, clothing, etc.),
       (6) background.
-      Use positive, descriptive language and specify what should be included, not what to avoid. 
+      Use positive, descriptive language and specify what should be included, not what to avoid.
       List number and characteristics of people/objects, and mention style/technical requirements (e.g., "DSLR photo, 85mm lens, golden hour").
       Do not reference any uploaded images—use for new image creation from text only.`;
 
 const DEFAULT_IMAGE_EDIT_PROMPT_DESCRIPTION = `Describe the changes, enhancements, or new ideas to apply to the uploaded image(s).
-      Be highly specific—break your request into layers: 
+      Be highly specific—break your request into layers:
       (1) main concept or transformation,
       (2) specific edits/replacements or composition guidance,
       (3) desired style, mood, or technique,
@@ -106,6 +109,12 @@ const getImageGenPromptDescription = () => {
 const getImageEditPromptDescription = () => {
   return process.env.IMAGE_EDIT_OAI_PROMPT_DESCRIPTION || DEFAULT_IMAGE_EDIT_PROMPT_DESCRIPTION;
 };
+
+function createAbortHandler() {
+  return function () {
+    logger.debug('[ImageGenOAI] Image generation aborted');
+  };
+}
 
 /**
  * Creates OpenAI Image tools (generation and editing)
@@ -183,7 +192,10 @@ function createOpenAIImageTools(fields = {}) {
       }
       const clientConfig = { ...closureConfig };
       if (process.env.PROXY) {
-        clientConfig.httpAgent = new HttpsProxyAgent(process.env.PROXY);
+        const proxyAgent = new ProxyAgent(process.env.PROXY);
+        clientConfig.fetchOptions = {
+          dispatcher: proxyAgent,
+        };
       }
 
       /** @type {OpenAI} */
@@ -200,11 +212,49 @@ function createOpenAIImageTools(fields = {}) {
         output_format = EImageOutputType.PNG;
       }
 
+      // Check image balance before generation
+      const userId = req?.user?.id;
+      if (userId) {
+        try {
+          const balanceDoc = await Balance.findOne({ user: userId }).lean();
+          
+          if (!balanceDoc) {
+            logger.warn('[ImageGenOAI] No balance document found for user:', userId);
+            return returnValue('Unable to verify image credits balance.');
+          }
+
+          const imageBalance = balanceDoc.availableCredits?.image || 0;
+          const requiredCredits = FIXED_SERVICE_COSTS.FLUX_IMAGE; // Using same cost as Flux
+
+          logger.debug('[ImageGenOAI] Image balance check:', {
+            userId,
+            imageBalance,
+            requiredCredits,
+            canGenerate: imageBalance >= requiredCredits,
+          });
+
+          if (imageBalance < requiredCredits) {
+            return returnValue(`Insufficient image credits. You have ${imageBalance} credits but need at least ${requiredCredits} to generate an image.`);
+          }
+        } catch (error) {
+          logger.error('[ImageGenOAI] Error checking image balance:', error);
+          // Continue if balance check fails to not block the service
+        }
+      }
+
       let resp;
+      /** @type {AbortSignal} */
+      let derivedSignal = null;
+      /** @type {() => void} */
+      let abortHandler = null;
+
       try {
-        const derivedSignal = runnableConfig?.signal
-          ? AbortSignal.any([runnableConfig.signal])
-          : undefined;
+        if (runnableConfig?.signal) {
+          derivedSignal = AbortSignal.any([runnableConfig.signal]);
+          abortHandler = createAbortHandler();
+          derivedSignal.addEventListener('abort', abortHandler, { once: true });
+        }
+
         resp = await openai.images.generate(
           {
             model: 'gpt-image-1',
@@ -228,6 +278,10 @@ function createOpenAIImageTools(fields = {}) {
         logAxiosError({ error, message });
         return returnValue(`Something went wrong when trying to generate the image. The OpenAI API may be unavailable:
 Error Message: ${error.message}`);
+      } finally {
+        if (abortHandler && derivedSignal) {
+          derivedSignal.removeEventListener('abort', abortHandler);
+        }
       }
 
       if (!resp) {
@@ -237,13 +291,45 @@ Error Message: ${error.message}`);
       }
 
       // For gpt-image-1, the response contains base64-encoded images
-      // TODO: handle cost in `resp.usage`
       const base64Image = resp.data[0].b64_json;
 
       if (!base64Image) {
         return returnValue(
           'No image data returned from OpenAI API. There may be a problem with the API or your configuration.',
         );
+      }
+
+      // Spend 1000 image tokens for successful image generation
+      logger.info('[ImageGenOAI] Image generated successfully, preparing to charge tokens');
+      try {
+        if (userId) {
+          const conversationId = runnableConfig?.configurable?.thread_id;
+          const endpoint = runnableConfig?.metadata?.endpoint || 'agents';
+          
+          if (conversationId) {
+            const txMetadata = {
+              user: userId,
+              conversationId: conversationId,
+              context: 'openai_image_generation',
+              endpoint: endpoint,
+              model: 'gpt-image-1',
+              creditType: 'image',
+            };
+
+            // Charge fixed image tokens
+            await spendTokens(txMetadata, {
+              promptTokens: 0,
+              completionTokens: FIXED_SERVICE_COSTS.FLUX_IMAGE, // Using same cost as Flux
+            });
+
+            logger.info(`[ImageGenOAI] Successfully charged ${FIXED_SERVICE_COSTS.FLUX_IMAGE} image tokens`);
+          } else {
+            logger.warn('[ImageGenOAI] Missing conversationId, cannot charge tokens');
+          }
+        }
+      } catch (error) {
+        logger.error('[ImageGenOAI] Error spending image tokens:', error);
+        // Continue even if token spending fails
       }
 
       const content = [
@@ -315,9 +401,42 @@ Error Message: ${error.message}`);
         throw new Error('Missing required field: prompt');
       }
 
+      // Check image balance before editing
+      const userId = req?.user?.id;
+      if (userId) {
+        try {
+          const balanceDoc = await Balance.findOne({ user: userId }).lean();
+          
+          if (!balanceDoc) {
+            logger.warn('[ImageEditOAI] No balance document found for user:', userId);
+            return returnValue('Unable to verify image credits balance.');
+          }
+
+          const imageBalance = balanceDoc.availableCredits?.image || 0;
+          const requiredCredits = FIXED_SERVICE_COSTS.FLUX_IMAGE; // Using same cost as Flux
+
+          logger.debug('[ImageEditOAI] Image balance check:', {
+            userId,
+            imageBalance,
+            requiredCredits,
+            canGenerate: imageBalance >= requiredCredits,
+          });
+
+          if (imageBalance < requiredCredits) {
+            return returnValue(`Insufficient image credits. You have ${imageBalance} credits but need at least ${requiredCredits} to edit an image.`);
+          }
+        } catch (error) {
+          logger.error('[ImageEditOAI] Error checking image balance:', error);
+          // Continue if balance check fails to not block the service
+        }
+      }
+
       const clientConfig = { ...closureConfig };
       if (process.env.PROXY) {
-        clientConfig.httpAgent = new HttpsProxyAgent(process.env.PROXY);
+        const proxyAgent = new ProxyAgent(process.env.PROXY);
+        clientConfig.fetchOptions = {
+          dispatcher: proxyAgent,
+        };
       }
 
       const formData = new FormData();
@@ -409,10 +528,17 @@ Error Message: ${error.message}`);
         headers['Authorization'] = `Bearer ${apiKey}`;
       }
 
+      /** @type {AbortSignal} */
+      let derivedSignal = null;
+      /** @type {() => void} */
+      let abortHandler = null;
+
       try {
-        const derivedSignal = runnableConfig?.signal
-          ? AbortSignal.any([runnableConfig.signal])
-          : undefined;
+        if (runnableConfig?.signal) {
+          derivedSignal = AbortSignal.any([runnableConfig.signal]);
+          abortHandler = createAbortHandler();
+          derivedSignal.addEventListener('abort', abortHandler, { once: true });
+        }
 
         /** @type {import('axios').AxiosRequestConfig} */
         const axiosConfig = {
@@ -422,6 +548,19 @@ Error Message: ${error.message}`);
           baseURL,
         };
 
+        if (process.env.PROXY) {
+          try {
+            const url = new URL(process.env.PROXY);
+            axiosConfig.proxy = {
+              host: url.hostname.replace(/^\[|\]$/g, ''),
+              port: url.port ? parseInt(url.port, 10) : undefined,
+              protocol: url.protocol.replace(':', ''),
+            };
+          } catch (error) {
+            logger.error('Error parsing proxy URL:', error);
+          }
+        }
+
         if (process.env.IMAGE_GEN_OAI_AZURE_API_VERSION && process.env.IMAGE_GEN_OAI_BASEURL) {
           axiosConfig.params = {
             'api-version': process.env.IMAGE_GEN_OAI_AZURE_API_VERSION,
@@ -429,11 +568,7 @@ Error Message: ${error.message}`);
           };
         }
 
-        console.log(11111)
-
         const response = await axios.post('/images/edits', formData, axiosConfig);
-
-        console.log('Image edit response:', JSON.stringify(response.data, null, 2));
 
         if (!response.data || !response.data.data || !response.data.data.length) {
           return returnValue(
@@ -446,6 +581,39 @@ Error Message: ${error.message}`);
           return returnValue(
             'No image data returned from OpenAI API. There may be a problem with the API or your configuration.',
           );
+        }
+
+        // Spend 1000 image tokens for successful image editing
+        logger.info('[ImageEditOAI] Image edited successfully, preparing to charge tokens');
+        try {
+          if (userId) {
+            const conversationId = runnableConfig?.configurable?.thread_id;
+            const endpoint = runnableConfig?.metadata?.endpoint || 'agents';
+            
+            if (conversationId) {
+              const txMetadata = {
+                user: userId,
+                conversationId: conversationId,
+                context: 'openai_image_editing',
+                endpoint: endpoint,
+                model: 'gpt-image-1',
+                creditType: 'image',
+              };
+
+              // Charge fixed image tokens
+              await spendTokens(txMetadata, {
+                promptTokens: 0,
+                completionTokens: FIXED_SERVICE_COSTS.FLUX_IMAGE, // Using same cost as Flux
+              });
+
+              logger.info(`[ImageEditOAI] Successfully charged ${FIXED_SERVICE_COSTS.FLUX_IMAGE} image tokens`);
+            } else {
+              logger.warn('[ImageEditOAI] Missing conversationId, cannot charge tokens');
+            }
+          }
+        } catch (error) {
+          logger.error('[ImageEditOAI] Error spending image tokens:', error);
+          // Continue even if token spending fails
         }
 
         const content = [
@@ -472,6 +640,10 @@ Error Message: ${error.message}`);
         logAxiosError({ error, message });
         return returnValue(`Something went wrong when trying to edit the image. The OpenAI API may be unavailable:
 Error Message: ${error.message || 'Unknown error'}`);
+      } finally {
+        if (abortHandler && derivedSignal) {
+          derivedSignal.removeEventListener('abort', abortHandler);
+        }
       }
     },
     {
@@ -486,7 +658,7 @@ Error Message: ${error.message || 'Unknown error'}`);
 IDs (image ID strings) of previously generated or uploaded images that should guide the edit.
 
 Guidelines:
-- If the user's request depends on any prior image(s), copy their image IDs into the \`image_ids\` array (in the same order the user refers to them).  
+- If the user's request depends on any prior image(s), copy their image IDs into the \`image_ids\` array (in the same order the user refers to them).
 - Never invent or hallucinate IDs; only use IDs that are still visible in the conversation context.
 - If no earlier image is relevant, omit the field entirely.
 `.trim(),

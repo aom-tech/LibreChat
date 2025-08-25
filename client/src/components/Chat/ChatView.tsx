@@ -1,6 +1,7 @@
 import { memo, useCallback } from 'react';
 import { useRecoilValue } from 'recoil';
 import { useForm } from 'react-hook-form';
+import { Spinner } from '@librechat/client';
 import { useParams } from 'react-router-dom';
 import { Constants } from 'librechat-data-provider';
 import type { TMessage } from 'librechat-data-provider';
@@ -10,7 +11,6 @@ import { useChatHelpers, useAddedResponse, useSSE } from '~/hooks';
 import ConversationStarters from './Input/ConversationStarters';
 import { useGetMessagesByConvoId } from '~/data-provider';
 import MessagesView from './Messages/MessagesView';
-import { Spinner } from '~/components/svg';
 import Presentation from './Presentation';
 import { buildTree, cn } from '~/utils';
 import ChatForm from './Input/ChatForm';
@@ -18,6 +18,7 @@ import Landing from './Landing';
 import Header from './Header';
 import Footer from './Footer';
 import store from '~/store';
+import AgentSelector from './AgentSelector';
 
 function LoadingSpinner() {
   return (
@@ -97,6 +98,7 @@ function ChatView({ index = 0 }: { index?: number }) {
                       isLandingPage && 'max-w-3xl transition-all duration-200 xl:max-w-4xl',
                     )}
                   >
+                    {isLandingPage ? <AgentSelector /> : null}
                     <ChatForm index={index} />
                     {isLandingPage ? <ConversationStarters /> : <Footer />}
                   </div>
