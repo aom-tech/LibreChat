@@ -34,7 +34,7 @@ async function setUserTrial(userId) {
     logger.warn(`[setUserTrial] Unexpected response status: ${response.status} for user: ${userId}`);
     return false;
   } catch (error) {
-    logger.error(`[setUserTrial] Error setting trial for user ${userId}:`, error.message);
+    logger.error(`[setUserTrial] Error setting trial for user ${userId}, billingUrl ${billingUrl}:`, error);
     return false;
   }
 }
