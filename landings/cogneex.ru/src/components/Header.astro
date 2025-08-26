@@ -15,6 +15,9 @@
         <li><a href="#course-box">Для курсов</a></li>
         <li><a href="#pricing">Цены</a></li>
         <li><a href="#faq">FAQ</a></li>
+        <li class="mobile-menu-cta">
+          <a href="#lead-form" class="btn btn-primary mobile-cta-btn">Попробовать бесплатно</a>
+        </li>
       </ul>
       
       <div class="nav-actions">
@@ -28,6 +31,7 @@
       </button>
     </nav>
   </div>
+  <div class="overlay"></div>
 </header>
 
 <style>
@@ -77,6 +81,39 @@
     }
   }
 
+  @media (max-width: 767px) {
+    .nav-menu {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 280px;
+      height: 100vh;
+      background: white;
+      flex-direction: column;
+      padding: 5rem 1rem 2rem;
+      gap: 0.5rem;
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+      transition: right 0.3s ease;
+      z-index: 999;
+      overflow-y: auto;
+    }
+
+    .nav-menu.active {
+      display: flex;
+      right: 0;
+    }
+    
+    .nav-menu li {
+      width: 100%;
+    }
+    
+    .nav-menu a {
+      display: block;
+      padding: 0.5rem 0;
+      font-size: 1.1rem;
+    }
+  }
+
   .nav-menu a {
     color: var(--dark);
     text-decoration: none;
@@ -102,11 +139,17 @@
   .mobile-toggle {
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
     gap: 4px;
     background: none;
     border: none;
     cursor: pointer;
     padding: 0.5rem;
+    width: 40px;
+    height: 40px;
+    position: relative;
+    z-index: 1001;
   }
 
   @media (min-width: 768px) {
@@ -120,14 +163,101 @@
     height: 2px;
     background: var(--dark);
     transition: all 0.3s ease;
+    display: block;
+  }
+
+  .mobile-toggle.active span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .mobile-toggle.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-toggle.active span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .overlay.active {
+    display: block;
+    opacity: 1;
+  }
+
+  .mobile-menu-cta {
+    display: none;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+    width: 100%;
+  }
+
+  @media (max-width: 767px) {
+    .mobile-menu-cta {
+      display: block;
+    }
+
+    .mobile-cta-btn {
+      width: 100%;
+      text-align: center;
+      padding: 1rem 3rem;
+      color: white !important;
+    }
   }
 </style>
 
 <script>
   const toggle = document.querySelector('.mobile-toggle');
   const menu = document.querySelector('.nav-menu');
+  const overlay = document.querySelector('.overlay');
+  const menuLinks = document.querySelectorAll('.nav-menu a');
   
-  toggle?.addEventListener('click', () => {
-    menu?.classList.toggle('active');
+  function toggleMenu() {
+    const isActive = menu?.classList.contains('active');
+    
+    if (isActive) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  }
+  
+  function openMenu() {
+    menu?.classList.add('active');
+    toggle?.classList.add('active');
+    overlay?.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  
+  function closeMenu() {
+    menu?.classList.remove('active');
+    toggle?.classList.remove('active');
+    overlay?.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  
+  toggle?.addEventListener('click', toggleMenu);
+  overlay?.addEventListener('click', closeMenu);
+  
+  menuLinks.forEach(link => {
+    link.addEventListener('click', closeMenu);
+  });
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menu?.classList.contains('active')) {
+      closeMenu();
+    }
   });
 </script>

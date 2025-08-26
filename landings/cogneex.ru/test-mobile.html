@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Menu Test</title>
+</head>
+<body>
+    <h1>Mobile Menu Test</h1>
+    <p>Open the development server at <a href="http://localhost:4321" target="_blank">http://localhost:4321</a></p>
+    
+    <h2>How to test:</h2>
+    <ol>
+        <li>Open the page in your browser</li>
+        <li>Open Developer Tools (F12 or right-click → Inspect)</li>
+        <li>Toggle device emulation (Ctrl+Shift+M or click mobile icon)</li>
+        <li>Select a mobile device like iPhone or set width to less than 768px</li>
+        <li>Click the burger menu (3 horizontal lines) in the top right</li>
+        <li>The menu should slide in from the right</li>
+        <li>Click on any menu item to close the menu</li>
+        <li>Click the overlay (dark background) to close the menu</li>
+        <li>Press Escape key to close the menu</li>
+    </ol>
+    
+    <h2>Expected behavior:</h2>
+    <ul>
+        <li>✅ Burger icon visible on mobile screens (< 768px)</li>
+        <li>✅ Clicking burger opens slide-in menu from right</li>
+        <li>✅ Burger icon animates to X when menu opens</li>
+        <li>✅ Dark overlay appears behind menu</li>
+        <li>✅ Body scroll is disabled when menu is open</li>
+        <li>✅ Clicking menu links closes the menu</li>
+        <li>✅ Clicking overlay closes the menu</li>
+        <li>✅ Pressing Escape closes the menu</li>
+        <li>✅ "Try for free" button appears at bottom of mobile menu</li>
+    </ul>
+</body>
+</html>
