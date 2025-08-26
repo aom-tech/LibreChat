@@ -75,7 +75,7 @@ const Registration: React.FC = () => {
           autoComplete={id}
           aria-label={localize(label)}
           {...register(
-            id as 'name' | 'email' | 'username' | 'password' | 'confirm_password',
+            id as 'name' | 'email' | 'password' | 'confirm_password',
             validation,
           )}
           aria-invalid={!!errors[id]}
@@ -100,7 +100,9 @@ const Registration: React.FC = () => {
 
   const onSubmit = async (data: TRegisterUser) => {
     try {
-      registerUser.mutate({ ...data, token: token ?? undefined });
+      // Auto-generate username from email (part before @)
+      const username = data.email.split('@')[0];
+      registerUser.mutate({ ...data, username, token: token ?? undefined });
       reachGoal('register');
     } catch (error) {
       if ((error as TError).response?.data?.message) {
@@ -149,16 +151,7 @@ const Registration: React.FC = () => {
                 message: localize('com_auth_name_max_length'),
               },
             })}
-            {renderInput('username', 'com_auth_username', 'text', {
-              minLength: {
-                value: 2,
-                message: localize('com_auth_username_min_length'),
-              },
-              maxLength: {
-                value: 80,
-                message: localize('com_auth_username_max_length'),
-              },
-            })}
+            {/* Username field hidden - automatically generated from email */}
             {renderInput('email', 'com_auth_email', 'email', {
               required: localize('com_auth_email_required'),
               minLength: {
