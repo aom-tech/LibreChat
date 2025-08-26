@@ -74,10 +74,7 @@ const Registration: React.FC = () => {
           type={type}
           autoComplete={id}
           aria-label={localize(label)}
-          {...register(
-            id as 'name' | 'email' | 'password' | 'confirm_password',
-            validation,
-          )}
+          {...register(id as 'name' | 'email' | 'password' | 'confirm_password', validation)}
           aria-invalid={!!errors[id]}
           className="webkit-dark-styles transition-color peer w-full rounded-2xl border border-border-light bg-surface-primary px-3.5 pb-2.5 pt-3 text-text-primary duration-200 focus:border-green-500 focus:outline-none"
           placeholder=" "
@@ -210,9 +207,39 @@ const Registration: React.FC = () => {
                 variant="submit"
                 className="h-12 w-full rounded-2xl"
               >
-                {isSubmitting ? <Spinner /> : localize('com_auth_continue')}
+                {isSubmitting ? <Spinner /> : localize('com_auth_register_button')}
               </Button>
             </div>
+
+            {(startupConfig?.interface?.privacyPolicy?.externalUrl || startupConfig?.interface?.termsOfService?.externalUrl) && (
+              <p className="mt-3 text-center text-xs text-gray-600 dark:text-gray-400">
+                {localize('com_auth_register_terms_prefix')}{' '}
+                {startupConfig?.interface?.termsOfService?.externalUrl && (
+                  <a
+                    href={startupConfig.interface.termsOfService.externalUrl}
+                    target={startupConfig.interface.termsOfService.openNewTab ? '_blank' : undefined}
+                    rel="noopener noreferrer"
+                    className="text-green-600 underline hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                  >
+                    {localize('com_auth_register_terms_link')}
+                  </a>
+                )}
+                {startupConfig?.interface?.privacyPolicy?.externalUrl && (
+                  <>
+                    {'. '}
+                    {localize('com_auth_register_privacy_prefix')}{' '}
+                    <a
+                      href={startupConfig.interface.privacyPolicy.externalUrl}
+                      target={startupConfig.interface.privacyPolicy.openNewTab ? '_blank' : undefined}
+                      rel="noopener noreferrer"
+                      className="text-green-600 underline hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                    >
+                      {localize('com_auth_register_privacy_link')}
+                    </a>
+                  </>
+                )}
+              </p>
+            )}
           </form>
 
           <p className="my-4 text-center text-sm font-light text-gray-700 dark:text-white">
