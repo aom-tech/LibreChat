@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, X, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useToastContext, Button } from '@librechat/client';
 import {
   useGetSubscriptionPlans,
@@ -13,29 +13,100 @@ interface PlanFeature {
   included: boolean;
 }
 
+// Fallback plans when API is unavailable
+const getFallbackPlans = (): BillingPlan[] => [
+  {
+    _id: 'pro-fallback',
+    name: 'Pro',
+    price: 299900, // 2999 руб
+    interval: 'monthly' as const,
+    active: true,
+    metadata: {
+      tokens: 1000000,
+      images: 100,
+      presentations: 20,
+      videoSeconds: 0,
+      features: {
+        presentations: true,
+        videos: false,
+        support: 'Priority',
+      },
+      description: 'Professional AI access with generous limits',
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    _id: 'video-pro-fallback',
+    name: 'Video Pro',
+    price: 2999900, // 29999 руб
+    interval: 'monthly' as const,
+    active: true,
+    metadata: {
+      tokens: 1000000,
+      images: 100,
+      presentations: 20,
+      videoSeconds: 300,
+      features: {
+        presentations: true,
+        videos: true,
+        support: 'Priority',
+      },
+      description: 'Everything in Pro plus video generation',
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
 const Paywall: React.FC = () => {
   const { showToast } = useToastContext();
   const localize = useLocalize();
-  const { data: plans, isLoading: plansLoading } = useGetSubscriptionPlans();
+  const { data: plans, isLoading: plansLoading, error: plansError, refetch } = useGetSubscriptionPlans();
   const checkoutMutation = useCreateCheckoutSession();
+  
+  // Use fallback plans if there's an error
+  const isUsingFallback = !!plansError && !plans;
+  const displayPlans = plans || (plansError ? getFallbackPlans() : null);
 
   // Helper to get features for a plan
   const getPlanFeatures = (plan: BillingPlan): PlanFeature[] => {
     const tokens = plan.metadata?.tokens || 0;
-    const hasPresentation = plan.metadata?.features?.presentations || false;
-    const hasVideo = plan.metadata?.features?.videos || false;
+    const images = (plan.metadata as any)?.images || 0;
+    const presentations = (plan.metadata as any)?.presentations || 0;
+    const videoSeconds = (plan.metadata as any)?.videoSeconds || 0;
     const support = plan.metadata?.features?.support || 'Basic';
 
-    return [
+    const features: PlanFeature[] = [
       {
-        text: localize('com_ui_paywall_tokens_per_month', { tokens: tokens.toLocaleString() }),
+        text: localize('com_ui_paywall_text_tokens', { amount: tokens.toLocaleString() }) || 
+              `${tokens.toLocaleString()} text tokens`,
+        included: true,
+      },
+      {
+        text: localize('com_ui_paywall_images_per_month', { amount: images }) || 
+              `${images} images per month`,
+        included: true,
+      },
+      {
+        text: localize('com_ui_paywall_presentations_per_month', { amount: presentations }) || 
+              `${presentations} presentations per month`,
         included: true,
       },
       { text: localize('com_ui_paywall_access_all_models'), included: true },
       { text: localize('com_ui_paywall_support', { level: support }), included: true },
-      { text: localize('com_ui_paywall_presentation_generation'), included: hasPresentation },
-      { text: localize('com_ui_paywall_video_generation'), included: hasVideo },
     ];
+
+    // Add video feature for Video Pro plan
+    if (videoSeconds > 0) {
+      features.push({
+        text: localize('com_ui_paywall_video_seconds', { amount: videoSeconds }) || 
+              `${videoSeconds} seconds of video generation`,
+        included: true,
+      });
+    }
+
+    return features;
   };
 
   const handleSelectPlan = async (planId: string) => {
@@ -50,23 +121,69 @@ const Paywall: React.FC = () => {
     }
   };
 
-  if (plansLoading || !plans) {
+  if (plansLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+        <div className="flex flex-col items-center text-center">
+          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent" />
           <p className="text-gray-600 dark:text-gray-400">{localize('com_ui_paywall_loading')}</p>
         </div>
       </div>
     );
   }
 
+  if (!displayPlans || displayPlans.length === 0) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-yellow-500" />
+          <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+            {localize('com_ui_paywall_error_loading') || 'Failed to load subscription plans'}
+          </h3>
+          <p className="mb-4 text-gray-600 dark:text-gray-400">
+            {localize('com_ui_paywall_contact_support') || 'Please contact support for assistance'}
+          </p>
+          <Button onClick={() => refetch()} variant="outline">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            {localize('com_ui_paywall_retry') || 'Try Again'}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Sort plans by price
-  const sortedPlans = [...plans].sort((a, b) => a.price - b.price);
+  const sortedPlans = [...displayPlans].sort((a, b) => a.price - b.price);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        {isUsingFallback && (
+          <div className="mb-8 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 p-4 border border-yellow-200 dark:border-yellow-800">
+            <div className="flex items-start">
+              <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-500 mt-0.5 mr-3 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  {localize('com_ui_paywall_showing_default') || 'Showing standard plans'}
+                </h3>
+                <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+                  {localize('com_ui_paywall_prices_may_vary') || 
+                   'Unable to load current prices. The displayed prices may not be up to date. Please contact support for current pricing.'}
+                </p>
+                <Button
+                  onClick={() => refetch()}
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                >
+                  <RefreshCw className="mr-2 h-3 w-3" />
+                  {localize('com_ui_paywall_retry') || 'Retry'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
             {localize('com_ui_paywall_title')}
@@ -76,20 +193,20 @@ const Paywall: React.FC = () => {
           </p>
         </div>
 
-        <div className="mt-16 grid gap-8 lg:grid-cols-3">
-          {sortedPlans.map((plan, index) => {
+        <div className="mt-16 grid gap-8 lg:grid-cols-2 max-w-5xl mx-auto">
+          {sortedPlans.map((plan) => {
             const features = getPlanFeatures(plan);
-            const isPopular = index === 1; // Middle plan is usually most popular
+            const isPopular = plan.name === 'Video Pro'; // Video Pro is most popular
 
             return (
               <div
                 key={plan._id}
                 className={`relative rounded-2xl border ${
-                  isPopular ? 'border-blue-500 shadow-xl' : 'border-gray-200 dark:border-gray-700'
+                  isPopular ? 'border-green-500 shadow-xl' : 'border-gray-200 dark:border-gray-700'
                 } bg-white p-8 dark:bg-gray-800`}
               >
                 {isPopular && (
-                  <div className="absolute -top-4 left-0 right-0 mx-auto w-32 rounded-full bg-blue-500 px-3 py-1 text-center text-sm font-medium text-white">
+                  <div className="absolute -top-4 left-0 right-0 mx-auto w-32 rounded-full bg-green-500 px-3 py-1 text-center text-sm font-medium text-white">
                     {localize('com_ui_paywall_most_popular')}
                   </div>
                 )}
@@ -144,7 +261,7 @@ const Paywall: React.FC = () => {
                   disabled={checkoutMutation.isLoading}
                   className={`w-full ${
                     isPopular
-                      ? 'bg-blue-500 text-white hover:bg-blue-600'
+                      ? 'bg-green-500 text-white hover:bg-green-600'
                       : 'bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100'
                   }`}
                 >

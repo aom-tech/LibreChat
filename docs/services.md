@@ -2,5 +2,5 @@
 
 ## Billing
 
-URL: http://188.225.87.39:8088/api/v1/
-Swagger: http://188.225.87.39:8088/swagger/json
+URL: https://ai-courses-backend.aom-tech.ru/api/v1/
+Swagger: https://ai-courses-backend.aom-tech.ru/swagger/json

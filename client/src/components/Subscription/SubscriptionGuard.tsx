@@ -2,7 +2,6 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { useGetSubscriptionStatus } from '~/data-provider/subscription';
-import Paywall from './Paywall';
 
 interface SubscriptionGuardProps {
   children: React.ReactNode;
@@ -67,14 +66,9 @@ const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }) => {
     showPaywall: subscription && !subscription.isActive,
   });
 
-  // If subscription data exists and user doesn't have active subscription, show paywall
-  if (subscription && !subscription.isActive) {
-    console.log('[SubscriptionGuard] Showing paywall - no active subscription');
-    return <Paywall />;
-  }
-
-  // User has active subscription or subscription system is disabled
-  console.log('[SubscriptionGuard] Allowing access - subscription active or system disabled');
+  // Always allow access now - the banner will handle prompting for subscription
+  // The SubscriptionGuard now only ensures subscription status is loaded
+  console.log('[SubscriptionGuard] Allowing access - subscription check complete');
   return <>{children}</>;
 };
 

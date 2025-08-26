@@ -14,6 +14,9 @@ export interface BillingPlan {
   active: boolean;
   metadata: {
     tokens?: number;
+    images?: number;
+    presentations?: number;
+    videoSeconds?: number;
     features?: {
       presentations?: boolean;
       videos?: boolean;
@@ -123,11 +126,19 @@ export const useGetSubscriptionPlans = () => {
   return useQuery<BillingPlan[]>({
     queryKey: ['subscriptionPlans'],
     queryFn: async () => {
-      const response = await billingFetch('/plans');
-      console.log('[Billing API] Plans response:', response);
-      // API returns array of plans directly or in activePlans property
-      return response.activePlans || response;
+      try {
+        const response = await billingFetch('/plans');
+        console.log('[Billing API] Plans response:', response);
+        // API returns array of plans directly or in activePlans property
+        return response.activePlans || response;
+      } catch (error) {
+        console.error('[Billing API] Failed to fetch plans:', error);
+        // Re-throw the error to let React Query handle it
+        throw error;
+      }
     },
+    retry: 2, // Try 2 more times on failure
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 };
 

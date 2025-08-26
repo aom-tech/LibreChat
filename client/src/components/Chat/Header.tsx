@@ -7,6 +7,7 @@ import ModelSelector from './Menus/Endpoints/ModelSelector';
 import { PresetsMenu, HeaderNewChat, OpenSidebar } from './Menus';
 import { TourButton, useAutoTour } from '~/components/Tour';
 import { useGetStartupConfig } from '~/data-provider';
+import { SubscriptionButton } from '~/components/Subscription';
 import ExportAndShareMenu from './ExportAndShareMenu';
 import BookmarkMenu from './Menus/BookmarkMenu';
 import { TemporaryChat } from './TemporaryChat';
@@ -68,6 +69,7 @@ export default function Header() {
                 <ExportAndShareMenu
                   isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
                 />
+                <SubscriptionButton />
                 <TemporaryChat />
               </>
             )}
@@ -78,6 +80,7 @@ export default function Header() {
             <ExportAndShareMenu
               isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
             />
+            <SubscriptionButton />
             <TemporaryChat />
           </div>
         )}
