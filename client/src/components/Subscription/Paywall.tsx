@@ -6,6 +6,7 @@ import {
   useCreateCheckoutSession,
   type BillingPlan,
 } from '~/data-provider/subscription';
+import { useGetUserQuery } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 
 interface PlanFeature {
@@ -16,7 +17,7 @@ interface PlanFeature {
 // Fallback plans when API is unavailable
 const getFallbackPlans = (): BillingPlan[] => [
   {
-    _id: 'pro-fallback',
+    _id: 'coursegpt_pro_test',
     name: 'Pro',
     price: 299900, // 2999 руб
     interval: 'monthly' as const,
@@ -37,7 +38,7 @@ const getFallbackPlans = (): BillingPlan[] => [
     updatedAt: new Date().toISOString(),
   },
   {
-    _id: 'video-pro-fallback',
+    _id: 'coursegpt_video_pro_test',
     name: 'Video Pro',
     price: 2999900, // 29999 руб
     interval: 'monthly' as const,
@@ -62,9 +63,15 @@ const getFallbackPlans = (): BillingPlan[] => [
 const Paywall: React.FC = () => {
   const { showToast } = useToastContext();
   const localize = useLocalize();
-  const { data: plans, isLoading: plansLoading, error: plansError, refetch } = useGetSubscriptionPlans();
+  const { data: user } = useGetUserQuery();
+  const {
+    data: plans,
+    isLoading: plansLoading,
+    error: plansError,
+    refetch,
+  } = useGetSubscriptionPlans();
   const checkoutMutation = useCreateCheckoutSession();
-  
+
   // Use fallback plans if there's an error
   const isUsingFallback = !!plansError && !plans;
   const displayPlans = plans || (plansError ? getFallbackPlans() : null);
@@ -79,18 +86,21 @@ const Paywall: React.FC = () => {
 
     const features: PlanFeature[] = [
       {
-        text: localize('com_ui_paywall_text_tokens', { amount: tokens.toLocaleString() }) || 
-              `${tokens.toLocaleString()} text tokens`,
+        text:
+          localize('com_ui_paywall_text_tokens', { amount: tokens.toLocaleString() }) ||
+          `${tokens.toLocaleString()} text tokens`,
         included: true,
       },
       {
-        text: localize('com_ui_paywall_images_per_month', { amount: images }) || 
-              `${images} images per month`,
+        text:
+          localize('com_ui_paywall_images_per_month', { amount: images }) ||
+          `${images} images per month`,
         included: true,
       },
       {
-        text: localize('com_ui_paywall_presentations_per_month', { amount: presentations }) || 
-              `${presentations} presentations per month`,
+        text:
+          localize('com_ui_paywall_presentations_per_month', { amount: presentations }) ||
+          `${presentations} presentations per month`,
         included: true,
       },
       { text: localize('com_ui_paywall_access_all_models'), included: true },
@@ -100,8 +110,9 @@ const Paywall: React.FC = () => {
     // Add video feature for Video Pro plan
     if (videoSeconds > 0) {
       features.push({
-        text: localize('com_ui_paywall_video_seconds', { amount: videoSeconds }) || 
-              `${videoSeconds} seconds of video generation`,
+        text:
+          localize('com_ui_paywall_video_seconds', { amount: videoSeconds }) ||
+          `${videoSeconds} seconds of video generation`,
         included: true,
       });
     }
@@ -112,7 +123,11 @@ const Paywall: React.FC = () => {
   const handleSelectPlan = async (planId: string) => {
     try {
       // The mutation will handle the redirect
-      await checkoutMutation.mutateAsync({ planId });
+      await checkoutMutation.mutateAsync({
+        planId,
+        userId: user?.id,
+        email: user?.email,
+      });
     } catch (_error) {
       showToast({
         message: localize('com_ui_paywall_error_checkout'),
@@ -159,23 +174,18 @@ const Paywall: React.FC = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         {isUsingFallback && (
-          <div className="mb-8 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 p-4 border border-yellow-200 dark:border-yellow-800">
+          <div className="mb-8 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
             <div className="flex items-start">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-500 mt-0.5 mr-3 flex-shrink-0" />
+              <AlertTriangle className="mr-3 mt-0.5 h-5 w-5 flex-shrink-0 text-yellow-600 dark:text-yellow-500" />
               <div className="flex-1">
                 <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
                   {localize('com_ui_paywall_showing_default') || 'Showing standard plans'}
                 </h3>
                 <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
-                  {localize('com_ui_paywall_prices_may_vary') || 
-                   'Unable to load current prices. The displayed prices may not be up to date. Please contact support for current pricing.'}
+                  {localize('com_ui_paywall_prices_may_vary') ||
+                    'Unable to load current prices. The displayed prices may not be up to date. Please contact support for current pricing.'}
                 </p>
-                <Button
-                  onClick={() => refetch()}
-                  variant="outline"
-                  size="sm"
-                  className="mt-3"
-                >
+                <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-3">
                   <RefreshCw className="mr-2 h-3 w-3" />
                   {localize('com_ui_paywall_retry') || 'Retry'}
                 </Button>
@@ -183,7 +193,7 @@ const Paywall: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
             {localize('com_ui_paywall_title')}
@@ -193,7 +203,7 @@ const Paywall: React.FC = () => {
           </p>
         </div>
 
-        <div className="mt-16 grid gap-8 lg:grid-cols-2 max-w-5xl mx-auto">
+        <div className="mx-auto mt-16 grid max-w-5xl gap-8 lg:grid-cols-2">
           {sortedPlans.map((plan) => {
             const features = getPlanFeatures(plan);
             const isPopular = plan.name === 'Video Pro'; // Video Pro is most popular

@@ -182,14 +182,25 @@ export const useGetSubscriptionStatus = () => {
 
 // Create checkout session (stub - redirects to external payment)
 export const useCreateCheckoutSession = () => {
-  return useMutation<{ redirectUrl: string }, Error, { planId: string }>({
+  return useMutation<
+    { redirectUrl: string },
+    Error,
+    { planId: string; userId?: string; email?: string }
+  >({
     mutationFn: async (data) => {
       // For now, construct payment URL directly
       // In future, this should call billing API to create session
       const paymentUrl = import.meta.env.VITE_PAYMENT_URL || 'https://payment.example.com';
-      const redirectUrl = `${paymentUrl}/checkout?planId=${data.planId}&returnUrl=${encodeURIComponent(
-        window.location.origin,
-      )}`;
+
+      // Build query params
+      const params = new URLSearchParams({
+        payanyway_acquiring: 'yes',
+        planId: data.planId,
+        ...(data.userId && { userId: data.userId }),
+        ...(data.email && { email: data.email }),
+      });
+
+      const redirectUrl = `${paymentUrl}/${data.planId}/7733?${params.toString()}`;
 
       return { redirectUrl };
     },
