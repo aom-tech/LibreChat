@@ -74,10 +74,7 @@ const Registration: React.FC = () => {
           type={type}
           autoComplete={id}
           aria-label={localize(label)}
-          {...register(
-            id as 'name' | 'email' | 'username' | 'password' | 'confirm_password',
-            validation,
-          )}
+          {...register(id as 'name' | 'email' | 'password' | 'confirm_password', validation)}
           aria-invalid={!!errors[id]}
           className="webkit-dark-styles transition-color peer w-full rounded-2xl border border-border-light bg-surface-primary px-3.5 pb-2.5 pt-3 text-text-primary duration-200 focus:border-green-500 focus:outline-none"
           placeholder=" "
@@ -100,7 +97,9 @@ const Registration: React.FC = () => {
 
   const onSubmit = async (data: TRegisterUser) => {
     try {
-      registerUser.mutate({ ...data, token: token ?? undefined });
+      // Auto-generate username from email (part before @)
+      const username = data.email.split('@')[0];
+      registerUser.mutate({ ...data, username, token: token ?? undefined });
       reachGoal('register');
     } catch (error) {
       if ((error as TError).response?.data?.message) {
@@ -149,16 +148,7 @@ const Registration: React.FC = () => {
                 message: localize('com_auth_name_max_length'),
               },
             })}
-            {renderInput('username', 'com_auth_username', 'text', {
-              minLength: {
-                value: 2,
-                message: localize('com_auth_username_min_length'),
-              },
-              maxLength: {
-                value: 80,
-                message: localize('com_auth_username_max_length'),
-              },
-            })}
+            {/* Username field hidden - automatically generated from email */}
             {renderInput('email', 'com_auth_email', 'email', {
               required: localize('com_auth_email_required'),
               minLength: {
@@ -217,9 +207,39 @@ const Registration: React.FC = () => {
                 variant="submit"
                 className="h-12 w-full rounded-2xl"
               >
-                {isSubmitting ? <Spinner /> : localize('com_auth_continue')}
+                {isSubmitting ? <Spinner /> : localize('com_auth_register_button')}
               </Button>
             </div>
+
+            {(startupConfig?.interface?.privacyPolicy?.externalUrl || startupConfig?.interface?.termsOfService?.externalUrl) && (
+              <p className="mt-3 text-center text-xs text-gray-600 dark:text-gray-400">
+                {localize('com_auth_register_terms_prefix')}{' '}
+                {startupConfig?.interface?.termsOfService?.externalUrl && (
+                  <a
+                    href={startupConfig.interface.termsOfService.externalUrl}
+                    target={startupConfig.interface.termsOfService.openNewTab ? '_blank' : undefined}
+                    rel="noopener noreferrer"
+                    className="text-green-600 underline hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                  >
+                    {localize('com_auth_register_terms_link')}
+                  </a>
+                )}
+                {startupConfig?.interface?.privacyPolicy?.externalUrl && (
+                  <>
+                    {'. '}
+                    {localize('com_auth_register_privacy_prefix')}{' '}
+                    <a
+                      href={startupConfig.interface.privacyPolicy.externalUrl}
+                      target={startupConfig.interface.privacyPolicy.openNewTab ? '_blank' : undefined}
+                      rel="noopener noreferrer"
+                      className="text-green-600 underline hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                    >
+                      {localize('com_auth_register_privacy_link')}
+                    </a>
+                  </>
+                )}
+              </p>
+            )}
           </form>
 
           <p className="my-4 text-center text-sm font-light text-gray-700 dark:text-white">

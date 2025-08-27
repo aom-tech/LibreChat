@@ -623,6 +623,13 @@ export type TUpdateFeedbackResponse = {
 
 export type TBalanceResponse = {
   tokenCredits: number;
+  // Available credits for each content type
+  availableCredits?: {
+    text: number;
+    image: number;
+    presentation: number;
+    video: number;
+  };
   // Automatic refill settings
   autoRefillEnabled: boolean;
   refillIntervalValue?: number;

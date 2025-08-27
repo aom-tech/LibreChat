@@ -93,12 +93,18 @@ MongoDB with Mongoose:
 - `File` - Uploaded files and attachments
 - `Assistant/Agent` - AI assistant configurations
 - `Transaction` - Token usage tracking
+- `Balance` - User credit balance with multi-type credits (text, image, presentation, video)
 
 ### AI Provider Integration
 - **Abstraction**: `BaseClient` class provides unified interface
 - **Providers**: OpenAI, Anthropic, Google, Azure, custom endpoints
+- **New Providers**: Veo, Veo2 (video generation via MCP)
 - **Features**: Streaming, vision support, function calling, plugins
 - **Token Management**: Usage tracking and balance management
+- **Credit System**: 
+  - Multi-type credits: text, image, presentation, video
+  - Agent-specific credit consumption
+  - Auto-refill functionality with configurable intervals
 
 ### Key Patterns
 1. **Streaming**: Real-time message streaming with SSE
@@ -113,6 +119,7 @@ MongoDB with Mongoose:
 1. Run `npm run update` to sync with latest changes
 2. Clear browser localStorage/cookies when testing auth changes
 3. Check existing patterns in similar files before implementing new features
+4. Review token/credit costs in `api/models/tx.js` for AI provider pricing
 
 ### Code Style
 - **Linting**: ESLint configuration enforced
@@ -137,6 +144,11 @@ MongoDB with Mongoose:
 - Implement required methods: `sendCompletion`, `getCompletion`
 - Handle streaming vs non-streaming responses
 - Proper error handling and token counting
+- **Special Providers**:
+  - `flux` - Image generation (1000 credits per image)
+  - `slidespeak-server` - Presentation generation (1000 credits)
+  - `veo-mcp`, `veo2-mcp` - Video generation (1000 credits)
+  - OpenAI image generation - Uses image credits
 
 ### State Management
 - Use Recoil atoms for global client state
@@ -149,3 +161,10 @@ MongoDB with Mongoose:
 - Use middleware for authentication and validation
 - Consistent error response format
 - Document new endpoints in route files
+
+### Balance & Credit System
+- **Credit Types**: text, image, presentation, video
+- **Agent Mapping**: Specific agents consume different credit types (see `api/models/tx.js`)
+- **Balance Methods**: Located in `api/models/balanceMethods.js`
+- **Auto-refill**: Configurable per-user with interval and amount
+- **Token Multipliers**: Different rates for different models and operations
