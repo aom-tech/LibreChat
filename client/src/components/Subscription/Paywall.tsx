@@ -186,8 +186,14 @@ const Paywall: React.FC = () => {
     );
   }
 
-  // Sort plans by price
-  const sortedPlans = [...displayPlans].sort((a, b) => a.price - b.price);
+  // Separate subscriptions and one-time purchases
+  const subscriptionPlans = displayPlans
+    .filter(plan => plan.interval !== 'once')
+    .sort((a, b) => a.price - b.price);
+  
+  const oneTimePlans = displayPlans
+    .filter(plan => plan.interval === 'once')
+    .sort((a, b) => a.price - b.price);
 
   return (
     <div className="min-h-screen overflow-y-auto bg-gray-50 dark:bg-gray-900">
@@ -222,8 +228,9 @@ const Paywall: React.FC = () => {
           </p>
         </div>
 
+        {/* Subscription Plans */}
         <div className="mx-auto mt-16 grid max-w-5xl gap-8 lg:grid-cols-2">
-          {sortedPlans.map((plan) => {
+          {subscriptionPlans.map((plan) => {
             const features = getPlanFeatures(plan);
             const isPopular = plan.name === 'Video Pro'; // Video Pro is most popular
 
@@ -302,6 +309,72 @@ const Paywall: React.FC = () => {
             );
           })}
         </div>
+
+        {/* One-time Purchases Section */}
+        {oneTimePlans.length > 0 && (
+          <>
+            <div className="mx-auto mt-16 max-w-5xl">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {'One-time Purchases'}
+              </h3>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                {'Additional credits for your account'}
+              </p>
+            </div>
+            
+            <div className="mx-auto mt-8 grid max-w-5xl gap-6 lg:grid-cols-3">
+              {oneTimePlans.map((plan) => {
+                const features = getPlanFeatures(plan);
+
+                return (
+                  <div
+                    key={plan._id}
+                    className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+                  >
+                    <div className="mb-4">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{plan.name}</h4>
+                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        {plan.metadata?.description || plan.name}
+                      </p>
+                      <p className="mt-3">
+                        <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {'₽'}
+                          {(plan.price / 100).toFixed(0)}
+                        </span>
+                        <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                          {'one-time'}
+                        </span>
+                      </p>
+                    </div>
+
+                    <ul className="mb-4 space-y-2">
+                      {features.slice(0, 4).map((feature, featureIndex) => (
+                        <li key={featureIndex} className="flex items-start">
+                          <Check className="mr-2 h-4 w-4 flex-shrink-0 text-green-500" />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {feature.text}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Button
+                      onClick={() => handleSelectPlan(plan._id)}
+                      disabled={checkoutMutation.isLoading}
+                      variant="outline"
+                      className="w-full"
+                      size="sm"
+                    >
+                      {checkoutMutation.isLoading
+                        ? localize('com_ui_paywall_processing')
+                        : localize('com_ui_paywall_get_started')}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
 
         <div className="mt-12 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">

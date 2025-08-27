@@ -10,7 +10,7 @@ export interface BillingPlan {
   _id: string;
   name: string;
   price: number; // in kopecks
-  interval: 'monthly' | 'yearly' | 'weekly' | 'daily';
+  interval: 'monthly' | 'yearly' | 'weekly' | 'daily' | 'once';
   active: boolean;
   credits?: {
     text: number;
