@@ -12,12 +12,19 @@ export interface BillingPlan {
   price: number; // in kopecks
   interval: 'monthly' | 'yearly' | 'weekly' | 'daily';
   active: boolean;
+  credits?: {
+    text: number;
+    image: number;
+    presentation: number;
+    video: number;
+  };
   metadata: {
+    // Legacy fields for backward compatibility
     tokens?: number;
     images?: number;
     presentations?: number;
     videoSeconds?: number;
-    features?: {
+    features?: string[] | {
       presentations?: boolean;
       videos?: boolean;
       support?: string;
@@ -129,8 +136,28 @@ export const useGetSubscriptionPlans = () => {
       try {
         const response = await billingFetch('/plans');
         console.log('[Billing API] Plans response:', response);
-        // API returns array of plans directly or in activePlans property
-        return response.activePlans || response;
+        
+        // Handle different response formats
+        // API might return: { data: [...] }, { plans: [...] }, { activePlans: [...] }, or array directly
+        if (Array.isArray(response)) {
+          return response;
+        }
+        
+        if (response.data && Array.isArray(response.data)) {
+          return response.data;
+        }
+        
+        if (response.plans && Array.isArray(response.plans)) {
+          return response.plans;
+        }
+        
+        if (response.activePlans && Array.isArray(response.activePlans)) {
+          return response.activePlans;
+        }
+        
+        // If response has a different structure, log it for debugging
+        console.warn('[Billing API] Unexpected response format:', response);
+        return [];
       } catch (error) {
         console.error('[Billing API] Failed to fetch plans:', error);
         // Re-throw the error to let React Query handle it

@@ -22,16 +22,19 @@ const getFallbackPlans = (): BillingPlan[] => [
     price: 299900, // 2999 руб
     interval: 'monthly' as const,
     active: true,
+    credits: {
+      text: 1000000,
+      image: 100,
+      presentation: 20,
+      video: 0,
+    },
     metadata: {
-      tokens: 1000000,
-      images: 100,
-      presentations: 20,
-      videoSeconds: 0,
-      features: {
-        presentations: true,
-        videos: false,
-        support: 'Priority',
-      },
+      features: [
+        'Priority support',
+        'Advanced AI models',
+        'Presentation generation',
+        'Export to all formats',
+      ],
       description: 'Professional AI access with generous limits',
     },
     createdAt: new Date().toISOString(),
@@ -43,16 +46,19 @@ const getFallbackPlans = (): BillingPlan[] => [
     price: 2999900, // 29999 руб
     interval: 'monthly' as const,
     active: true,
+    credits: {
+      text: 1000000,
+      image: 100,
+      presentation: 20,
+      video: 300,
+    },
     metadata: {
-      tokens: 1000000,
-      images: 100,
-      presentations: 20,
-      videoSeconds: 300,
-      features: {
-        presentations: true,
-        videos: true,
-        support: 'Priority',
-      },
+      features: [
+        'Everything in Pro',
+        'Video generation',
+        'Priority support',
+        'Early access to new features',
+      ],
       description: 'Everything in Pro plus video generation',
     },
     createdAt: new Date().toISOString(),
@@ -78,43 +84,56 @@ const Paywall: React.FC = () => {
 
   // Helper to get features for a plan
   const getPlanFeatures = (plan: BillingPlan): PlanFeature[] => {
-    const tokens = plan.metadata?.tokens || 0;
-    const images = (plan.metadata as any)?.images || 0;
-    const presentations = (plan.metadata as any)?.presentations || 0;
-    const videoSeconds = (plan.metadata as any)?.videoSeconds || 0;
-    const support = plan.metadata?.features?.support || 'Basic';
+    // Use new format if available, fallback to legacy format
+    const textCredits = plan.credits?.text || plan.metadata?.tokens || 0;
+    const imageCredits = plan.credits?.image || (plan.metadata as any)?.images || 0;
+    const presentationCredits = plan.credits?.presentation || (plan.metadata as any)?.presentations || 0;
+    const videoCredits = plan.credits?.video || (plan.metadata as any)?.videoSeconds || 0;
 
     const features: PlanFeature[] = [
       {
         text:
-          localize('com_ui_paywall_text_tokens', { amount: tokens.toLocaleString() }) ||
-          `${tokens.toLocaleString()} text tokens`,
+          localize('com_ui_paywall_text_tokens', { amount: textCredits.toLocaleString() }) ||
+          `${textCredits.toLocaleString()} text credits`,
         included: true,
       },
       {
         text:
-          localize('com_ui_paywall_images_per_month', { amount: images }) ||
-          `${images} images per month`,
+          localize('com_ui_paywall_images_per_month', { amount: imageCredits }) ||
+          `${imageCredits} image credits per month`,
         included: true,
       },
       {
         text:
-          localize('com_ui_paywall_presentations_per_month', { amount: presentations }) ||
-          `${presentations} presentations per month`,
+          localize('com_ui_paywall_presentations_per_month', { amount: presentationCredits }) ||
+          `${presentationCredits} presentation credits per month`,
         included: true,
       },
-      { text: localize('com_ui_paywall_access_all_models'), included: true },
-      { text: localize('com_ui_paywall_support', { level: support }), included: true },
     ];
 
-    // Add video feature for Video Pro plan
-    if (videoSeconds > 0) {
+    // Add video credits if available
+    if (videoCredits > 0) {
       features.push({
         text:
-          localize('com_ui_paywall_video_seconds', { amount: videoSeconds }) ||
-          `${videoSeconds} seconds of video generation`,
+          localize('com_ui_paywall_video_seconds', { amount: videoCredits }) ||
+          `${videoCredits} video credits per month`,
         included: true,
       });
+    }
+
+    // Add additional features from metadata
+    if (Array.isArray(plan.metadata?.features)) {
+      plan.metadata.features.forEach((feature) => {
+        features.push({
+          text: feature,
+          included: true,
+        });
+      });
+    } else if (typeof plan.metadata?.features === 'object') {
+      // Legacy format compatibility
+      features.push({ text: localize('com_ui_paywall_access_all_models'), included: true });
+      const support = (plan.metadata.features as any)?.support || 'Basic';
+      features.push({ text: localize('com_ui_paywall_support', { level: support }), included: true });
     }
 
     return features;
