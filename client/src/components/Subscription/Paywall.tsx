@@ -171,7 +171,7 @@ const Paywall: React.FC = () => {
   const sortedPlans = [...displayPlans].sort((a, b) => a.price - b.price);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen overflow-y-auto bg-gray-50 dark:bg-gray-900">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         {isUsingFallback && (
           <div className="mb-8 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
