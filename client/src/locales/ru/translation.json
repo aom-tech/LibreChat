@@ -888,7 +888,7 @@
   "com_ui_paywall_support": "{{level}} поддержка",
   "com_ui_paywall_presentation_generation": "Генерация презентаций",
   "com_ui_paywall_video_generation": "Генерация видео",
-  "com_ui_paywall_get_started": "Начать",
+  "com_ui_paywall_get_started": "Выбрать",
   "com_ui_paywall_processing": "Обработка...",
   "com_ui_paywall_loading": "Загрузка планов...",
   "com_ui_paywall_error_checkout": "Не удалось создать сессию оплаты. Пожалуйста, попробуйте снова.",
