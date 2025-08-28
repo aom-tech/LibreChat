@@ -150,7 +150,7 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
         }
         return null;
       }).filter(Boolean);
-      
+
       if (images.length > 0) {
         // Добавить изображения в аргументы инструмента
         if (typeof toolArguments === 'object' && toolArguments !== null) {
@@ -197,15 +197,37 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
         config?.configurable?.userMCPAuthMap?.[`${Constants.mcp_prefix}${serverName}`];
 
       // Check if this is a presentation generation tool
-      const isPresentationTool = toolName.toLowerCase().includes('powerpoint') || 
+      const isPresentationTool = toolName.toLowerCase().includes('powerpoint') ||
                                 toolName.toLowerCase().includes('presentation') ||
                                 serverName.toLowerCase().includes('slidespeak');
-      
+
+      // Check if this is a video generation tool
+      const isVideoTool = toolName.toLowerCase().includes('video') ||
+                         serverName.toLowerCase().includes('veo');
+
+      // Extract duration for video tools
+      let videoDurationSeconds = 0;
+      if (isVideoTool && toolArguments) {
+        if (typeof toolArguments === 'object' && toolArguments.duration_seconds) {
+          videoDurationSeconds = parseInt(toolArguments.duration_seconds) || 0;
+        } else if (typeof toolArguments === 'string') {
+          try {
+            const parsed = JSON.parse(toolArguments);
+            videoDurationSeconds = parseInt(parsed.duration_seconds) || 0;
+          } catch (e) {
+            logger.debug('[MCP] Could not parse video duration from toolArguments');
+          }
+        }
+      }
+
+      // Calculate video cost: FIXED_SERVICE_COSTS.VIDEO credits per 5 seconds
+      const videoCost = Math.ceil(videoDurationSeconds / 5) * FIXED_SERVICE_COSTS.VIDEO;
+
       // Check balance for presentation tools
       if (isPresentationTool && userId) {
         try {
           const balanceDoc = await Balance.findOne({ user: userId }).lean();
-          
+
           if (!balanceDoc) {
             logger.warn(`[MCP][${serverName}][${toolName}] No balance document found for user:`, userId);
             throw new Error('Unable to verify presentation credits balance.');
@@ -226,6 +248,36 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
           }
         } catch (error) {
           logger.error(`[MCP][${serverName}][${toolName}] Error checking presentation balance:`, error);
+          throw error;
+        }
+      }
+
+      // Check balance for video tools
+      if (isVideoTool && userId && videoDurationSeconds > 0) {
+        try {
+          const balanceDoc = await Balance.findOne({ user: userId }).lean();
+
+          if (!balanceDoc) {
+            logger.warn(`[MCP][${serverName}][${toolName}] No balance document found for user:`, userId);
+            throw new Error('Unable to verify video credits balance.');
+          }
+
+          const videoBalance = balanceDoc.availableCredits?.video || 0;
+          const requiredCredits = videoCost;
+
+          logger.debug(`[MCP][${serverName}][${toolName}] Video balance check:`, {
+            userId,
+            videoBalance,
+            requiredCredits,
+            videoDurationSeconds,
+            canGenerate: videoBalance >= requiredCredits,
+          });
+
+          if (videoBalance < requiredCredits) {
+            throw new Error(`Insufficient video credits. You have ${videoBalance} credits but need at least ${requiredCredits} to generate a ${videoDurationSeconds} second video.`);
+          }
+        } catch (error) {
+          logger.error(`[MCP][${serverName}][${toolName}] Error checking video balance:`, error);
           throw error;
         }
       }
@@ -256,7 +308,7 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
         try {
           const conversationId = config?.configurable?.thread_id;
           const endpoint = config?.metadata?.endpoint || 'agents';
-          
+
           if (conversationId) {
             const txMetadata = {
               user: userId,
@@ -279,6 +331,39 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
           }
         } catch (error) {
           logger.error(`[MCP][${serverName}][${toolName}] Error spending presentation tokens:`, error);
+          // Continue even if token spending fails
+        }
+      }
+
+      // Charge video tokens after successful generation
+      if (isVideoTool && userId && videoDurationSeconds > 0) {
+        logger.info(`[MCP][${serverName}][${toolName}] Video generated successfully, preparing to charge tokens`);
+        try {
+          const conversationId = config?.configurable?.thread_id;
+          const endpoint = config?.metadata?.endpoint || 'agents';
+
+          if (conversationId) {
+            const txMetadata = {
+              user: userId,
+              conversationId: conversationId,
+              context: 'video_generation',
+              endpoint: endpoint,
+              model: serverName,
+              creditType: 'video',
+            };
+
+            // Charge calculated video tokens
+            await spendTokens(txMetadata, {
+              promptTokens: 0,
+              completionTokens: videoCost,
+            });
+
+            logger.info(`[MCP][${serverName}][${toolName}] Successfully charged ${videoCost} video tokens for ${videoDurationSeconds} second video`);
+          } else {
+            logger.warn(`[MCP][${serverName}][${toolName}] Missing conversationId, cannot charge tokens`);
+          }
+        } catch (error) {
+          logger.error(`[MCP][${serverName}][${toolName}] Error spending video tokens:`, error);
           // Continue even if token spending fails
         }
       }

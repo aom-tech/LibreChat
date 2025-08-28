@@ -76,10 +76,34 @@ function AccountSettings() {
         <DropdownMenuSeparator />
         {startupConfig?.balance?.enabled === true && balanceQuery.data != null && (
           <>
-            <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm" role="note">
-              {localize('com_nav_balance')}:{' '}
-              {new Intl.NumberFormat().format(Math.round(balanceQuery.data.tokenCredits))}
-            </div>
+            {balanceQuery.data.availableCredits ? (
+              <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm space-y-1" role="note">
+                <div className="font-medium mb-1">{localize('com_nav_available_credits')}:</div>
+                <div className="space-y-1 pl-2">
+                  <div className="flex justify-between">
+                    <span>{localize('com_nav_credits_text')}:</span>
+                    <span>{new Intl.NumberFormat().format(Math.round(balanceQuery.data.availableCredits.text))}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{localize('com_nav_credits_image')}:</span>
+                    <span>{new Intl.NumberFormat().format(Math.round(balanceQuery.data.availableCredits.image))}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{localize('com_nav_credits_presentation')}:</span>
+                    <span>{new Intl.NumberFormat().format(Math.round(balanceQuery.data.availableCredits.presentation))}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{localize('com_nav_credits_video')}:</span>
+                    <span>{new Intl.NumberFormat().format(Math.round(balanceQuery.data.availableCredits.video))}</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm" role="note">
+                {localize('com_nav_balance')}:{' '}
+                {new Intl.NumberFormat().format(Math.round(balanceQuery.data.tokenCredits))}
+              </div>
+            )}
             <DropdownMenuSeparator />
           </>
         )}

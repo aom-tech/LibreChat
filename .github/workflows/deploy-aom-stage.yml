@@ -45,6 +45,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
+            VITE_BILLING_API_URL=https://skatoolka-stage-backend.aom-tech.ru
             NODE_ENV=production
 
       - name: run docker compose

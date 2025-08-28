@@ -2,6 +2,7 @@ import React from 'react';
 import { useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext, useLocalize } from '~/hooks';
 import TokenCreditsItem from './TokenCreditsItem';
+import AvailableCreditsItem from './AvailableCreditsItem';
 import AutoRefillSettings from './AutoRefillSettings';
 
 function Balance() {
@@ -17,6 +18,7 @@ function Balance() {
   // Pull out all the fields we need, with safe defaults
   const {
     tokenCredits = 0,
+    availableCredits,
     autoRefillEnabled = false,
     lastRefill,
     refillAmount,
@@ -33,8 +35,12 @@ function Balance() {
 
   return (
     <div className="flex flex-col gap-4 p-4 text-sm text-text-primary">
-      {/* Token credits display */}
-      <TokenCreditsItem tokenCredits={tokenCredits} />
+      {/* Credits display - show available credits if available, otherwise show token credits */}
+      {availableCredits ? (
+        <AvailableCreditsItem availableCredits={availableCredits} />
+      ) : (
+        <TokenCreditsItem tokenCredits={tokenCredits} />
+      )}
 
       {/* Auto-refill display */}
       {autoRefillEnabled ? (

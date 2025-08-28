@@ -11,6 +11,9 @@ const { ContentTypes, EImageOutputType } = require('librechat-data-provider');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { extractBaseURL } = require('~/utils');
 const { getFiles } = require('~/models/File');
+const { spendTokens } = require('~/models/spendTokens');
+const { FIXED_SERVICE_COSTS } = require('~/models/tx');
+const { Balance } = require('~/db/models');
 
 /** Default descriptions for image generation tool  */
 const DEFAULT_IMAGE_GEN_DESCRIPTION = `
@@ -209,6 +212,36 @@ function createOpenAIImageTools(fields = {}) {
         output_format = EImageOutputType.PNG;
       }
 
+      // Check image balance before generation
+      const userId = req?.user?.id;
+      if (userId) {
+        try {
+          const balanceDoc = await Balance.findOne({ user: userId }).lean();
+          
+          if (!balanceDoc) {
+            logger.warn('[ImageGenOAI] No balance document found for user:', userId);
+            return returnValue('Unable to verify image credits balance.');
+          }
+
+          const imageBalance = balanceDoc.availableCredits?.image || 0;
+          const requiredCredits = FIXED_SERVICE_COSTS.FLUX_IMAGE; // Using same cost as Flux
+
+          logger.debug('[ImageGenOAI] Image balance check:', {
+            userId,
+            imageBalance,
+            requiredCredits,
+            canGenerate: imageBalance >= requiredCredits,
+          });
+
+          if (imageBalance < requiredCredits) {
+            return returnValue(`Insufficient image credits. You have ${imageBalance} credits but need at least ${requiredCredits} to generate an image.`);
+          }
+        } catch (error) {
+          logger.error('[ImageGenOAI] Error checking image balance:', error);
+          // Continue if balance check fails to not block the service
+        }
+      }
+
       let resp;
       /** @type {AbortSignal} */
       let derivedSignal = null;
@@ -258,13 +291,45 @@ Error Message: ${error.message}`);
       }
 
       // For gpt-image-1, the response contains base64-encoded images
-      // TODO: handle cost in `resp.usage`
       const base64Image = resp.data[0].b64_json;
 
       if (!base64Image) {
         return returnValue(
           'No image data returned from OpenAI API. There may be a problem with the API or your configuration.',
         );
+      }
+
+      // Spend 1000 image tokens for successful image generation
+      logger.info('[ImageGenOAI] Image generated successfully, preparing to charge tokens');
+      try {
+        if (userId) {
+          const conversationId = runnableConfig?.configurable?.thread_id;
+          const endpoint = runnableConfig?.metadata?.endpoint || 'agents';
+          
+          if (conversationId) {
+            const txMetadata = {
+              user: userId,
+              conversationId: conversationId,
+              context: 'openai_image_generation',
+              endpoint: endpoint,
+              model: 'gpt-image-1',
+              creditType: 'image',
+            };
+
+            // Charge fixed image tokens
+            await spendTokens(txMetadata, {
+              promptTokens: 0,
+              completionTokens: FIXED_SERVICE_COSTS.FLUX_IMAGE, // Using same cost as Flux
+            });
+
+            logger.info(`[ImageGenOAI] Successfully charged ${FIXED_SERVICE_COSTS.FLUX_IMAGE} image tokens`);
+          } else {
+            logger.warn('[ImageGenOAI] Missing conversationId, cannot charge tokens');
+          }
+        }
+      } catch (error) {
+        logger.error('[ImageGenOAI] Error spending image tokens:', error);
+        // Continue even if token spending fails
       }
 
       const content = [
@@ -334,6 +399,36 @@ Error Message: ${error.message}`);
     async ({ prompt, image_ids, quality = 'auto', size = 'auto' }, runnableConfig) => {
       if (!prompt) {
         throw new Error('Missing required field: prompt');
+      }
+
+      // Check image balance before editing
+      const userId = req?.user?.id;
+      if (userId) {
+        try {
+          const balanceDoc = await Balance.findOne({ user: userId }).lean();
+          
+          if (!balanceDoc) {
+            logger.warn('[ImageEditOAI] No balance document found for user:', userId);
+            return returnValue('Unable to verify image credits balance.');
+          }
+
+          const imageBalance = balanceDoc.availableCredits?.image || 0;
+          const requiredCredits = FIXED_SERVICE_COSTS.FLUX_IMAGE; // Using same cost as Flux
+
+          logger.debug('[ImageEditOAI] Image balance check:', {
+            userId,
+            imageBalance,
+            requiredCredits,
+            canGenerate: imageBalance >= requiredCredits,
+          });
+
+          if (imageBalance < requiredCredits) {
+            return returnValue(`Insufficient image credits. You have ${imageBalance} credits but need at least ${requiredCredits} to edit an image.`);
+          }
+        } catch (error) {
+          logger.error('[ImageEditOAI] Error checking image balance:', error);
+          // Continue if balance check fails to not block the service
+        }
       }
 
       const clientConfig = { ...closureConfig };
@@ -486,6 +581,39 @@ Error Message: ${error.message}`);
           return returnValue(
             'No image data returned from OpenAI API. There may be a problem with the API or your configuration.',
           );
+        }
+
+        // Spend 1000 image tokens for successful image editing
+        logger.info('[ImageEditOAI] Image edited successfully, preparing to charge tokens');
+        try {
+          if (userId) {
+            const conversationId = runnableConfig?.configurable?.thread_id;
+            const endpoint = runnableConfig?.metadata?.endpoint || 'agents';
+            
+            if (conversationId) {
+              const txMetadata = {
+                user: userId,
+                conversationId: conversationId,
+                context: 'openai_image_editing',
+                endpoint: endpoint,
+                model: 'gpt-image-1',
+                creditType: 'image',
+              };
+
+              // Charge fixed image tokens
+              await spendTokens(txMetadata, {
+                promptTokens: 0,
+                completionTokens: FIXED_SERVICE_COSTS.FLUX_IMAGE, // Using same cost as Flux
+              });
+
+              logger.info(`[ImageEditOAI] Successfully charged ${FIXED_SERVICE_COSTS.FLUX_IMAGE} image tokens`);
+            } else {
+              logger.warn('[ImageEditOAI] Missing conversationId, cannot charge tokens');
+            }
+          }
+        } catch (error) {
+          logger.error('[ImageEditOAI] Error spending image tokens:', error);
+          // Continue even if token spending fails
         }
 
         const content = [
