@@ -139,13 +139,14 @@ const Paywall: React.FC = () => {
     return features;
   };
 
-  const handleSelectPlan = async (planId: string) => {
+  const handleSelectPlan = async (planId: string, paymentLink?: string) => {
     try {
       // The mutation will handle the redirect
       await checkoutMutation.mutateAsync({
         planId,
         userId: user?.id,
         email: user?.email,
+        paymentLink,
       });
     } catch (_error) {
       showToast({
@@ -293,7 +294,7 @@ const Paywall: React.FC = () => {
                 </ul>
 
                 <Button
-                  onClick={() => handleSelectPlan(plan._id)}
+                  onClick={() => handleSelectPlan(plan._id, plan.paymentLink)}
                   disabled={checkoutMutation.isLoading}
                   className={`w-full ${
                     isPopular

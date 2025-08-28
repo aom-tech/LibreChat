@@ -12,6 +12,7 @@ export interface BillingPlan {
   price: number; // in kopecks
   interval: 'monthly' | 'yearly' | 'weekly' | 'daily' | 'once';
   active: boolean;
+  paymentLink?: string;
   credits?: {
     text: number;
     image: number;
@@ -24,11 +25,13 @@ export interface BillingPlan {
     images?: number;
     presentations?: number;
     videoSeconds?: number;
-    features?: string[] | {
-      presentations?: boolean;
-      videos?: boolean;
-      support?: string;
-    };
+    features?:
+      | string[]
+      | {
+          presentations?: boolean;
+          videos?: boolean;
+          support?: string;
+        };
     description?: string;
   };
   createdAt: string;
@@ -136,25 +139,25 @@ export const useGetSubscriptionPlans = () => {
       try {
         const response = await billingFetch('/plans');
         console.log('[Billing API] Plans response:', response);
-        
+
         // Handle different response formats
         // API might return: { data: [...] }, { plans: [...] }, { activePlans: [...] }, or array directly
         if (Array.isArray(response)) {
           return response;
         }
-        
+
         if (response.data && Array.isArray(response.data)) {
           return response.data;
         }
-        
+
         if (response.plans && Array.isArray(response.plans)) {
           return response.plans;
         }
-        
+
         if (response.activePlans && Array.isArray(response.activePlans)) {
           return response.activePlans;
         }
-        
+
         // If response has a different structure, log it for debugging
         console.warn('[Billing API] Unexpected response format:', response);
         return [];
@@ -212,11 +215,19 @@ export const useCreateCheckoutSession = () => {
   return useMutation<
     { redirectUrl: string },
     Error,
-    { planId: string; userId?: string; email?: string }
+    { planId: string; userId?: string; email?: string; paymentLink?: string }
   >({
     mutationFn: async (data) => {
-      // For now, construct payment URL directly
-      // In future, this should call billing API to create session
+      if (data.paymentLink) {
+        const params = new URLSearchParams({
+          planId: data.planId,
+          ...(data.userId && { userId: data.userId }),
+          ...(data.email && { email: data.email }),
+        });
+        return { redirectUrl: `${data.paymentLink}&${params.toString()}` };
+      }
+
+      // Otherwise, construct payment URL (fallback)
       const paymentUrl = import.meta.env.VITE_PAYMENT_URL || 'https://payment.example.com';
 
       // Build query params
