@@ -45,7 +45,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            NODE_ENV=production
+            SCRIPT_YANDEX_METRICA_ID=${{ vars.SCRIPT_YANDEX_METRICA_ID }}
+            VITE_BILLING_API_URL=https://skatoolka-stage-backend.aom-tech.ru
+            NODE_ENV=production 
 
       - name: run docker compose
         uses: appleboy/ssh-action@master
