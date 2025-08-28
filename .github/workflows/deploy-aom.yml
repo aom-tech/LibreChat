@@ -47,6 +47,7 @@ jobs:
           build-args: |
             SCRIPT_YANDEX_METRICA_ID=${{ vars.SCRIPT_YANDEX_METRICA_ID }}
             SCRIPT_AMPLITUDE_API_KEY=${{ vars.SCRIPT_AMPLITUDE_API_KEY }}
+            VITE_BILLING_API_URL=https://ai-courses-backend.aom-tech.ru
             NODE_ENV=production
 
       - name: run docker compose
