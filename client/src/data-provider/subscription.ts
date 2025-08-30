@@ -215,12 +215,12 @@ export const useCreateCheckoutSession = () => {
   return useMutation<
     { redirectUrl: string },
     Error,
-    { planId: string; userId?: string; email?: string; paymentLink?: string }
+    { planId: string; userId?: string; email?: string; paymentLink?: string; name: string }
   >({
     mutationFn: async (data) => {
       if (data.paymentLink) {
         const params = new URLSearchParams({
-          planId: data.planId,
+          planId: data.name,
           ...(data.userId && { userId: data.userId }),
           ...(data.email && { email: data.email }),
         });

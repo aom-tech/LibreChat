@@ -87,7 +87,8 @@ const Paywall: React.FC = () => {
     // Use new format if available, fallback to legacy format
     const textCredits = plan.credits?.text || plan.metadata?.tokens || 0;
     const imageCredits = plan.credits?.image || (plan.metadata as any)?.images || 0;
-    const presentationCredits = plan.credits?.presentation || (plan.metadata as any)?.presentations || 0;
+    const presentationCredits =
+      plan.credits?.presentation || (plan.metadata as any)?.presentations || 0;
     const videoCredits = plan.credits?.video || (plan.metadata as any)?.videoSeconds || 0;
 
     const features: PlanFeature[] = [
@@ -133,13 +134,16 @@ const Paywall: React.FC = () => {
       // Legacy format compatibility
       features.push({ text: localize('com_ui_paywall_access_all_models'), included: true });
       const support = (plan.metadata.features as any)?.support || 'Basic';
-      features.push({ text: localize('com_ui_paywall_support', { level: support }), included: true });
+      features.push({
+        text: localize('com_ui_paywall_support', { level: support }),
+        included: true,
+      });
     }
 
     return features;
   };
 
-  const handleSelectPlan = async (planId: string, paymentLink?: string) => {
+  const handleSelectPlan = async (planId: string, name: string, paymentLink?: string) => {
     try {
       // The mutation will handle the redirect
       await checkoutMutation.mutateAsync({
@@ -147,6 +151,7 @@ const Paywall: React.FC = () => {
         userId: user?.id,
         email: user?.email,
         paymentLink,
+        name,
       });
     } catch (_error) {
       showToast({
@@ -189,11 +194,11 @@ const Paywall: React.FC = () => {
 
   // Separate subscriptions and one-time purchases
   const subscriptionPlans = displayPlans
-    .filter(plan => plan.interval !== 'once')
+    .filter((plan) => plan.interval !== 'once')
     .sort((a, b) => a.price - b.price);
-  
+
   const oneTimePlans = displayPlans
-    .filter(plan => plan.interval === 'once')
+    .filter((plan) => plan.interval === 'once')
     .sort((a, b) => a.price - b.price);
 
   return (
@@ -294,7 +299,7 @@ const Paywall: React.FC = () => {
                 </ul>
 
                 <Button
-                  onClick={() => handleSelectPlan(plan._id, plan.paymentLink)}
+                  onClick={() => handleSelectPlan(plan._id, plan.name, plan.paymentLink)}
                   disabled={checkoutMutation.isLoading}
                   className={`w-full ${
                     isPopular
@@ -322,7 +327,7 @@ const Paywall: React.FC = () => {
                 {'Additional credits for your account'}
               </p>
             </div>
-            
+
             <div className="mx-auto mt-8 grid max-w-5xl gap-6 lg:grid-cols-3">
               {oneTimePlans.map((plan) => {
                 const features = getPlanFeatures(plan);
@@ -333,7 +338,9 @@ const Paywall: React.FC = () => {
                     className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
                   >
                     <div className="mb-4">
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{plan.name}</h4>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {plan.name}
+                      </h4>
                       <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                         {plan.metadata?.description || plan.name}
                       </p>
