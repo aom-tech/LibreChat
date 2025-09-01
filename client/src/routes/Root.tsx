@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import type { ContextType } from '~/common';
 import {
-  useAuthContext,
+  useSearchEnabled,
   useAssistantsMap,
+  useAuthContext,
   useAgentsMap,
   useFileMap,
-  useSearchEnabled,
 } from '~/hooks';
 import {
-  AgentsMapContext,
+  PromptGroupsProvider,
   AssistantsMapContext,
-  FileMapContext,
+  AgentsMapContext,
   SetConvoProvider,
+  FileMapContext,
 } from '~/Providers';
 import { useUserTermsQuery, useGetStartupConfig } from '~/data-provider';
 import { TermsAndConditionsModal } from '~/components/ui';
@@ -65,12 +66,11 @@ export default function Root() {
   }
 
   return (
-    <>
-      {/* <SubscriptionGuard> */}
-      <SetConvoProvider>
-        <FileMapContext.Provider value={fileMap}>
-          <AssistantsMapContext.Provider value={assistantsMap}>
-            <AgentsMapContext.Provider value={agentsMap}>
+    <SetConvoProvider>
+      <FileMapContext.Provider value={fileMap}>
+        <AssistantsMapContext.Provider value={assistantsMap}>
+          <AgentsMapContext.Provider value={agentsMap}>
+            <PromptGroupsProvider>
               <Banner onHeightChange={setBannerHeight} />
               <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
                 <div className="relative z-0 flex h-full w-full overflow-hidden">
@@ -81,22 +81,20 @@ export default function Root() {
                   </div>
                 </div>
               </div>
-            </AgentsMapContext.Provider>
-            {config?.interface?.termsOfService?.modalAcceptance === true && (
-              <TermsAndConditionsModal
-                open={showTerms}
-                onOpenChange={setShowTerms}
-                onAccept={handleAcceptTerms}
-                onDecline={handleDeclineTerms}
-                title={config.interface.termsOfService.modalTitle}
-                modalContent={config.interface.termsOfService.modalContent}
-              />
-            )}
-          </AssistantsMapContext.Provider>
-        </FileMapContext.Provider>
-      </SetConvoProvider>
-      {/* <DevSubscriptionTest /> */}
-      {/* </SubscriptionGuard> */}
-    </>
+            </PromptGroupsProvider>
+          </AgentsMapContext.Provider>
+          {config?.interface?.termsOfService?.modalAcceptance === true && (
+            <TermsAndConditionsModal
+              open={showTerms}
+              onOpenChange={setShowTerms}
+              onAccept={handleAcceptTerms}
+              onDecline={handleDeclineTerms}
+              title={config.interface.termsOfService.modalTitle}
+              modalContent={config.interface.termsOfService.modalContent}
+            />
+          )}
+        </AssistantsMapContext.Provider>
+      </FileMapContext.Provider>
+    </SetConvoProvider>
   );
 }
