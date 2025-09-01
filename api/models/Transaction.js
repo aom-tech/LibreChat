@@ -205,11 +205,12 @@ async function createAutoRefillTransaction(txData) {
     user: transaction.user,
     incrementValue: txData.rawAmount,
     setValues: { lastRefill: new Date() },
+    creditType: 'text', // Auto-refill always applies to text credits
   });
   const result = {
     rate: transaction.rate,
     user: transaction.user.toString(),
-    balance: balanceResponse.tokenCredits,
+    balance: balanceResponse.availableCredits?.text ?? balanceResponse.tokenCredits ?? 0,
   };
   logger.debug('[Balance.check] Auto-refill performed', result);
   result.transaction = transaction;

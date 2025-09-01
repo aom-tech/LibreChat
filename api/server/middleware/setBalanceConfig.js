@@ -54,7 +54,7 @@ function buildUpdateFields(config, userRecord) {
     updateFields.user = userRecord?.user;
     updateFields.tokenCredits = config.startBalance;
     updateFields.availableCredits = {
-      text: 0,
+      text: config.startBalance,
       image: 0,
       presentation: 0,
       video: 0,
@@ -68,11 +68,17 @@ function buildUpdateFields(config, userRecord) {
   // Initialize availableCredits if not exists
   if (!userRecord?.availableCredits) {
     updateFields.availableCredits = {
-      text: 0,
+      text: config.startBalance ?? 0,
       image: 0,
       presentation: 0,
       video: 0,
     };
+  } else if (userRecord.availableCredits.text == null && config.startBalance != null) {
+    // If availableCredits exists but text is not initialized
+    if (!updateFields.availableCredits) {
+      updateFields.availableCredits = { ...userRecord.availableCredits };
+    }
+    updateFields.availableCredits.text = config.startBalance;
   }
 
   const isAutoRefillConfigValid =

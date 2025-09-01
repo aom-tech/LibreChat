@@ -37,10 +37,10 @@ const checkBalanceRecord = async function ({
       creditType: 'text',
     };
   }
-  
+
   // Always use text credits for balance checking
   const creditType = 'text';
-  let balance = record.tokenCredits;
+  let balance = record.availableCredits?.text ?? record.tokenCredits ?? 0;
 
   logger.debug('[Balance.check] Initial state', {
     user,
@@ -74,6 +74,11 @@ const checkBalanceRecord = async function ({
           rawAmount: record.refillAmount,
         });
         balance = result.balance;
+        // Update the record's balance to reflect the auto-refill
+        record = await Balance.findOne({ user }).lean();
+        if (record) {
+          balance = record.availableCredits?.text ?? record.tokenCredits ?? 0;
+        }
       } catch (error) {
         logger.error('[Balance.check] Failed to record transaction for auto-refill', error);
       }

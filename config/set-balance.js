@@ -69,7 +69,9 @@ const connect = require('./connect');
   if (!balance) {
     console.purple('User has no balance!');
   } else {
-    console.purple(`Current Balance: ${balance.tokenCredits}`);
+    const textCredits = balance.availableCredits?.text ?? balance.tokenCredits ?? 0;
+    console.purple(`Current Balance: ${textCredits} (text credits)`);
+    console.purple(`Legacy tokenCredits: ${balance.tokenCredits}`);
   }
 
   if (!amount) {
@@ -88,7 +90,15 @@ const connect = require('./connect');
   try {
     result = await Balance.findOneAndUpdate(
       { user: user._id },
-      { tokenCredits: amount },
+      { 
+        tokenCredits: amount,
+        availableCredits: {
+          text: amount,
+          image: balance?.availableCredits?.image ?? 0,
+          presentation: balance?.availableCredits?.presentation ?? 0,
+          video: balance?.availableCredits?.video ?? 0,
+        }
+      },
       { upsert: true, new: true },
     ).lean();
   } catch (error) {
@@ -106,7 +116,9 @@ const connect = require('./connect');
 
   // Done!
   console.green('Balance set successfully!');
-  console.purple(`New Balance: ${result.tokenCredits}`);
+  const newTextCredits = result.availableCredits?.text ?? result.tokenCredits ?? 0;
+  console.purple(`New Balance: ${newTextCredits} (text credits)`);
+  console.purple(`Legacy tokenCredits: ${result.tokenCredits}`);
   silentExit(0);
 })();
 
