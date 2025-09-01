@@ -40,10 +40,11 @@ export default function useSelectAgent() {
         conversation: { ...(conversation ?? {}), agent_id: agent.id },
         preset: template,
       });
+      const isNewChat = conversation?.conversationId === 'new' || !conversation?.conversationId;
       newConversation({
         template: currentConvo,
         preset: template as Partial<TPreset>,
-        keepLatestMessage: true,
+        keepLatestMessage: !isNewChat,
       });
     },
     [conversation, getDefaultConversation, newConversation],

@@ -87,10 +87,11 @@ export default function useSelectMention({
 
         /* We don't reset the latest message, only when changing settings mid-converstion */
         logger.info('conversation', 'Switching conversation to new spec (modular)', conversation);
+        const isNewChat = conversation?.conversationId === 'new' || !conversation?.conversationId;
         newConversation({
           template: currentConvo,
           preset,
-          keepLatestMessage: true,
+          keepLatestMessage: !isNewChat,
           keepAddedConvos: true,
         });
         return;
@@ -101,6 +102,7 @@ export default function useSelectMention({
         template: { ...(template as Partial<TConversation>) },
         preset,
         keepAddedConvos: isModular,
+        keepLatestMessage: false, // Never keep messages when switching specs
       });
     },
     [
@@ -179,10 +181,11 @@ export default function useSelectMention({
           'Switching conversation to new endpoint/model (modular)',
           currentConvo,
         );
+        const isNewChat = conversation?.conversationId === 'new' || !conversation?.conversationId;
         newConversation({
           template: currentConvo,
           preset: currentConvo,
-          keepLatestMessage: true,
+          keepLatestMessage: !isNewChat,
           keepAddedConvos: true,
         });
         return;
@@ -193,6 +196,7 @@ export default function useSelectMention({
         template: { ...(template as Partial<TConversation>) },
         preset: { ...kwargs, spec: null, iconURL: null, modelLabel: null, endpoint: newEndpoint },
         keepAddedConvos: isNewModular,
+        keepLatestMessage: false, // Never keep messages when switching models
       });
     },
     [conversation, getDefaultConversation, modularChat, newConversation, endpointsConfig],
@@ -240,10 +244,11 @@ export default function useSelectMention({
 
         /* We don't reset the latest message, only when changing settings mid-converstion */
         logger.info('conversation', 'Switching conversation to new preset (modular)', currentConvo);
+        const isNewChat = conversation?.conversationId === 'new' || !conversation?.conversationId;
         newConversation({
           template: currentConvo,
           preset: newPreset,
-          keepLatestMessage: true,
+          keepLatestMessage: !isNewChat,
           keepAddedConvos: true,
           disableParams,
         });
@@ -255,6 +260,7 @@ export default function useSelectMention({
         preset: newPreset,
         keepAddedConvos: isModular,
         disableParams,
+        keepLatestMessage: false, // Never keep messages when switching presets
       });
     },
     [

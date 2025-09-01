@@ -135,18 +135,26 @@ export function getConvoSwitchLogic(params: ConversationInitParams): InitiatedTe
   const { conversation, newEndpoint, endpointsConfig, modularChat = false } = params;
 
   const currentEndpoint = conversation?.endpoint;
-  const template: Partial<t.TPreset> = {
-    ...conversation,
-    endpoint: newEndpoint,
-    conversationId: 'new',
-  };
+  const conversationId = conversation?.conversationId ?? '';
+  const isNewChat = conversationId === 'new' || !conversationId;
+  
+  // For new chats, don't copy old conversation data
+  const template: Partial<t.TPreset> = isNewChat 
+    ? {
+        endpoint: newEndpoint,
+        conversationId: 'new',
+      }
+    : {
+        ...conversation,
+        endpoint: newEndpoint,
+        conversationId: 'new',
+      };
 
   const isAssistantSwitch =
     isAssistantsEndpoint(newEndpoint) &&
     isAssistantsEndpoint(currentEndpoint) &&
     currentEndpoint === newEndpoint;
 
-  const conversationId = conversation?.conversationId ?? '';
   const isExistingConversation = !!(conversationId && conversationId !== 'new');
 
   const currentEndpointType =
