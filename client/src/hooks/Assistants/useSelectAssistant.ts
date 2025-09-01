@@ -30,10 +30,11 @@ export default function useSelectAssistant(endpoint: AssistantsEndpoint) {
           conversation: { ...(conversation ?? {}) },
           preset: template,
         });
+        const isNewChat = conversation?.conversationId === 'new' || !conversation?.conversationId;
         newConversation({
           template: currentConvo,
           preset: template as Partial<TPreset>,
-          keepLatestMessage: true,
+          keepLatestMessage: !isNewChat,
         });
         return;
       }
