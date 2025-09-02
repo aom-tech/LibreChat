@@ -226,7 +226,7 @@ class FluxAPI extends Tool {
         }
 
         const imageBalance = balanceDoc.availableCredits?.image || 0;
-        const requiredCredits = FIXED_SERVICE_COSTS.FLUX_IMAGE;
+        const requiredCredits = FIXED_SERVICE_COSTS.IMAGE;
 
         logger.debug('[FluxAPI] Image balance check:', {
           userId,
@@ -380,10 +380,10 @@ class FluxAPI extends Tool {
         // Charge fixed image tokens
         await spendTokens(txMetadata, {
           promptTokens: 0,
-          completionTokens: FIXED_SERVICE_COSTS.FLUX_IMAGE,
+          completionTokens: FIXED_SERVICE_COSTS.IMAGE,
         });
 
-        logger.info(`[FluxAPI] Successfully charged ${FIXED_SERVICE_COSTS.FLUX_IMAGE} image tokens`);
+        logger.info(`[FluxAPI] Successfully charged ${FIXED_SERVICE_COSTS.IMAGE} image tokens`);
       } else {
         logger.warn('[FluxAPI] Missing userId or conversationId, cannot charge tokens');
       }
