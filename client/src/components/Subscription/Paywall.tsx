@@ -85,40 +85,40 @@ const Paywall: React.FC = () => {
   // Helper to get features for a plan
   const getPlanFeatures = (plan: BillingPlan): PlanFeature[] => {
     // Use new format if available, fallback to legacy format
-    const textCredits = plan.credits?.text || plan.metadata?.tokens || 0;
-    const imageCredits = plan.credits?.image || (plan.metadata as any)?.images || 0;
-    const presentationCredits = plan.credits?.presentation || (plan.metadata as any)?.presentations || 0;
+    // const textCredits = plan.credits?.text || plan.metadata?.tokens || 0;
+    // const imageCredits = plan.credits?.image || (plan.metadata as any)?.images || 0;
+    // const presentationCredits = plan.credits?.presentation || (plan.metadata as any)?.presentations || 0;
     const videoCredits = plan.credits?.video || (plan.metadata as any)?.videoSeconds || 0;
 
     const features: PlanFeature[] = [
-      {
-        text:
-          localize('com_ui_paywall_text_tokens', { amount: textCredits.toLocaleString() }) ||
-          `${textCredits.toLocaleString()} text credits`,
-        included: true,
-      },
-      {
-        text:
-          localize('com_ui_paywall_images_per_month', { amount: imageCredits }) ||
-          `${imageCredits} image credits per month`,
-        included: true,
-      },
-      {
-        text:
-          localize('com_ui_paywall_presentations_per_month', { amount: presentationCredits }) ||
-          `${presentationCredits} presentation credits per month`,
-        included: true,
-      },
+      // {
+      //   text:
+      //     localize('com_ui_paywall_text_tokens', { amount: textCredits.toLocaleString() }) ||
+      //     `${textCredits.toLocaleString()} text credits`,
+      //   included: true,
+      // },
+      // {
+      //   text:
+      //     localize('com_ui_paywall_images_per_month', { amount: imageCredits }) ||
+      //     `${imageCredits} image credits per month`,
+      //   included: true,
+      // },
+      // {
+      //   text:
+      //     localize('com_ui_paywall_presentations_per_month', { amount: presentationCredits }) ||
+      //     `${presentationCredits} presentation credits per month`,
+      //   included: true,
+      // },
     ];
 
     // Add video credits if available
     if (videoCredits > 0) {
-      features.push({
-        text:
-          localize('com_ui_paywall_video_seconds', { amount: videoCredits }) ||
-          `${videoCredits} video credits per month`,
-        included: true,
-      });
+      // features.push({
+      //   text:
+      //     localize('com_ui_paywall_video_seconds', { amount: videoCredits }) ||
+      //     `${videoCredits} video credits per month`,
+      //   included: true,
+      // });
     }
 
     // Add additional features from metadata
