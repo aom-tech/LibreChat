@@ -224,7 +224,7 @@ function createOpenAIImageTools(fields = {}) {
           }
 
           const imageBalance = balanceDoc.availableCredits?.image || 0;
-          const requiredCredits = FIXED_SERVICE_COSTS.FLUX_IMAGE; // Using same cost as Flux
+          const requiredCredits = FIXED_SERVICE_COSTS.IMAGE; // Using same cost as Flux
 
           logger.debug('[ImageGenOAI] Image balance check:', {
             userId,
@@ -319,10 +319,10 @@ Error Message: ${error.message}`);
             // Charge fixed image tokens
             await spendTokens(txMetadata, {
               promptTokens: 0,
-              completionTokens: FIXED_SERVICE_COSTS.FLUX_IMAGE, // Using same cost as Flux
+              completionTokens: FIXED_SERVICE_COSTS.IMAGE, // Using same cost as Flux
             });
 
-            logger.info(`[ImageGenOAI] Successfully charged ${FIXED_SERVICE_COSTS.FLUX_IMAGE} image tokens`);
+            logger.info(`[ImageGenOAI] Successfully charged ${FIXED_SERVICE_COSTS.IMAGE} image tokens`);
           } else {
             logger.warn('[ImageGenOAI] Missing conversationId, cannot charge tokens');
           }
@@ -413,7 +413,7 @@ Error Message: ${error.message}`);
           }
 
           const imageBalance = balanceDoc.availableCredits?.image || 0;
-          const requiredCredits = FIXED_SERVICE_COSTS.FLUX_IMAGE; // Using same cost as Flux
+          const requiredCredits = FIXED_SERVICE_COSTS.IMAGE; // Using same cost as Flux
 
           logger.debug('[ImageEditOAI] Image balance check:', {
             userId,
@@ -603,10 +603,10 @@ Error Message: ${error.message}`);
               // Charge fixed image tokens
               await spendTokens(txMetadata, {
                 promptTokens: 0,
-                completionTokens: FIXED_SERVICE_COSTS.FLUX_IMAGE, // Using same cost as Flux
+                completionTokens: FIXED_SERVICE_COSTS.IMAGE, // Using same cost as Flux
               });
 
-              logger.info(`[ImageEditOAI] Successfully charged ${FIXED_SERVICE_COSTS.FLUX_IMAGE} image tokens`);
+              logger.info(`[ImageEditOAI] Successfully charged ${FIXED_SERVICE_COSTS.IMAGE} image tokens`);
             } else {
               logger.warn('[ImageEditOAI] Missing conversationId, cannot charge tokens');
             }

@@ -61,7 +61,7 @@ First, add your service cost to `/api/models/tx.js`:
 
 ```javascript
 const FIXED_SERVICE_COSTS = {
-  FLUX_IMAGE: 1000,      // Cost per image generation
+  IMAGE: 1000,      // Cost per image generation
   PRESENTATION: 5000,    // Cost per presentation
   VIDEO: 10000,          // Cost per video
   YOUR_SERVICE: 2000,    // Add your service cost

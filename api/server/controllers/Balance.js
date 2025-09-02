@@ -1,4 +1,5 @@
 const { Balance } = require('~/db/models');
+const { FIXED_SERVICE_COSTS } = require('../../models/tx');
 
 async function balanceController(req, res) {
   const balanceData = await Balance.findOne(
@@ -16,6 +17,20 @@ async function balanceController(req, res) {
     delete balanceData.refillIntervalUnit;
     delete balanceData.lastRefill;
     delete balanceData.refillAmount;
+  }
+
+  // console.log('balance: ',)
+
+  if (balanceData.availableCredits) {
+    balanceData.availableCredits.image =
+      balanceData.availableCredits.image / FIXED_SERVICE_COSTS.IMAGE;
+
+    balanceData.availableCredits.presentation =
+      balanceData.availableCredits.presentation / FIXED_SERVICE_COSTS.PRESENTATION;
+
+    balanceData.availableCredits.video =
+      balanceData.availableCredits.video /
+      (FIXED_SERVICE_COSTS.DEFAULT_VIDEO_DURATION_SEC * FIXED_SERVICE_COSTS.VIDEO);
   }
 
   res.status(200).json(balanceData);

@@ -3,9 +3,10 @@ const defaultRate = 6;
 
 // Fixed costs for various services
 const FIXED_SERVICE_COSTS = {
-  FLUX_IMAGE: 1000,  // Cost per image generation
+  IMAGE: 1000,  // Cost per image generation
   PRESENTATION: 1000, // Cost per presentation
   VIDEO: 1000,      // Cost per video
+  DEFAULT_VIDEO_DURATION_SEC: 5, // 5 sec
 };
 
 // Agent IDs to credit type mapping
