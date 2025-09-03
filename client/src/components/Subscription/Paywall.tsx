@@ -367,7 +367,7 @@ const Paywall: React.FC = () => {
                     </ul>
 
                     <Button
-                      onClick={() => handleSelectPlan(plan._id)}
+                      onClick={() => handleSelectPlan(plan._id, plan.name, plan.paymentLink)}
                       disabled={checkoutMutation.isLoading}
                       variant="outline"
                       className="w-full"
