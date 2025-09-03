@@ -32,6 +32,7 @@ const Registration: React.FC = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const token = queryParams.get('token');
+  const referalCode = queryParams.get('ref');
   const validTheme = theme === 'dark' ? 'dark' : 'light';
 
   // only require captcha if we have a siteKey
@@ -99,7 +100,12 @@ const Registration: React.FC = () => {
     try {
       // Auto-generate username from email (part before @)
       const username = data.email.split('@')[0];
-      registerUser.mutate({ ...data, username, token: token ?? undefined });
+      registerUser.mutate({ 
+        ...data, 
+        username, 
+        token: token ?? undefined,
+        referalCode: referalCode ?? undefined
+      });
       reachGoal('register');
     } catch (error) {
       if ((error as TError).response?.data?.message) {

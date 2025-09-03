@@ -35,6 +35,8 @@ export interface IUser extends Document {
   };
   createdAt?: Date;
   updatedAt?: Date;
+  personalReferalCode?: string;
+  reffererId?: string;
 }
 
 export interface BalanceConfig {

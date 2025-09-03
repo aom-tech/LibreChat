@@ -129,6 +129,12 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    personalReferalCode: {
+      type: String,
+    },
+    reffererId: {
+      type: String,
+    },
     personalization: {
       type: {
         memories: {
