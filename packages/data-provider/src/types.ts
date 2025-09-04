@@ -192,6 +192,7 @@ export type TUser = {
   personalization?: {
     memories?: boolean;
   };
+  personalReferralCode?: string;
   createdAt: string;
   updatedAt: string;
 };
