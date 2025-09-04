@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 /**
  * Compares the provided password with the user's password.
@@ -26,6 +27,26 @@ const comparePassword = async (user, candidatePassword) => {
   });
 };
 
+/**
+ * Generates a unique referral code for a user.
+ *
+ * @returns {string} A unique 8-character alphanumeric referral code.
+ */
+const generateReferralCode = () => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const codeLength = 8;
+  let code = '';
+
+  const randomBytes = crypto.randomBytes(codeLength);
+
+  for (let i = 0; i < codeLength; i++) {
+    code += characters[randomBytes[i] % characters.length];
+  }
+
+  return code;
+};
+
 module.exports = {
   comparePassword,
+  generateReferralCode,
 };

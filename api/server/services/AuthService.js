@@ -25,6 +25,7 @@ const { checkEmailConfig, sendEmail } = require('~/server/utils');
 const { getBalanceConfig } = require('~/server/services/Config');
 const { registerSchema } = require('~/strategies/validators');
 const setUserTrial = require('~/server/utils/setUserTrial');
+const { generateReferralCode } = require('~/models/userMethods');
 
 const domains = {
   client: process.env.DOMAIN_CLIENT,
@@ -178,7 +179,7 @@ const registerUser = async (user, additionalData = {}) => {
     return { status: 404, message: errorMessage };
   }
 
-  const { email, password, name, username } = user;
+  const { email, password, name, username, referalCode } = user;
 
   let newUserId;
   try {
@@ -207,6 +208,30 @@ const registerUser = async (user, additionalData = {}) => {
     const isFirstRegisteredUser = (await countUsers()) === 0;
 
     const salt = bcrypt.genSaltSync(10);
+    
+    // Generate unique personal referral code
+    let personalReferralCode;
+    let codeExists = true;
+    
+    // Keep generating until we find a unique code
+    while (codeExists) {
+      personalReferralCode = generateReferralCode();
+      const existingUserWithCode = await findUser({ personalReferalCode: personalReferralCode });
+      codeExists = !!existingUserWithCode;
+    }
+    
+    // Find referrer if referral code is provided
+    let reffererId = '';
+    if (referalCode) {
+      const referrer = await findUser({ personalReferalCode: referalCode }, '_id');
+      if (referrer && referrer._id) {
+        reffererId = referrer._id.toString();
+        logger.info(`[registerUser] User registered with referral code: ${referalCode} from user: ${reffererId}`);
+      } else {
+        logger.warn(`[registerUser] Invalid referral code provided: ${referalCode}`);
+      }
+    }
+    
     const newUserData = {
       provider: 'local',
       email,
@@ -215,6 +240,8 @@ const registerUser = async (user, additionalData = {}) => {
       avatar: null,
       role: isFirstRegisteredUser ? SystemRoles.ADMIN : SystemRoles.USER,
       password: bcrypt.hashSync(password, salt),
+      personalReferalCode: personalReferralCode,
+      reffererId: reffererId,
       ...additionalData,
     };
 

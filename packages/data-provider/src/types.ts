@@ -192,6 +192,7 @@ export type TUser = {
   personalization?: {
     memories?: boolean;
   };
+  personalReferralCode?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -367,6 +368,7 @@ export type TRegisterUser = {
   password: string;
   confirm_password?: string;
   token?: string;
+  referalCode?: string;
 };
 
 export type TLoginUser = {
