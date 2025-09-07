@@ -160,9 +160,16 @@ const useNewConvo = (index = 0) => {
           conversation.disableParams = true;
         }
 
-        if (!(keepAddedConvos ?? false)) {
+        // Check if we're updating an existing new chat with agent information
+        const isUpdatingNewChatWithAgent = conversation.conversationId === Constants.NEW_CONVO && 
+                                          conversation.agent_id && 
+                                          !buildDefaultConversation;
+
+        // Clear conversations before setting new conversation state, but not when updating existing new chat with agent
+        if (!(keepAddedConvos ?? false) && !isUpdatingNewChatWithAgent) {
           clearAllConversations(true);
         }
+
         const isCancelled = conversation.conversationId?.startsWith('_');
         if (isCancelled) {
           logger.log(
@@ -333,6 +340,7 @@ const useNewConvo = (index = 0) => {
 };
 
 export default useNewConvo;
+
 
 
 
