@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useGetModelsQuery } from 'librechat-data-provider/react-query';
 import {
   Constants,
@@ -318,3 +318,4 @@ const useNewConvo = (index = 0) => {
 };
 
 export default useNewConvo;
+
