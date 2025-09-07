@@ -59,10 +59,14 @@ export default function useSelectAgent() {
 
       setSelectedAgentId(agent.id);
 
+      // Determine if we're in a new chat to preserve the conversation ID properly
+      const isNewChat = conversation?.conversationId === Constants.NEW_CONVO || !conversation?.conversationId;
+      
       const template: Partial<TPreset | TConversation> = {
         endpoint: EModelEndpoint.agents,
         agent_id: agent.id,
-        conversationId: Constants.NEW_CONVO as string,
+        // Preserve Constants.NEW_CONVO when in a new chat, otherwise use existing conversationId
+        conversationId: isNewChat ? Constants.NEW_CONVO as string : conversation?.conversationId,
       };
 
       updateConversation({ id: agent.id }, template);
@@ -96,4 +100,5 @@ export default function useSelectAgent() {
 
   return { onSelect };
 }
+
 
