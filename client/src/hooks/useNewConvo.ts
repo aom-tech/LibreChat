@@ -199,6 +199,20 @@ const useNewConvo = (index = 0) => {
           return;
         }
 
+        // Check if we're currently in a new chat context and avoid navigating away
+        const isCurrentlyInNewChat = location.pathname === `/c/${Constants.NEW_CONVO}`;
+        const isSettingNewChatWithAgent = conversation.conversationId === Constants.NEW_CONVO;
+        
+        // If we're in a new chat and setting a new chat with an agent, don't navigate away
+        if (isCurrentlyInNewChat && isSettingNewChatWithAgent) {
+          // Stay on the current route, just update the document title if needed
+          const appTitle = localStorage.getItem(LocalStorageKeys.APP_TITLE) ?? '';
+          if (appTitle) {
+            document.title = appTitle;
+          }
+          return;
+        }
+
         const path = `/c/${conversation.conversationId}${getParams()}`;
         navigate(path, {
           replace: true,
@@ -319,5 +333,6 @@ const useNewConvo = (index = 0) => {
 };
 
 export default useNewConvo;
+
 
 
