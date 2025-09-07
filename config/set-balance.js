@@ -90,14 +90,14 @@ const connect = require('./connect');
   try {
     result = await Balance.findOneAndUpdate(
       { user: user._id },
-      { 
+      {
         tokenCredits: amount,
         availableCredits: {
           text: amount,
           image: balance?.availableCredits?.image ?? 0,
           presentation: balance?.availableCredits?.presentation ?? 0,
           video: balance?.availableCredits?.video ?? 0,
-        }
+        },
       },
       { upsert: true, new: true },
     ).lean();

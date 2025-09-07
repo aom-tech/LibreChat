@@ -23,7 +23,7 @@ async function setUserTrial(userId) {
           'Content-Type': 'application/json',
         },
         timeout: 5000, // 5 second timeout
-      }
+      },
     );
 
     if (response.status === 200 || response.status === 201) {
@@ -31,10 +31,15 @@ async function setUserTrial(userId) {
       return true;
     }
 
-    logger.warn(`[setUserTrial] Unexpected response status: ${response.status} for user: ${userId}`);
+    logger.warn(
+      `[setUserTrial] Unexpected response status: ${response.status} for user: ${userId}`,
+    );
     return false;
   } catch (error) {
-    logger.error(`[setUserTrial] Error setting trial for user ${userId}, billingUrl ${billingUrl}:`, error);
+    logger.error(
+      `[setUserTrial] Error setting trial for user ${userId}, billingUrl ${billingUrl}:`,
+      error,
+    );
     return false;
   }
 }

@@ -71,17 +71,14 @@ const SubscriptionManagement: React.FC = () => {
               </div>
             )}
 
-            <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-3">
+            <div className="rounded-lg bg-amber-50 p-3 dark:bg-amber-900/20">
               <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500 mt-0.5" />
+                <AlertCircle className="mt-0.5 h-4 w-4 text-amber-600 dark:text-amber-500" />
                 <div className="text-sm text-amber-700 dark:text-amber-400">
                   <p className="font-medium">{localize('com_ui_subscription_need_cancel')}</p>
                   <p className="mt-1">
                     {localize('com_ui_subscription_contact_support')}{' '}
-                    <a 
-                      href="mailto:support@example.com" 
-                      className="underline hover:no-underline"
-                    >
+                    <a href="mailto:support@example.com" className="underline hover:no-underline">
                       support@example.com
                     </a>
                   </p>
@@ -95,21 +92,17 @@ const SubscriptionManagement: React.FC = () => {
               className="w-full"
               disabled={cancelMutation.isLoading}
             >
-              {cancelMutation.isLoading 
-                ? localize('com_ui_paywall_processing') 
-                : localize('com_ui_subscription_contact_support_cancel')
-              }
+              {cancelMutation.isLoading
+                ? localize('com_ui_paywall_processing')
+                : localize('com_ui_subscription_contact_support_cancel')}
             </Button>
           </div>
         ) : (
-          <div className="text-center py-4">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <div className="py-4 text-center">
+            <p className="mb-4 text-gray-600 dark:text-gray-400">
               {localize('com_ui_subscription_no_active')}
             </p>
-            <Button
-              onClick={() => window.location.href = '/'}
-              className="w-full"
-            >
+            <Button onClick={() => (window.location.href = '/')} className="w-full">
               {localize('com_ui_subscription_view_plans')}
             </Button>
           </div>

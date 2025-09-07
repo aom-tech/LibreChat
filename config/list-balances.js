@@ -20,9 +20,13 @@ const connect = require('./connect');
     let balance = await Balance.findOne({ user: user._id });
     if (balance !== null) {
       const textCredits = balance.availableCredits?.text ?? balance.tokenCredits ?? 0;
-      console.green(`User ${user.name} (${user.email}) has a balance of ${textCredits} text credits`);
+      console.green(
+        `User ${user.name} (${user.email}) has a balance of ${textCredits} text credits`,
+      );
       if (balance.availableCredits) {
-        console.cyan(`  Available credits - Text: ${balance.availableCredits.text}, Image: ${balance.availableCredits.image}, Presentation: ${balance.availableCredits.presentation}, Video: ${balance.availableCredits.video}`);
+        console.cyan(
+          `  Available credits - Text: ${balance.availableCredits.text}, Image: ${balance.availableCredits.image}, Presentation: ${balance.availableCredits.presentation}, Video: ${balance.availableCredits.video}`,
+        );
       }
       console.cyan(`  Legacy tokenCredits: ${balance.tokenCredits}`);
     } else {

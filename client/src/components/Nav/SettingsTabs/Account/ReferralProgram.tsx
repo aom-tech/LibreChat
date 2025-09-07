@@ -66,7 +66,9 @@ const ReferralProgram: React.FC = () => {
           </div>
           <div>
             <h4 className="font-medium">{localize('com_ui_referral_your_link')}</h4>
-            <p className="text-xs text-text-secondary">{localize('com_ui_referral_code')}: {referralCode}</p>
+            <p className="text-xs text-text-secondary">
+              {localize('com_ui_referral_code')}: {referralCode}
+            </p>
           </div>
         </div>
 
@@ -109,7 +111,9 @@ const ReferralProgram: React.FC = () => {
         >
           <div className="flex items-center justify-center gap-2">
             <Link className="h-4 w-4" />
-            <span>{copying ? localize('com_ui_referral_copied') : localize('com_ui_referral_copy_link')}</span>
+            <span>
+              {copying ? localize('com_ui_referral_copied') : localize('com_ui_referral_copy_link')}
+            </span>
           </div>
         </button>
       </div>

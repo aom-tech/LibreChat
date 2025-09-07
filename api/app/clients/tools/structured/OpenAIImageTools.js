@@ -217,7 +217,7 @@ function createOpenAIImageTools(fields = {}) {
       if (userId) {
         try {
           const balanceDoc = await Balance.findOne({ user: userId }).lean();
-          
+
           if (!balanceDoc) {
             logger.warn('[ImageGenOAI] No balance document found for user:', userId);
             return returnValue('Unable to verify image credits balance.');
@@ -234,7 +234,9 @@ function createOpenAIImageTools(fields = {}) {
           });
 
           if (imageBalance < requiredCredits) {
-            return returnValue(`Insufficient image credits. You have ${imageBalance} credits but need at least ${requiredCredits} to generate an image.`);
+            return returnValue(
+              `Insufficient image credits. You have ${imageBalance} credits but need at least ${requiredCredits} to generate an image.`,
+            );
           }
         } catch (error) {
           logger.error('[ImageGenOAI] Error checking image balance:', error);
@@ -305,7 +307,7 @@ Error Message: ${error.message}`);
         if (userId) {
           const conversationId = runnableConfig?.configurable?.thread_id;
           const endpoint = runnableConfig?.metadata?.endpoint || 'agents';
-          
+
           if (conversationId) {
             const txMetadata = {
               user: userId,
@@ -322,7 +324,9 @@ Error Message: ${error.message}`);
               completionTokens: FIXED_SERVICE_COSTS.IMAGE, // Using same cost as Flux
             });
 
-            logger.info(`[ImageGenOAI] Successfully charged ${FIXED_SERVICE_COSTS.IMAGE} image tokens`);
+            logger.info(
+              `[ImageGenOAI] Successfully charged ${FIXED_SERVICE_COSTS.IMAGE} image tokens`,
+            );
           } else {
             logger.warn('[ImageGenOAI] Missing conversationId, cannot charge tokens');
           }
@@ -406,7 +410,7 @@ Error Message: ${error.message}`);
       if (userId) {
         try {
           const balanceDoc = await Balance.findOne({ user: userId }).lean();
-          
+
           if (!balanceDoc) {
             logger.warn('[ImageEditOAI] No balance document found for user:', userId);
             return returnValue('Unable to verify image credits balance.');
@@ -423,7 +427,9 @@ Error Message: ${error.message}`);
           });
 
           if (imageBalance < requiredCredits) {
-            return returnValue(`Insufficient image credits. You have ${imageBalance} credits but need at least ${requiredCredits} to edit an image.`);
+            return returnValue(
+              `Insufficient image credits. You have ${imageBalance} credits but need at least ${requiredCredits} to edit an image.`,
+            );
           }
         } catch (error) {
           logger.error('[ImageEditOAI] Error checking image balance:', error);
@@ -589,7 +595,7 @@ Error Message: ${error.message}`);
           if (userId) {
             const conversationId = runnableConfig?.configurable?.thread_id;
             const endpoint = runnableConfig?.metadata?.endpoint || 'agents';
-            
+
             if (conversationId) {
               const txMetadata = {
                 user: userId,
@@ -606,7 +612,9 @@ Error Message: ${error.message}`);
                 completionTokens: FIXED_SERVICE_COSTS.IMAGE, // Using same cost as Flux
               });
 
-              logger.info(`[ImageEditOAI] Successfully charged ${FIXED_SERVICE_COSTS.IMAGE} image tokens`);
+              logger.info(
+                `[ImageEditOAI] Successfully charged ${FIXED_SERVICE_COSTS.IMAGE} image tokens`,
+              );
             } else {
               logger.warn('[ImageEditOAI] Missing conversationId, cannot charge tokens');
             }

@@ -138,18 +138,20 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
   /** @type {(toolArguments: Object | string, config?: GraphRunnableConfig) => Promise<unknown>} */
   const _call = async (toolArguments, config) => {
     const userId = config?.configurable?.user?.id || config?.configurable?.user_id;
-    logger.debug(config)
+    logger.debug(config);
     // Добавить изображения в аргументы, если они есть
     const imageUrls = config?.configurable?.image_urls;
     if (imageUrls && imageUrls.length > 0) {
       // Извлечь base64 данные из data URLs
-      const images = imageUrls.map(url => {
-        if (url && url.startsWith('data:image/')) {
-          const base64Data = url.split(',')[1];
-          return base64Data;
-        }
-        return null;
-      }).filter(Boolean);
+      const images = imageUrls
+        .map((url) => {
+          if (url && url.startsWith('data:image/')) {
+            const base64Data = url.split(',')[1];
+            return base64Data;
+          }
+          return null;
+        })
+        .filter(Boolean);
 
       if (images.length > 0) {
         // Добавить изображения в аргументы инструмента
@@ -197,13 +199,14 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
         config?.configurable?.userMCPAuthMap?.[`${Constants.mcp_prefix}${serverName}`];
 
       // Check if this is a presentation generation tool
-      const isPresentationTool = toolName.toLowerCase().includes('powerpoint') ||
-                                toolName.toLowerCase().includes('presentation') ||
-                                serverName.toLowerCase().includes('slidespeak');
+      const isPresentationTool =
+        toolName.toLowerCase().includes('powerpoint') ||
+        toolName.toLowerCase().includes('presentation') ||
+        serverName.toLowerCase().includes('slidespeak');
 
       // Check if this is a video generation tool
-      const isVideoTool = toolName.toLowerCase().includes('video') ||
-                         serverName.toLowerCase().includes('veo');
+      const isVideoTool =
+        toolName.toLowerCase().includes('video') || serverName.toLowerCase().includes('veo');
 
       // Extract duration for video tools
       let videoDurationSeconds = 0;
@@ -229,7 +232,10 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
           const balanceDoc = await Balance.findOne({ user: userId }).lean();
 
           if (!balanceDoc) {
-            logger.warn(`[MCP][${serverName}][${toolName}] No balance document found for user:`, userId);
+            logger.warn(
+              `[MCP][${serverName}][${toolName}] No balance document found for user:`,
+              userId,
+            );
             throw new Error('Unable to verify presentation credits balance.');
           }
 
@@ -244,10 +250,15 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
           });
 
           if (presentationBalance < requiredCredits) {
-            throw new Error(`Insufficient presentation credits. You have ${presentationBalance} credits but need at least ${requiredCredits} to generate a presentation.`);
+            throw new Error(
+              `Insufficient presentation credits. You have ${presentationBalance} credits but need at least ${requiredCredits} to generate a presentation.`,
+            );
           }
         } catch (error) {
-          logger.error(`[MCP][${serverName}][${toolName}] Error checking presentation balance:`, error);
+          logger.error(
+            `[MCP][${serverName}][${toolName}] Error checking presentation balance:`,
+            error,
+          );
           throw error;
         }
       }
@@ -258,7 +269,10 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
           const balanceDoc = await Balance.findOne({ user: userId }).lean();
 
           if (!balanceDoc) {
-            logger.warn(`[MCP][${serverName}][${toolName}] No balance document found for user:`, userId);
+            logger.warn(
+              `[MCP][${serverName}][${toolName}] No balance document found for user:`,
+              userId,
+            );
             throw new Error('Unable to verify video credits balance.');
           }
 
@@ -274,7 +288,9 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
           });
 
           if (videoBalance < requiredCredits) {
-            throw new Error(`Insufficient video credits. You have ${videoBalance} credits but need at least ${requiredCredits} to generate a ${videoDurationSeconds} second video.`);
+            throw new Error(
+              `Insufficient video credits. You have ${videoBalance} credits but need at least ${requiredCredits} to generate a ${videoDurationSeconds} second video.`,
+            );
           }
         } catch (error) {
           logger.error(`[MCP][${serverName}][${toolName}] Error checking video balance:`, error);
@@ -304,7 +320,9 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
 
       // Charge presentation tokens after successful generation
       if (isPresentationTool && userId) {
-        logger.info(`[MCP][${serverName}][${toolName}] Presentation generated successfully, preparing to charge tokens`);
+        logger.info(
+          `[MCP][${serverName}][${toolName}] Presentation generated successfully, preparing to charge tokens`,
+        );
         try {
           const conversationId = config?.configurable?.thread_id;
           const endpoint = config?.metadata?.endpoint || 'agents';
@@ -325,19 +343,28 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
               completionTokens: FIXED_SERVICE_COSTS.PRESENTATION,
             });
 
-            logger.info(`[MCP][${serverName}][${toolName}] Successfully charged ${FIXED_SERVICE_COSTS.PRESENTATION} presentation tokens`);
+            logger.info(
+              `[MCP][${serverName}][${toolName}] Successfully charged ${FIXED_SERVICE_COSTS.PRESENTATION} presentation tokens`,
+            );
           } else {
-            logger.warn(`[MCP][${serverName}][${toolName}] Missing conversationId, cannot charge tokens`);
+            logger.warn(
+              `[MCP][${serverName}][${toolName}] Missing conversationId, cannot charge tokens`,
+            );
           }
         } catch (error) {
-          logger.error(`[MCP][${serverName}][${toolName}] Error spending presentation tokens:`, error);
+          logger.error(
+            `[MCP][${serverName}][${toolName}] Error spending presentation tokens:`,
+            error,
+          );
           // Continue even if token spending fails
         }
       }
 
       // Charge video tokens after successful generation
       if (isVideoTool && userId && videoDurationSeconds > 0) {
-        logger.info(`[MCP][${serverName}][${toolName}] Video generated successfully, preparing to charge tokens`);
+        logger.info(
+          `[MCP][${serverName}][${toolName}] Video generated successfully, preparing to charge tokens`,
+        );
         try {
           const conversationId = config?.configurable?.thread_id;
           const endpoint = config?.metadata?.endpoint || 'agents';
@@ -358,9 +385,13 @@ async function createMCPTool({ req, res, toolKey, provider: _provider }) {
               completionTokens: videoCost,
             });
 
-            logger.info(`[MCP][${serverName}][${toolName}] Successfully charged ${videoCost} video tokens for ${videoDurationSeconds} second video`);
+            logger.info(
+              `[MCP][${serverName}][${toolName}] Successfully charged ${videoCost} video tokens for ${videoDurationSeconds} second video`,
+            );
           } else {
-            logger.warn(`[MCP][${serverName}][${toolName}] Missing conversationId, cannot charge tokens`);
+            logger.warn(
+              `[MCP][${serverName}][${toolName}] Missing conversationId, cannot charge tokens`,
+            );
           }
         } catch (error) {
           logger.error(`[MCP][${serverName}][${toolName}] Error spending video tokens:`, error);

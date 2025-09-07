@@ -3,18 +3,18 @@ const defaultRate = 6;
 
 // Fixed costs for various services
 const FIXED_SERVICE_COSTS = {
-  IMAGE: 1000,  // Cost per image generation
+  IMAGE: 1000, // Cost per image generation
   PRESENTATION: 1000, // Cost per presentation
-  VIDEO: 1000,      // Cost per video
+  VIDEO: 1000, // Cost per video
   DEFAULT_VIDEO_DURATION_SEC: 5, // 5 sec
 };
 
 // Agent IDs to credit type mapping
 const AGENT_CREDIT_TYPES = {
   'agent_-2vJDJqv7zoHlNeu5VX6f': 'image',
-  'agent_srl6222FWjmA0XxeEGgGQ': 'image',
-  'agent_b1rpKFVSmmevC7A2hkfLz': 'presentation',
-  'agent_p_s8V9FmVfxgHGVIFjOne': 'video',
+  agent_srl6222FWjmA0XxeEGgGQ: 'image',
+  agent_b1rpKFVSmmevC7A2hkfLz: 'presentation',
+  agent_p_s8V9FmVfxgHGVIFjOne: 'video',
 };
 
 /**
@@ -100,7 +100,7 @@ const bedrockValues = {
  */
 const tokenValues = Object.assign(
   {
-    'flux': { prompt: 1, completion: 1 }, // Fixed rate for image generation
+    flux: { prompt: 1, completion: 1 }, // Fixed rate for image generation
     'slidespeak-server': { prompt: 1, completion: 1 }, // Fixed rate for presentation generation
     'gpt-image-1': { prompt: 1, completion: 1 }, // Fixed rate for OpenAI image generation
     'veo-mcp': { prompt: 1, completion: 1 }, // Fixed rate for video generation

@@ -100,11 +100,11 @@ const Registration: React.FC = () => {
     try {
       // Auto-generate username from email (part before @)
       const username = data.email.split('@')[0];
-      registerUser.mutate({ 
-        ...data, 
-        username, 
+      registerUser.mutate({
+        ...data,
+        username,
         token: token ?? undefined,
-        referalCode: referalCode ?? undefined
+        referalCode: referalCode ?? undefined,
       });
       reachGoal('register');
     } catch (error) {
@@ -217,13 +217,16 @@ const Registration: React.FC = () => {
               </Button>
             </div>
 
-            {(startupConfig?.interface?.privacyPolicy?.externalUrl || startupConfig?.interface?.termsOfService?.externalUrl) && (
+            {(startupConfig?.interface?.privacyPolicy?.externalUrl ||
+              startupConfig?.interface?.termsOfService?.externalUrl) && (
               <p className="mt-3 text-center text-xs text-gray-600 dark:text-gray-400">
                 {localize('com_auth_register_terms_prefix')}{' '}
                 {startupConfig?.interface?.termsOfService?.externalUrl && (
                   <a
                     href={startupConfig.interface.termsOfService.externalUrl}
-                    target={startupConfig.interface.termsOfService.openNewTab ? '_blank' : undefined}
+                    target={
+                      startupConfig.interface.termsOfService.openNewTab ? '_blank' : undefined
+                    }
                     rel="noopener noreferrer"
                     className="text-green-600 underline hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
                   >
@@ -236,7 +239,9 @@ const Registration: React.FC = () => {
                     {localize('com_auth_register_privacy_prefix')}{' '}
                     <a
                       href={startupConfig.interface.privacyPolicy.externalUrl}
-                      target={startupConfig.interface.privacyPolicy.openNewTab ? '_blank' : undefined}
+                      target={
+                        startupConfig.interface.privacyPolicy.openNewTab ? '_blank' : undefined
+                      }
                       rel="noopener noreferrer"
                       className="text-green-600 underline hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
                     >
