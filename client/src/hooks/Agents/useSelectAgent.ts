@@ -40,7 +40,7 @@ export default function useSelectAgent() {
         conversation: { ...(conversation ?? {}), agent_id: agent.id },
         preset: template,
       });
-      const isNewChat = conversation?.conversationId === 'new' || !conversation?.conversationId;
+      const isNewChat = conversation?.conversationId === Constants.NEW_CONVO || !conversation?.conversationId;
       newConversation({
         template: currentConvo,
         preset: template as Partial<TPreset>,
@@ -96,3 +96,4 @@ export default function useSelectAgent() {
 
   return { onSelect };
 }
+
