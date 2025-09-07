@@ -35,6 +35,7 @@ import store from '~/store';
 
 const useNewConvo = (index = 0) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { data: startupConfig } = useGetStartupConfig();
   const clearAllConversations = store.useClearConvoState();
@@ -318,4 +319,5 @@ const useNewConvo = (index = 0) => {
 };
 
 export default useNewConvo;
+
 
