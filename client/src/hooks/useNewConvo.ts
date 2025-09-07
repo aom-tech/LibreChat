@@ -161,9 +161,10 @@ const useNewConvo = (index = 0) => {
         }
 
         // Check if we're updating an existing new chat with agent information
-        const isUpdatingNewChatWithAgent = conversation.conversationId === Constants.NEW_CONVO && 
-                                          conversation.agent_id && 
-                                          !buildDefaultConversation;
+        const isUpdatingNewChatWithAgent =
+          conversation.conversationId === Constants.NEW_CONVO &&
+          conversation.agent_id &&
+          !buildDefaultConversation;
 
         // Clear conversations before setting new conversation state, but not when updating existing new chat with agent
         if (!(keepAddedConvos ?? false) && !isUpdatingNewChatWithAgent) {
@@ -209,7 +210,7 @@ const useNewConvo = (index = 0) => {
         // Check if we're currently in a new chat context and avoid navigating away
         const isCurrentlyInNewChat = location.pathname === `/c/${Constants.NEW_CONVO}`;
         const isSettingNewChatWithAgent = conversation.conversationId === Constants.NEW_CONVO;
-        
+
         // If we're in a new chat and setting a new chat with an agent, don't navigate away
         if (isCurrentlyInNewChat && isSettingNewChatWithAgent) {
           // Stay on the current route, just update the document title if needed
@@ -340,7 +341,3 @@ const useNewConvo = (index = 0) => {
 };
 
 export default useNewConvo;
-
-
-
-

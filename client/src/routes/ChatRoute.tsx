@@ -69,9 +69,12 @@ export default function ChatRoute() {
       // Defensive check: prevent multiple competing newConversation() calls when an agent is selected in a new chat
       const isCurrentConvoNewChat = conversation?.conversationId === Constants.NEW_CONVO;
       const shouldSkipNewConversation = hasSetConversation.current && isCurrentConvoNewChat;
-      
+
       if (shouldSkipNewConversation) {
-        logger.log('conversation', 'ChatRoute: Skipping newConversation() - already set for new chat with agent');
+        logger.log(
+          'conversation',
+          'ChatRoute: Skipping newConversation() - already set for new chat with agent',
+        );
         return;
       }
 
@@ -161,4 +164,3 @@ export default function ChatRoute() {
     </ToolCallsMapProvider>
   );
 }
-
