@@ -1,0 +1,72 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/global.css';
+---
+
+<Layout title="404 — Страница не найдена | CogneeX">
+  <Header />
+  <main class="flex-grow flex items-center justify-center px-6">
+    <div class="max-w-2xl mx-auto text-center py-20">
+      <div class="mb-8">
+        <h1 class="text-9xl font-bold text-[#3A01FB] mb-4">404</h1>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Страница не найдена
+        </h2>
+        <p class="text-lg text-gray-600 mb-8">
+          К сожалению, запрашиваемая страница не существует или была перемещена.
+        </p>
+      </div>
+      
+      <div class="space-y-4">
+        <a
+          href="/"
+          class="inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-[#3A01FB] rounded-lg hover:bg-[#2d01c9] transition-colors duration-200"
+        >
+          Вернуться на главную
+        </a>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center mt-6">
+          <a
+            href="/#pricing"
+            class="text-[#3A01FB] hover:text-[#2d01c9] font-medium transition-colors"
+          >
+            Посмотреть тарифы
+          </a>
+          <span class="hidden sm:inline text-gray-400">•</span>
+          <a
+            href="/#lead-form"
+            class="text-[#3A01FB] hover:text-[#2d01c9] font-medium transition-colors"
+          >
+            Связаться с нами
+          </a>
+          <span class="hidden sm:inline text-gray-400">•</span>
+          <a
+            href="/#faq"
+            class="text-[#3A01FB] hover:text-[#2d01c9] font-medium transition-colors"
+          >
+            Частые вопросы
+          </a>
+        </div>
+      </div>
+      
+      <div class="mt-16 p-8 bg-gray-50 rounded-2xl">
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">
+          Нужна помощь?
+        </h3>
+        <p class="text-gray-600">
+          Если вы считаете, что произошла ошибка, или вам нужна помощь,<br class="hidden sm:inline">
+          свяжитесь с нашей службой поддержки.
+        </p>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  main {
+    min-height: calc(100vh - 80px - 200px);
+  }
+</style>
