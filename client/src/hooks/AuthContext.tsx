@@ -39,6 +39,19 @@ const AuthContextProvider = ({
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const logoutRedirectRef = useRef<string | undefined>(undefined);
 
+  // Get the 'from' parameter if it exists, otherwise use current pathname
+  const getInitialFrom = () => {
+    const params = new URLSearchParams(window.location.search);
+    const fromParam = params.get('from');
+    if (fromParam) {
+      return fromParam;
+    }
+    const currentPath = window.location.pathname;
+    return currentPath !== '/login' && currentPath !== '/' ? currentPath : '/c/new';
+  };
+
+  const initialPathRef = useRef<string>(getInitialFrom());
+
   const { data: userRole = null } = useGetRole(SystemRoles.USER, {
     enabled: !!(isAuthenticated && (user?.role ?? '')),
   });
@@ -91,7 +104,10 @@ const AuthContextProvider = ({
     onError: (error: TResError | unknown) => {
       const resError = error as TResError;
       doSetError(resError.message);
-      navigate('/login', { replace: true });
+      // Use the stored initial path (which already handles the from parameter)
+      navigate(`/login?from=${encodeURIComponent(initialPathRef.current)}&xuy=1`, {
+        replace: true,
+      });
     },
   });
   const logoutUser = useLogoutUserMutation({
@@ -127,8 +143,21 @@ const AuthContextProvider = ({
 
   const userQuery = useGetUserQuery({ enabled: !!(token ?? '') });
 
-  const login = (data: t.TLoginUser) => {
-    loginUser.mutate(data);
+  const login = (data: t.TLoginUser & { redirect?: string }) => {
+    const { redirect, ...loginData } = data;
+    loginUser.mutate(loginData, {
+      onSuccess: (response: t.TLoginResponse) => {
+        const { user, token, twoFAPending, tempToken } = response;
+        if (twoFAPending) {
+          // Redirect to the two-factor authentication route.
+          navigate(`/login/2fa?tempToken=${tempToken}`, { replace: true });
+          return;
+        }
+        setError(undefined);
+        // Use the redirect path from login data, fallback to '/c/new'
+        setUserContext({ token, isAuthenticated: true, user, redirect: redirect || '/c/new' });
+      },
+    });
   };
 
   const silentRefresh = useCallback(() => {
@@ -146,7 +175,8 @@ const AuthContextProvider = ({
           if (authConfig?.test === true) {
             return;
           }
-          navigate('/login');
+          // Use the stored initial path (which already handles the from parameter)
+          navigate(`/login?from=${encodeURIComponent(initialPathRef.current)}`);
         }
       },
       onError: (error) => {
@@ -154,7 +184,8 @@ const AuthContextProvider = ({
         if (authConfig?.test === true) {
           return;
         }
-        navigate('/login');
+        // Use the stored initial path (which already handles the from parameter)
+        navigate(`/login?from=${encodeURIComponent(initialPathRef.current)}`);
       },
     });
   }, []);
@@ -164,7 +195,8 @@ const AuthContextProvider = ({
       setUser(userQuery.data);
     } else if (userQuery.isError) {
       doSetError((userQuery.error as Error).message);
-      navigate('/login', { replace: true });
+      // Use the stored initial path (which already handles the from parameter)
+      navigate(`/login?from=${encodeURIComponent(initialPathRef.current)}`, { replace: true });
     }
     if (error != null && error && isAuthenticated) {
       doSetError(undefined);

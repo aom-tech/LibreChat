@@ -33,6 +33,7 @@ const Registration: React.FC = () => {
   const queryParams = new URLSearchParams(location.search);
   const token = queryParams.get('token');
   const referalCode = queryParams.get('ref');
+  const from = queryParams.get('from') || '/c/new';
   const validTheme = theme === 'dark' ? 'dark' : 'light';
 
   // only require captcha if we have a siteKey
@@ -51,7 +52,8 @@ const Registration: React.FC = () => {
         setCountdown((prevCountdown) => {
           if (prevCountdown <= 1) {
             clearInterval(timer);
-            navigate('/c/new', { replace: true });
+            // Redirect to login with the original 'from' parameter preserved
+            navigate(`/login?from=${encodeURIComponent(from)}`, { replace: true });
             return 0;
           } else {
             return prevCountdown - 1;
@@ -251,7 +253,7 @@ const Registration: React.FC = () => {
           <p className="my-4 text-center text-sm font-light text-gray-700 dark:text-white">
             {localize('com_auth_already_have_account')}{' '}
             <a
-              href="/login"
+              href={`/login?from=${encodeURIComponent(from)}`}
               aria-label="Login"
               className="inline-flex p-1 text-sm font-medium text-green-600 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
             >

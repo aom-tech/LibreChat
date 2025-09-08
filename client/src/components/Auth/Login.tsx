@@ -17,6 +17,7 @@ function Login() {
   const { reachGoal } = useYandexMetrica();
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const from = searchParams.get('from') || '/c/new';
   // Determine if auto-redirect should be disabled based on the URL parameter
   const disableAutoRedirect = searchParams.get('redirect') === 'false';
 
@@ -76,17 +77,10 @@ function Login() {
   }
 
   const handleSubmit = async (data: TLoginUser) => {
-    // ...existing code...
-    try {
-      // ...existing login logic...
-
-      // Track successful login
-      reachGoal('login');
-
-      // ...existing code...
-    } catch (error) {
-      // ...existing error handling...
-    }
+    // Pass the redirect path to the login function
+    login({ ...data, redirect: from });
+    // Track successful login
+    reachGoal('login');
   };
 
   return (
@@ -94,7 +88,7 @@ function Login() {
       {error != null && <ErrorMessage>{localize(getLoginError(error))}</ErrorMessage>}
       {startupConfig?.emailLoginEnabled === true && (
         <LoginForm
-          onSubmit={login}
+          onSubmit={handleSubmit}
           startupConfig={startupConfig}
           error={error}
           setError={setError}
@@ -105,7 +99,7 @@ function Login() {
           {' '}
           {localize('com_auth_no_account')}{' '}
           <a
-            href="/register"
+            href={`/register?from=${encodeURIComponent(from)}`}
             className="inline-flex p-1 text-sm font-medium text-green-600 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
           >
             {localize('com_auth_sign_up')}

@@ -15,6 +15,7 @@ function RequestPasswordReset() {
   const [verificationStatus, setVerificationStatus] = useState<boolean>(false);
   const token = useMemo(() => params.get('token') || '', [params]);
   const email = useMemo(() => params.get('email') || '', [params]);
+  const from = useMemo(() => params.get('from') || '/c/new', [params]);
 
   const countdownRedirect = useCallback(() => {
     setCountdown(3);
@@ -22,13 +23,14 @@ function RequestPasswordReset() {
       setCountdown((prevCountdown) => {
         if (prevCountdown <= 1) {
           clearInterval(timer);
-          navigate('/c/new', { replace: true });
+          // Redirect to login with the original 'from' parameter preserved
+          navigate(`/login?from=${encodeURIComponent(from)}`, { replace: true });
           return 0;
         }
         return prevCountdown - 1;
       });
     }, 1000);
-  }, [navigate]);
+  }, [navigate, from]);
 
   const verifyEmailMutation = useVerifyEmailMutation({
     onSuccess: () => {
