@@ -3,12 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AlertTriangle, Loader2, CheckCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@librechat/client';
 import { useGetSubscriptionPlans, useGetSubscriptionStatus } from '~/data-provider/subscription';
+import { useGetUserQuery } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 
 const BuyPlan: React.FC = () => {
   const { plan_id } = useParams<{ plan_id: string }>();
   const navigate = useNavigate();
   const localize = useLocalize();
+  const { data: user } = useGetUserQuery();
   const { data: plans, isLoading, error } = useGetSubscriptionPlans();
   const [checkingStatus, setCheckingStatus] = useState(false);
   const { data: subscriptionStatus, refetch: refetchStatus } = useGetSubscriptionStatus();
@@ -20,7 +22,7 @@ const BuyPlan: React.FC = () => {
     }
     return `https://${link}`;
   };
-  
+
   const [paymentOpened, setPaymentOpened] = useState(false);
   const [subscriptionSuccessful, setSubscriptionSuccessful] = useState(false);
   const [currentPaymentLink, setCurrentPaymentLink] = useState<string>('');
@@ -39,8 +41,20 @@ const BuyPlan: React.FC = () => {
           initialSubscriptionRef.current = subscriptionStatus;
         }
 
-        // Save payment link and open in new tab
-        const normalizedLink = normalizePaymentLink(plan.paymentLink);
+        // Build payment link with user information
+        let normalizedLink = normalizePaymentLink(plan.paymentLink);
+
+        // Add user parameters to the payment link
+        const params = new URLSearchParams({
+          planId: plan.name,
+          ...(user?.id && { userId: user.id }),
+          ...(user?.email && { email: user.email }),
+        });
+
+        // Append parameters to the link
+        const separator = normalizedLink.includes('?') ? '&' : '?';
+        normalizedLink = `${normalizedLink}${separator}${params.toString()}`;
+
         setCurrentPaymentLink(normalizedLink);
         window.open(normalizedLink, '_blank');
         setPaymentOpened(true);
@@ -52,7 +66,7 @@ const BuyPlan: React.FC = () => {
         }, 3000);
       }
     }
-  }, [plans, isLoading, plan_id, paymentOpened, subscriptionStatus, refetchStatus]);
+  }, [plans, isLoading, plan_id, paymentOpened, subscriptionStatus, refetchStatus, user]);
 
   // Cleanup interval on unmount
   useEffect(() => {
@@ -62,7 +76,7 @@ const BuyPlan: React.FC = () => {
       }
     };
   }, []);
-  
+
   // Check for subscription changes
   useEffect(() => {
     if (checkingStatus && subscriptionStatus && initialSubscriptionRef.current) {
@@ -107,11 +121,11 @@ const BuyPlan: React.FC = () => {
         <div className="text-center">
           <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-red-500" />
           <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-            {localize('com_ui_paywall_error_loading') ||
-              'Не удалось загрузить тарифные планы'}
+            {localize('com_ui_paywall_error_loading') || 'Не удалось загрузить тарифные планы'}
           </h3>
           <p className="mb-4 text-gray-600 dark:text-gray-400">
-            {localize('com_ui_paywall_contact_support') || 'Пожалуйста, обратитесь в службу поддержки'}
+            {localize('com_ui_paywall_contact_support') ||
+              'Пожалуйста, обратитесь в службу поддержки'}
           </p>
           <Button onClick={() => navigate('/subscription/plans')} variant="outline">
             {'Посмотреть все планы'}
@@ -212,8 +226,8 @@ const BuyPlan: React.FC = () => {
             <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
               {'Если окно оплаты закрылось или не открылось:'}
             </p>
-            <Button 
-              onClick={() => window.open(currentPaymentLink, '_blank')} 
+            <Button
+              onClick={() => window.open(currentPaymentLink, '_blank')}
               variant="outline"
               className="flex items-center gap-2"
             >
