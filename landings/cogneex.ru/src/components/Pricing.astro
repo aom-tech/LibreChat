@@ -147,7 +147,7 @@ function getCreditName(key: string, amount: number): string {
                 </ul>
                 
                 <a 
-                  href={plan.paymentLink} 
+                  href={`https://coursegpt.cogneex.ru/subscriptions/buy/${plan._id}`} 
                   target="_blank"
                   rel="noopener noreferrer"
                   class={`btn ${index === 0 ? 'btn-primary' : 'btn-secondary'} btn-block`}
@@ -184,7 +184,7 @@ function getCreditName(key: string, amount: number): string {
                           ))}
                         </ul>
                         <a 
-                          href={plan.paymentLink} 
+                          href={`https://coursegpt.cogneex.ru/subscriptions/buy/${plan._id}`} 
                           target="_blank"
                           rel="noopener noreferrer"
                           class="btn btn-outline btn-small"
