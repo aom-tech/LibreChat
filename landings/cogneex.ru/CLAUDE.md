@@ -55,6 +55,9 @@ Landing page for Cogneex.ru AI platform built with Astro.js:
 1. **Lead Generation Form**: Captures B2B/B2C leads, stores in Firestore, sends to Telegram
 2. **Course Creation CTA**: Prominent block promoting AI course creation tools
 3. **Pricing Toggle**: Dynamic pricing display for Users/Business segments
+   - Fetches pricing data from API at build time (SSG)
+   - Displays subscription plans and one-time packages
+   - Fallback to static content if API fails
 4. **Performance**: Optimized for Core Web Vitals (LCP ≤ 2.5s, CLS ≤ 0.1)
 
 ### API Routes
@@ -62,6 +65,12 @@ Landing page for Cogneex.ru AI platform built with Astro.js:
   - Validates with Zod schema
   - Stores in Firestore
   - Triggers Cloud Function for Telegram notification
+
+### External APIs
+- **Billing Plans API**: `https://ai-courses-backend.aom-tech.ru/api/v1/billing/plans`
+  - Fetched at build time for pricing component
+  - Returns active subscription and one-time payment plans
+  - Includes pricing, credits (text/image/presentation/video), and payment links
 
 ### Environment Variables
 Copy `.env.example` to `.env` and fill in:

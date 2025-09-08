@@ -1,5 +1,53 @@
 ---
+import type { BillingPlansResponse, BillingPlan } from '../types/billing';
 
+// Fetch pricing data at build time
+let plans: BillingPlan[] = [];
+let fetchError = false;
+
+try {
+  const response = await fetch('https://ai-courses-backend.aom-tech.ru/api/v1/billing/plans');
+  const data: BillingPlansResponse = await response.json();
+  
+  if (data.success && data.activePlans) {
+    plans = data.activePlans;
+  } else {
+    fetchError = true;
+  }
+} catch (error) {
+  console.error('Failed to fetch billing plans:', error);
+  fetchError = true;
+}
+
+// Separate plans by type
+const subscriptionPlans = plans.filter(plan => plan.interval === 'monthly').sort((a, b) => a.price - b.price);
+const oneTimePlans = plans.filter(plan => plan.interval === 'once').sort((a, b) => a.price - b.price);
+
+// Format price with thousand separator
+function formatPrice(price: number): string {
+  return Math.floor(price / 100).toLocaleString('ru-RU');
+}
+
+// Format credits amount
+function formatCredits(amount: number): string {
+  if (amount >= 1000000) {
+    return `${(amount / 1000000).toFixed(1).replace('.0', '')} млн`;
+  } else if (amount >= 1000) {
+    return `${(amount / 1000).toFixed(0).replace('.0', '')}k`;
+  }
+  return amount.toLocaleString('ru-RU');
+}
+
+// Get credit display name
+function getCreditName(key: string, amount: number): string {
+  const names: Record<string, string> = {
+    text: amount >= 1000 ? 'токенов текста' : 'токенов',
+    image: amount === 1 ? 'изображение' : 'изображений',
+    presentation: amount === 1 ? 'презентация' : 'презентаций',
+    video: 'секунд видео'
+  };
+  return names[key] || key;
+}
 ---
 
 <section id="pricing" class="section pricing">
@@ -17,92 +65,140 @@
     <div class="pricing-content">
       <!-- Пользователи -->
       <div class="pricing-cards" data-pricing="users">
-        <div class="pricing-card">
-          <div class="card-badge">Популярно</div>
-          <h3 class="card-title">Базовый</h3>
-          <div class="card-price">
-            <span class="price">4 000</span>
-            <span class="currency">₽/мес</span>
+        {fetchError ? (
+          <!-- Fallback static content if API fails -->
+          <div class="pricing-card">
+            <div class="card-badge">Популярно</div>
+            <h3 class="card-title">Базовый</h3>
+            <div class="card-price">
+              <span class="price">4 999</span>
+              <span class="currency">₽/мес</span>
+            </div>
+            
+            <ul class="card-features">
+              <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span><strong>200 000</strong> токенов текста/мес</span>
+              </li>
+              <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span><strong>100</strong> изображений/мес</span>
+              </li>
+              <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span><strong>10</strong> презентаций/мес</span>
+              </li>
+              <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Все AI модели</span>
+              </li>
+              <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>API доступ</span>
+              </li>
+            </ul>
+            
+            <a href="#lead-form" class="btn btn-primary btn-block" data-form-type="b2c">Оформить подписку</a>
           </div>
-          
-          <ul class="card-features">
-            <li>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span><strong>200 000</strong> токенов текста/мес</span>
-            </li>
-            <li>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span><strong>100</strong> изображений/мес</span>
-            </li>
-            <li>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span><strong>10</strong> презентаций/мес</span>
-            </li>
-            <li>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span>Все AI модели</span>
-            </li>
-            <li>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span>API доступ</span>
-            </li>
-          </ul>
-          
-          <a href="#lead-form" class="btn btn-primary btn-block" data-form-type="b2c">Оформить подписку</a>
-        </div>
-        
-        <div class="pricing-card premium">
-          <h3 class="card-title">Премиум</h3>
-          <div class="card-price">
-            <span class="price">29 999</span>
-            <span class="currency">₽/мес</span>
-          </div>
-          
-          <ul class="card-features">
-            <li>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span>Всё из тарифа «Базовый»</span>
-            </li>
-            <li class="highlight">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span><strong>300 секунд</strong> видео/мес</span>
-            </li>
-            <li>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span>Приоритетная поддержка</span>
-            </li>
-            <li>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span>Командная работа (до 5 человек)</span>
-            </li>
-            <li>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span>Белый лейбл</span>
-            </li>
-          </ul>
-          
-          <a href="#lead-form" class="btn btn-secondary btn-block" data-form-type="b2c">Оформить премиум</a>
-        </div>
+        ) : (
+          <>
+            {/* Subscription Plans */}
+            {subscriptionPlans.map((plan, index) => (
+              <div class={`pricing-card ${index === 0 ? '' : 'premium'}`}>
+                {index === 0 && <div class="card-badge">Популярно</div>}
+                <h3 class="card-title">{plan.name}</h3>
+                <div class="card-price">
+                  <span class="price">{formatPrice(plan.price)}</span>
+                  <span class="currency">₽/мес</span>
+                </div>
+                
+                <ul class="card-features">
+                  {/* Show main credits */}
+                  {/* {Object.entries(plan.credits).filter(([_, amount]) => amount > 0).map(([key, amount]) => (
+                    <li class={key === 'video' ? 'highlight' : ''}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      <span>
+                        <strong>{key === 'video' ? amount / 200 : formatCredits(amount)}</strong> {getCreditName(key, key === 'video' ? amount / 200 : amount)}
+                      </span>
+                    </li>
+                  ))} */}
+                  
+                  {/* Show metadata features */}
+                  {plan.metadata.features.slice(0, 3).map((feature) => (
+                    <li>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                
+                <a 
+                  href={plan.paymentLink} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class={`btn ${index === 0 ? 'btn-primary' : 'btn-secondary'} btn-block`}
+                >
+                  Оформить {plan.name}
+                </a>
+              </div>
+            ))}
+            
+            {/* One-time Plans Section */}
+            {oneTimePlans.length > 0 && (
+              <div class="one-time-section">
+                <h3 class="one-time-title">Разовые пакеты</h3>
+                <div class="one-time-grid">
+                  {oneTimePlans.map((plan) => {
+                    const mainCredit = Object.entries(plan.credits).find(([_, amount]) => amount > 0);
+                    const [creditKey, creditAmount] = mainCredit || ['', 0];
+                    
+                    return (
+                      <div class="one-time-card">
+                        <h4 class="one-time-card-title">{plan.name.replace('One time — ', '')}</h4>
+                        <div class="one-time-price">
+                          <span class="price-small">{formatPrice(plan.price)} ₽</span>
+                        </div>
+                        <p class="one-time-description">
+                          {creditKey === 'video' 
+                            ? `${creditAmount / 200} ${getCreditName(creditKey, creditAmount / 200)}`
+                            : `${formatCredits(creditAmount)} ${getCreditName(creditKey, creditAmount)}`
+                          }
+                        </p>
+                        <ul class="one-time-features">
+                          {plan.metadata.features.map((feature) => (
+                            <li>{feature}</li>
+                          ))}
+                        </ul>
+                        <a 
+                          href={plan.paymentLink} 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="btn btn-outline btn-small"
+                        >
+                          Купить
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
       
       <!-- Бизнес -->
@@ -320,6 +416,101 @@
     font-weight: 600;
   }
 
+  /* One-time packages section */
+  .one-time-section {
+    grid-column: 1 / -1;
+    margin-top: 3rem;
+    padding-top: 3rem;
+    border-top: 2px solid #e5e7eb;
+  }
+
+  .one-time-title {
+    text-align: center;
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+    color: var(--dark);
+  }
+
+  .one-time-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .one-time-card {
+    background: var(--white);
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .one-time-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .one-time-card-title {
+    font-size: 1.125rem;
+    margin-bottom: 0.75rem;
+    color: var(--dark);
+  }
+
+  .one-time-price {
+    margin-bottom: 0.5rem;
+  }
+
+  .price-small {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .one-time-description {
+    font-size: 0.875rem;
+    color: var(--gray);
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+  }
+
+  .one-time-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem 0;
+    font-size: 0.8125rem;
+    color: var(--gray);
+  }
+
+  .one-time-features li {
+    padding: 0.25rem 0;
+    line-height: 1.4;
+  }
+
+  .one-time-features li:before {
+    content: "• ";
+    color: var(--secondary);
+    font-weight: bold;
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+  }
+
+  .btn-outline:hover {
+    background: var(--primary);
+    color: var(--white);
+  }
+
+  .btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
   .btn-block {
     width: 100%;
     justify-content: center;
@@ -343,6 +534,10 @@
     .pricing-cards {
       grid-template-columns: 1fr;
     }
+    
+    .one-time-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 
@@ -352,13 +547,15 @@
   
   toggleBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      const type = btn.dataset.type;
+      const htmlBtn = btn as HTMLElement;
+      const type = htmlBtn.dataset.type;
       
       toggleBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       
       pricingContents.forEach(content => {
-        if (content.dataset.pricing === type) {
+        const htmlContent = content as HTMLElement;
+        if (htmlContent.dataset.pricing === type) {
           content.classList.remove('hidden');
         } else {
           content.classList.add('hidden');
