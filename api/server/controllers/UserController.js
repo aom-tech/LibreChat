@@ -237,13 +237,8 @@ const verifyEmailController = async (req, res) => {
     const verifyEmailService = await verifyEmail(req);
     if (verifyEmailService instanceof Error) {
       return res.status(400).json(verifyEmailService);
-    } else {
-      // set trial
-      if (verifyEmailService.user && verifyEmailService.user._id) {
-        await setUserTrial(verifyEmailService.user._id.toString());
-      }
-      return res.status(200).json(verifyEmailService);
     }
+    return res.status(200).json(verifyEmailService);
   } catch (e) {
     logger.error('[verifyEmailController]', e);
     return res.status(500).json({ message: 'Something went wrong.' });

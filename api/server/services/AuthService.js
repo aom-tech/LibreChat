@@ -259,9 +259,10 @@ const registerUser = async (user, additionalData = {}) => {
       });
     } else {
       await updateUser(newUserId, { emailVerified: true });
-      // set trial
-      await setUserTrial(newUserId.toString());
     }
+
+    // set trial
+    await setUserTrial(newUserId.toString());
 
     return { status: 200, message: genericVerificationMessage };
   } catch (err) {
