@@ -18,6 +18,7 @@
   "com_auth_email_min_length": "Email harus setidaknya 6 karakter",
   "com_auth_email_pattern": "Anda harus memasukkan alamat email yang valid",
   "com_auth_email_required": "Email diperlukan",
+  "com_auth_phone": "Nomor Telepon",
   "com_auth_error_create": "Ada kesalahan saat mencoba mendaftarkan akun Anda. Silakan coba lagi.",
   "com_auth_error_invalid_reset_token": "Token pengaturan ulang kata sandi ini tidak lagi valid.",
   "com_auth_error_login": "Tidak dapat masuk dengan informasi yang diberikan. Silakan periksa kredensial Anda dan coba lagi.",

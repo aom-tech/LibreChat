@@ -48,6 +48,10 @@ const registerSchema = z
       .optional()
       .nullable(),
     email: z.string().email(),
+    phone: z
+      .string()
+      .regex(/^\+?[1-9]\d{1,14}$/, 'Phone number must be in E.164 format')
+      .optional(),
     password: z
       .string()
       .min(8)

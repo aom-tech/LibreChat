@@ -144,6 +144,11 @@ const userSchema = new Schema<IUser>(
       },
       default: {},
     },
+    phone: {
+      type: String,
+      match: [/^\+?[1-9]\d{1,14}$/, 'is invalid'],
+      sparse: true,
+    },
   },
   { timestamps: true },
 );

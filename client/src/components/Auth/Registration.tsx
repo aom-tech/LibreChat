@@ -77,7 +77,7 @@ const Registration: React.FC = () => {
           type={type}
           autoComplete={id}
           aria-label={localize(label)}
-          {...register(id as 'name' | 'email' | 'password' | 'confirm_password', validation)}
+          {...register(id as 'name' | 'email' | 'password' | 'confirm_password' | 'phone', validation)}
           aria-invalid={!!errors[id]}
           className="webkit-dark-styles transition-color peer w-full rounded-2xl border border-border-light bg-surface-primary px-3.5 pb-2.5 pt-3 text-text-primary duration-200 focus:border-green-500 focus:outline-none"
           placeholder=" "
@@ -170,6 +170,12 @@ const Registration: React.FC = () => {
               pattern: {
                 value: /\S+@\S+\.\S+/,
                 message: localize('com_auth_email_pattern'),
+              },
+            })}
+            {renderInput('phone', 'com_auth_phone', 'tel', {
+              pattern: {
+                value: /^\+?[1-9]\d{1,14}$/,
+                message: 'Phone number must be in E.164 format (e.g., +1234567890)',
               },
             })}
             {renderInput('password', 'com_auth_password', 'password', {

@@ -93,6 +93,7 @@
   "com_auth_email_verification_resend_prompt": "¿No recibió el correo electrónico?",
   "com_auth_email_verification_success": "Correo electrónico verificado exitosamente",
   "com_auth_email_verifying_ellipsis": "Verificando...",
+  "com_auth_phone": "Número de teléfono",
   "com_auth_error_create": "Hubo un error al intentar registrar su cuenta. Inténtelo de nuevo.",
   "com_auth_error_invalid_reset_token": "Este token de restablecimiento de contraseña ya no es válido.",
   "com_auth_error_login": "No se puede iniciar sesión con la información proporcionada. Verifique sus credenciales y vuelva a intentarlo.",

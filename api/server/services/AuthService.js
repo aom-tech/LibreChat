@@ -179,7 +179,7 @@ const registerUser = async (user, additionalData = {}) => {
     return { status: 404, message: errorMessage };
   }
 
-  const { email, password, name, username, referalCode } = user;
+  const { email, password, name, username, referalCode, phone } = user;
 
   let newUserId;
   try {
@@ -242,6 +242,7 @@ const registerUser = async (user, additionalData = {}) => {
       password: bcrypt.hashSync(password, salt),
       personalReferalCode: personalReferralCode,
       reffererId: reffererId,
+      phone: phone || undefined,
       ...additionalData,
     };
 

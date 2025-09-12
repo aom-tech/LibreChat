@@ -369,6 +369,7 @@ export type TRegisterUser = {
   confirm_password?: string;
   token?: string;
   referalCode?: string;
+  phone?: string;
 };
 
 export type TLoginUser = {
