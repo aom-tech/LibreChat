@@ -5,6 +5,7 @@ const { logger } = require('@librechat/data-schemas');
 const { createUser, findUser, updateUser, countUsers } = require('~/models');
 const { getBalanceConfig } = require('~/server/services/Config');
 const { isEnabled } = require('~/server/utils');
+const setUserTrial = require('~/server/utils/setUserTrial');
 
 const {
   LDAP_URL,
@@ -127,6 +128,9 @@ const ldapLogin = new LdapStrategy(ldapOptions, async (userinfo, done) => {
       const balanceConfig = await getBalanceConfig();
       const userId = await createUser(user, balanceConfig);
       user._id = userId;
+      
+      // Set trial for LDAP users
+      await setUserTrial(userId.toString());
     } else {
       // Users registered in LDAP are assumed to have their user information managed in LDAP,
       // so update the user information with the values registered in LDAP

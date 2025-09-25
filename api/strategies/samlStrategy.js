@@ -8,6 +8,7 @@ const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { findUser, createUser, updateUser } = require('~/models');
 const { getBalanceConfig } = require('~/server/services/Config');
 const paths = require('~/config/paths');
+const setUserTrial = require('~/server/utils/setUserTrial');
 
 let crypto;
 try {
@@ -220,6 +221,9 @@ async function setupSaml() {
             };
             const balanceConfig = await getBalanceConfig();
             user = await createUser(user, balanceConfig, true, true);
+            
+            // Set trial for SAML users
+            await setUserTrial(user._id.toString());
           } else {
             user.provider = 'saml';
             user.samlId = profile.nameID;

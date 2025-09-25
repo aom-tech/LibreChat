@@ -12,6 +12,7 @@ const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { findUser, createUser, updateUser } = require('~/models');
 const { getBalanceConfig } = require('~/server/services/Config');
 const getLogStores = require('~/cache/getLogStores');
+const setUserTrial = require('~/server/utils/setUserTrial');
 
 /**
  * @typedef {import('openid-client').ClientMetadata} ClientMetadata
@@ -378,6 +379,9 @@ async function setupOpenId() {
             const balanceConfig = await getBalanceConfig();
 
             user = await createUser(user, balanceConfig, true, true);
+            
+            // Set trial for OpenID users
+            await setUserTrial(user._id.toString());
           } else {
             user.provider = 'openid';
             user.openidId = userinfo.sub;
