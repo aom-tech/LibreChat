@@ -29,6 +29,7 @@ const {
 const {
   createOpenAIImageTools,
   createYouTubeTools,
+  createGeminiImageGenTool,
   manifestToolMap,
   toolkits,
 } = require('~/app/clients/tools');
@@ -83,7 +84,9 @@ function loadAndFormatTools({ directory, adminFilter = [], adminIncluded = [] })
   const included = new Set(adminIncluded);
   const tools = [];
   /* Structured Tools Directory */
+  console.log('🔍 [loadAndFormatTools] Starting with:', { directory, adminFilter, adminIncluded });
   const files = fs.readdirSync(directory);
+  console.log('🔍 [loadAndFormatTools] Files found:', files);
 
   if (included.size > 0 && adminFilter.length > 0) {
     logger.warn(
@@ -96,16 +99,27 @@ function loadAndFormatTools({ directory, adminFilter = [], adminIncluded = [] })
     if (!file.endsWith('.js') || (filter.has(file) && included.size === 0)) {
       continue;
     }
+    console.log(filePath);
 
     let ToolClass = null;
     try {
       ToolClass = require(filePath);
+      console.log(ToolClass);
     } catch (error) {
       logger.error(`[loadAndFormatTools] Error loading tool from ${filePath}:`, error);
       continue;
     }
 
+    if (file === 'GeminiImageGen.js') {
+      console.log('🔍 ToolClass:', ToolClass);
+      console.log('🔍 ToolClass.prototype:', ToolClass.prototype);
+      console.log('🔍 Tool:', Tool);
+      console.log('🔍 instanceof check:', ToolClass.prototype instanceof Tool);
+    }
+
     if (!ToolClass || !(ToolClass.prototype instanceof Tool)) {
+      logger.error(`[loadAndFormatTools] filter by class`, ToolClass, ToolClass.prototype);
+      logger.error(`[loadAndFormatTools] filter by class`, !ToolClass, !(ToolClass.prototype instanceof Tool));
       continue;
     }
 
@@ -133,6 +147,7 @@ function loadAndFormatTools({ directory, adminFilter = [], adminIncluded = [] })
     }
 
     const formattedTool = formatToOpenAIAssistantTool(toolInstance);
+    console.log(formattedTool);
     tools.push(formattedTool);
   }
 
@@ -141,6 +156,7 @@ function loadAndFormatTools({ directory, adminFilter = [], adminIncluded = [] })
     new Calculator(),
     ...createOpenAIImageTools({ override: true }),
     ...createYouTubeTools({ override: true }),
+    createGeminiImageGenTool({ override: true }),
   ];
   for (const toolInstance of basicToolInstances) {
     const formattedTool = formatToOpenAIAssistantTool(toolInstance);
