@@ -179,17 +179,25 @@ const getAvailableTools = async (req, res) => {
     });
 
     const toolDefinitions = (await getCachedTools({ includeGlobal: true })) || {};
+    console.log('🔍 [getAvailableTools] Tool definitions from cache:', Object.keys(toolDefinitions));
+    console.log('🔍 [getAvailableTools] gemini_image_gen in cache:', !!toolDefinitions['gemini_image_gen']);
 
     const toolsOutput = [];
     for (const plugin of authenticatedPlugins) {
+      console.log(`🔍 [getAvailableTools] Checking plugin: ${plugin.pluginKey}`);
       const isToolDefined = toolDefinitions[plugin.pluginKey] !== undefined;
       const isToolkit =
         plugin.toolkit === true &&
         Object.keys(toolDefinitions).some((key) => getToolkitKey(key) === plugin.pluginKey);
+      console.log(`🔍 [getAvailableTools] ${plugin.pluginKey} - isToolDefined: ${isToolDefined}, isToolkit: ${isToolkit}`);
 
       if (!isToolDefined && !isToolkit) {
+        console.log(`❌ [getAvailableTools] Skipping ${plugin.pluginKey} - not defined in cache`);
         continue;
       }
+
+      console.log(`✅ [getAvailableTools] Adding ${plugin.pluginKey} to tools`);
+
 
       const toolToAdd = { ...plugin };
 

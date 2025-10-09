@@ -205,8 +205,10 @@ const loadTools = async ({
         imageFiles,
       });
     },
+
     gemini_image_gen: async (toolContextMap) => {
       const authFields = getAuthFields('gemini_image_gen');
+      console.log('🔍 [loadTools] Auth fields for gemini_image_gen:', authFields);
       const authValues = await loadAuthValues({ userId: user, authFields });
       const imageFiles = options.tool_resources?.[EToolResources.image_edit]?.files ?? [];
       let toolContext = '';

@@ -11,6 +11,7 @@ const StructuredSD = require('./structured/StableDiffusion');
 const GoogleSearchAPI = require('./structured/GoogleSearch');
 const TraversaalSearch = require('./structured/TraversaalSearch');
 const createOpenAIImageTools = require('./structured/OpenAIImageTools');
+const createGeminiImageGenTool = require('./structured/GeminiImageGen');
 const TavilySearchResults = require('./structured/TavilySearchResults');
 const GeminiImageGen = require('./structured/GeminiImageGen');
 
@@ -44,4 +45,5 @@ module.exports = {
   TavilySearchResults,
   createOpenAIImageTools,
   GeminiImageGen,
+  createGeminiImageGenTool
 };
