@@ -67,14 +67,21 @@ const AppService = async (app) => {
     initializeS3();
   }
 
+  console.log('🔍 Loading tools with config:', { filteredTools, includedTools, directory: paths.structuredTools });
   /** @type {Record<string, FunctionTool>} */
   const availableTools = loadAndFormatTools({
     adminFilter: filteredTools,
     adminIncluded: includedTools,
     directory: paths.structuredTools,
   });
+  console.log('🔍 Loaded tools:', Object.keys(availableTools));
+  console.log('🔍 gemini_image_gen present:', !!availableTools['gemini_image_gen']);
 
+
+  console.log('🔍 Setting cached tools:', Object.keys(availableTools));
   await setCachedTools(availableTools, { isGlobal: true });
+  console.log('🔍 [AppService] Tools cached:', Object.keys(availableTools));
+  console.log('🔍 [AppService] gemini_image_gen cached:', !!availableTools['gemini_image_gen']);
 
   // Store MCP config for later initialization
   const mcpConfig = config.mcpServers || null;

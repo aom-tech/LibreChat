@@ -30,6 +30,9 @@ services:
       - type: bind
         source: ./librechat.yaml
         target: /app/librechat.yaml
+      - type: bind
+        source: ./auth.json
+        target: /app/data/auth.json
   mongodb:
     container_name: chat-mongodb
     image: mongo
