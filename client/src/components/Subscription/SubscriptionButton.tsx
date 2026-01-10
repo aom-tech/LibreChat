@@ -16,7 +16,7 @@ const SubscriptionButton: React.FC = () => {
   }
 
   const subscription = subscriptionData?.subscription;
-  
+
   // Only show if user doesn't have an active subscription
   if (!subscription || subscription.isActive) {
     return null;
@@ -32,9 +32,9 @@ const SubscriptionButton: React.FC = () => {
       className={cn(
         'group relative flex h-10 items-center gap-2 rounded-lg px-3 py-2',
         'bg-gradient-to-r from-green-500 to-green-600',
-        'text-white font-medium text-sm',
-        'transition-all duration-200 hover:shadow-lg hover:scale-105',
-        'border border-white/20'
+        'text-sm font-medium text-white',
+        'transition-all duration-200 hover:scale-105 hover:shadow-lg',
+        'border border-white/20',
       )}
       aria-label={localize('com_ui_subscription_upgrade')}
     >
@@ -42,12 +42,10 @@ const SubscriptionButton: React.FC = () => {
       <span className="hidden sm:inline">
         {localize('com_ui_subscription_upgrade_pro') || 'Upgrade to Pro'}
       </span>
-      <span className="sm:hidden">
-        {localize('com_ui_subscription_pro') || 'Pro'}
-      </span>
-      
+      <span className="sm:hidden">{localize('com_ui_subscription_pro') || 'Pro'}</span>
+
       {/* Animated glow effect */}
-      <div className="absolute inset-0 rounded-lg bg-white opacity-0 group-hover:opacity-20 transition-opacity" />
+      <div className="absolute inset-0 rounded-lg bg-white opacity-0 transition-opacity group-hover:opacity-20" />
     </button>
   );
 };

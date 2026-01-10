@@ -38,7 +38,7 @@ const SubscriptionPromptBanner: React.FC<SubscriptionPromptBannerProps> = ({ onH
   }
 
   const subscription = subscriptionData?.subscription;
-  
+
   // Only show if user doesn't have an active subscription
   if (!subscription || subscription.isActive) {
     return null;
@@ -63,30 +63,30 @@ const SubscriptionPromptBanner: React.FC<SubscriptionPromptBannerProps> = ({ onH
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between">
         <div className="flex flex-1 items-center gap-3">
-          <Sparkles className="h-5 w-5 text-white animate-pulse" />
+          <Sparkles className="h-5 w-5 animate-pulse text-white" />
           <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
             <span className="text-sm font-semibold text-white">
               {localize('com_ui_subscription_banner_title') || 'Unlock Full Potential'}
             </span>
             <span className="text-xs text-white/90 sm:text-sm">
-              {localize('com_ui_subscription_banner_message') || 
-               'Get unlimited access to all AI models, faster responses, and priority support'}
+              {localize('com_ui_subscription_banner_message') ||
+                'Get unlimited access to all AI models, faster responses, and priority support'}
             </span>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             onClick={handleUpgrade}
             size="sm"
-            className="bg-white text-purple-600 hover:bg-gray-100 font-medium px-4 py-1.5 text-sm"
+            className="bg-white px-4 py-1.5 text-sm font-medium text-purple-600 hover:bg-gray-100"
           >
             {localize('com_ui_subscription_banner_cta') || 'Upgrade Now'}
           </Button>
-          
+
           <button
             onClick={handleDismiss}
-            className="text-white/80 hover:text-white transition-colors p-1"
+            className="p-1 text-white/80 transition-colors hover:text-white"
             aria-label="Dismiss banner"
           >
             <X className="h-4 w-4" />

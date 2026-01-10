@@ -12,7 +12,7 @@ export const useAutoTour = () => {
     if (!isAuthenticated) return;
 
     const tourCompleted = localStorage.getItem(TOUR_COMPLETED_KEY);
-    
+
     if (!tourCompleted) {
       setTimeout(() => {
         setIsOpen(true);

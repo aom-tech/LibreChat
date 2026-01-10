@@ -64,7 +64,7 @@ function buildUpdateFields(config, userRecord) {
   if (userRecord?.tokenCredits == null && config.startBalance != null) {
     updateFields.tokenCredits = config.startBalance;
   }
-  
+
   // Initialize availableCredits if not exists
   if (!userRecord?.availableCredits) {
     updateFields.availableCredits = {

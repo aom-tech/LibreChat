@@ -186,7 +186,7 @@ class FluxAPI extends Tool {
 
   async _call(data) {
     const { action = 'generate', ...imageData } = data;
-    
+
     logger.debug('[FluxAPI] _call invoked with:', {
       action,
       hasReq: !!this.req,
@@ -219,7 +219,7 @@ class FluxAPI extends Tool {
       try {
         // Directly check image credits balance
         const balanceDoc = await Balance.findOne({ user: userId }).lean();
-        
+
         if (!balanceDoc) {
           logger.warn('[FluxAPI] No balance document found for user:', userId);
           return this.returnValue('Unable to verify image credits balance.');
@@ -236,7 +236,9 @@ class FluxAPI extends Tool {
         });
 
         if (imageBalance < requiredCredits) {
-          return this.returnValue(`Insufficient image credits. You have ${imageBalance} credits but need at least ${requiredCredits} to generate an image.`);
+          return this.returnValue(
+            `Insufficient image credits. You have ${imageBalance} credits but need at least ${requiredCredits} to generate an image.`,
+          );
         }
       } catch (error) {
         logger.error('[FluxAPI] Error checking image balance:', error);
@@ -345,7 +347,7 @@ class FluxAPI extends Tool {
       const conversationId = this.conversationId || this.req?.body?.conversationId;
       const endpoint = this.endpoint || this.req?.body?.endpoint || 'agents';
       const endpointTokenConfig = this.endpointTokenConfig || this.req?.body?.endpointTokenConfig;
-      
+
       logger.info('[FluxAPI] Token charge parameters:', {
         userId,
         conversationId,
@@ -363,9 +365,9 @@ class FluxAPI extends Tool {
           hasReq: !!this.req,
           hasReqUser: !!this.req?.user,
           hasReqBody: !!this.req?.body,
-        }
+        },
       });
-      
+
       if (userId && conversationId) {
         const txMetadata = {
           user: userId,

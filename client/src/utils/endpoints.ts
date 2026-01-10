@@ -137,9 +137,9 @@ export function getConvoSwitchLogic(params: ConversationInitParams): InitiatedTe
   const currentEndpoint = conversation?.endpoint;
   const conversationId = conversation?.conversationId ?? '';
   const isNewChat = conversationId === 'new' || !conversationId;
-  
+
   // For new chats, don't copy old conversation data
-  const template: Partial<t.TPreset> = isNewChat 
+  const template: Partial<t.TPreset> = isNewChat
     ? {
         endpoint: newEndpoint,
         conversationId: 'new',

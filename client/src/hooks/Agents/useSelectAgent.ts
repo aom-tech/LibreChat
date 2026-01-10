@@ -40,7 +40,8 @@ export default function useSelectAgent() {
         conversation: { ...(conversation ?? {}), agent_id: agent.id },
         preset: template,
       });
-      const isNewChat = conversation?.conversationId === 'new' || !conversation?.conversationId;
+      const isNewChat =
+        conversation?.conversationId === Constants.NEW_CONVO || !conversation?.conversationId;
       newConversation({
         template: currentConvo,
         preset: template as Partial<TPreset>,
@@ -59,10 +60,15 @@ export default function useSelectAgent() {
 
       setSelectedAgentId(agent.id);
 
+      // Determine if we're in a new chat to preserve the conversation ID properly
+      const isNewChat =
+        conversation?.conversationId === Constants.NEW_CONVO || !conversation?.conversationId;
+
       const template: Partial<TPreset | TConversation> = {
         endpoint: EModelEndpoint.agents,
         agent_id: agent.id,
-        conversationId: Constants.NEW_CONVO as string,
+        // Preserve Constants.NEW_CONVO when in a new chat, otherwise use existing conversationId
+        conversationId: isNewChat ? (Constants.NEW_CONVO as string) : conversation?.conversationId,
       };
 
       updateConversation({ id: agent.id }, template);
@@ -91,7 +97,7 @@ export default function useSelectAgent() {
         updateConversation({}, { ...template, agent_id: undefined });
       }
     },
-    [agentsMap, updateConversation, queryClient, agentQuery],
+    [agentsMap, updateConversation, queryClient, agentQuery, conversation?.conversationId],
   );
 
   return { onSelect };

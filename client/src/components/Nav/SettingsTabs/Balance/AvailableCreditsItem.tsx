@@ -22,16 +22,20 @@ const AvailableCreditsItem: React.FC<AvailableCreditsItemProps> = ({ availableCr
   const creditItems = [
     { key: 'text', label: 'com_nav_credits_text', value: availableCredits?.text },
     { key: 'image', label: 'com_nav_credits_image', value: availableCredits?.image },
-    { key: 'presentation', label: 'com_nav_credits_presentation', value: availableCredits?.presentation },
+    {
+      key: 'presentation',
+      label: 'com_nav_credits_presentation',
+      value: availableCredits?.presentation,
+    },
     { key: 'video', label: 'com_nav_credits_video', value: availableCredits?.video },
   ];
 
   return (
     <div className="space-y-3">
-      <Label className="font-medium text-sm">{localize('com_nav_available_credits')}</Label>
+      <Label className="text-sm font-medium">{localize('com_nav_available_credits')}</Label>
       <div className="space-y-2">
         {creditItems.map((item) => (
-          <div key={item.key} className="flex justify-between items-center">
+          <div key={item.key} className="flex items-center justify-between">
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {localize(item.label)}:
             </span>

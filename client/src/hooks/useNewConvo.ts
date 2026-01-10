@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useGetModelsQuery } from 'librechat-data-provider/react-query';
 import {
   Constants,
@@ -35,6 +35,7 @@ import store from '~/store';
 
 const useNewConvo = (index = 0) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { data: startupConfig } = useGetStartupConfig();
   const clearAllConversations = store.useClearConvoState();
@@ -159,9 +160,17 @@ const useNewConvo = (index = 0) => {
           conversation.disableParams = true;
         }
 
-        if (!(keepAddedConvos ?? false)) {
+        // Check if we're updating an existing new chat with agent information
+        const isUpdatingNewChatWithAgent =
+          conversation.conversationId === Constants.NEW_CONVO &&
+          conversation.agent_id &&
+          !buildDefaultConversation;
+
+        // Clear conversations before setting new conversation state, but not when updating existing new chat with agent
+        if (!(keepAddedConvos ?? false) && !isUpdatingNewChatWithAgent) {
           clearAllConversations(true);
         }
+
         const isCancelled = conversation.conversationId?.startsWith('_');
         if (isCancelled) {
           logger.log(
@@ -195,6 +204,20 @@ const useNewConvo = (index = 0) => {
           }
           const path = `/c/${Constants.NEW_CONVO}${getParams()}`;
           navigate(path, { state: { focusChat: true } });
+          return;
+        }
+
+        // Check if we're currently in a new chat context and avoid navigating away
+        const isCurrentlyInNewChat = location.pathname === `/c/${Constants.NEW_CONVO}`;
+        const isSettingNewChatWithAgent = conversation.conversationId === Constants.NEW_CONVO;
+
+        // If we're in a new chat and setting a new chat with an agent, don't navigate away
+        if (isCurrentlyInNewChat && isSettingNewChatWithAgent) {
+          // Stay on the current route, just update the document title if needed
+          const appTitle = localStorage.getItem(LocalStorageKeys.APP_TITLE) ?? '';
+          if (appTitle) {
+            document.title = appTitle;
+          }
           return;
         }
 
